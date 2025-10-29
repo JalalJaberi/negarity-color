@@ -1,0 +1,45 @@
+{
+  "name": "jalaljaberi/negarity-color",
+  "description": "Negarity Color — a modern, extensible color manipulation library for PHP.",
+  "keywords": [
+    "negarity",
+    "color",
+    "php"
+  ],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Jalal Jaberi",
+      "email": "proodoo@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=8.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.0",
+    "symfony/var-dumper": "^6.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Negarity\\Color\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Negarity\\Color\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit --configuration phpunit.xml",
+    "lint": "php -l src"
+  },
+  "config": {
+    "sort-packages": true,
+    "preferred-install": "dist"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
