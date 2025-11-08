@@ -321,4 +321,286 @@ final class Color
                 throw new \RuntimeException('Conversion to RGB not implemented for this color space.');
         }
     }
+
+    public function toRGBA(int $alpha = 255): Color
+    {
+        if ($alpha < 0 || $alpha > 255) {
+            throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
+        }
+
+        switch (get_class($this->colorSpace)) {
+            case RGBA::class:
+                return new self($this);
+            case RGB::class:
+                /** @var RGB $rgb */
+                $rgb = $this->colorSpace;
+                return new self(new RGBA($rgb->getR(), $rgb->getG(), $rgb->getB(), $alpha));
+            case HSLA::class:
+                /** @var HSLA $hsla */
+                $hsla = $this->colorSpace;
+                $rgb = $hsla->toRGB();
+                return new self(new RGBA($rgb->getR(), $rgb->getG(), $rgb->getB(), $hsla->getA()));
+            default:
+                /** @var RGB $rgb */
+                $rgb = $this->toRGB();
+                return new self(new RGBA($rgb->getR(), $rgb->getG(), $rgb->getB(), $alpha));
+        }
+    }
+
+    public function toCMYK(): Color
+    {
+        $rgb = $this->toRGB();
+        /** @var RGB $rgbSpace */
+        $rgbSpace = $rgb->getColorSpace();
+        $r = $rgbSpace->getR() / 255;
+        $g = $rgbSpace->getG() / 255;
+        $b = $rgbSpace->getB() / 255;
+
+        $k = 1 - max($r, $g, $b);
+        if ($k == 1) {
+            return new self(new CMYK(0, 0, 0, 100));
+        }
+
+        $c = (1 - $r - $k) / (1 - $k);
+        $m = (1 - $g - $k) / (1 - $k);
+        $y = (1 - $b - $k) / (1 - $k);
+
+        return new self(new CMYK(
+            (int)round($c * 100),
+            (int)round($m * 100),
+            (int)round($y * 100),
+            (int)round($k * 100)
+        ));
+    }
+
+    public function toHSL(): Color
+    {
+        $rgb = $this->toRGB();
+        /** @var RGB $rgbSpace */
+        $rgbSpace = $rgb->getColorSpace();
+        $r = $rgbSpace->getR() / 255;
+        $g = $rgbSpace->getG() / 255;
+        $b = $rgbSpace->getB() / 255;
+
+        $max = max($r, $g, $b);
+        $min = min($r, $g, $b);
+        $h = $s = $l = ($max + $min) / 2;
+
+        if ($max == $min) {
+            $h = $s = 0; // achromatic
+        } else {
+            $d = $max - $min;
+            $s = ($l > 0.5) ? $d / (2 - $max - $min) : $d / ($max + $min);
+            switch ($max) {
+                case $r:
+                    $h = ($g - $b) / $d + (($g < $b) ? 6 : 0);
+                    break;
+                case $g:
+                    $h = ($b - $r) / $d + 2;
+                    break;
+                case $b:
+                    $h = ($r - $g) / $d + 4;
+                    break;
+            }
+            $h /= 6;
+        }
+
+        return new self(new HSL(
+            (int)round($h * 360),
+            (int)round($s * 100),
+            (int)round($l * 100)
+        ));
+    }
+
+    public function toHSLA(int $alpha = 255): Color
+    {
+        if ($alpha < 0 || $alpha > 255) {
+            throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
+        }
+
+        switch (get_class($this->colorSpace)) {
+            case HSLA::class:
+                return new self($this);
+            case HSL::class:
+                /** @var HSL $hsl */
+                $hsl = $this->colorSpace;
+                return new self(new HSLA(
+                    $hsl->getH(),
+                    $hsl->getS(),
+                    $hsl->getL(),
+                    $alpha
+                ));
+            case RGBA::class:
+                /** @var RGBA $rgba */
+                $rgba = $this->colorSpace;
+                $rgbColor = self::rgb($rgba->getR(), $rgba->getG(), $rgba->getB());
+                $hslColor = $rgbColor->toHSL();
+                /** @var HSL $hslSpace */
+                $hslSpace = $hslColor->getColorSpace();
+                return new self(new HSLA(
+                    $hslSpace->getH(),
+                    $hslSpace->getS(),
+                    $hslSpace->getL(),
+                    $rgba->getA()
+                ));
+            default:
+                /** @var HSL $hsl */
+                $hsl = $this->toHSL();
+                /** @var HSL $hslSpace */
+                $hslSpace = $hsl->getColorSpace();
+                return new self(new HSLA(
+                    $hslSpace->getH(),
+                    $hslSpace->getS(),
+                    $hslSpace->getL(),
+                    $alpha
+                ));
+        }
+    }
+
+    public function toHSV(): Color
+    {
+        $rgb = $this->toRGB();
+        /** @var RGB $rgbSpace */
+        $rgbSpace = $rgb->getColorSpace();
+        $r = $rgbSpace->getR() / 255;
+        $g = $rgbSpace->getG() / 255;
+        $b = $rgbSpace->getB() / 255;
+
+        $max = max($r, $g, $b);
+        $min = min($r, $g, $b);
+        $h = $s = $v = $max;
+
+        $d = $max - $min;
+        $s = ($max == 0) ? 0 : $d / $max;
+
+        if ($max == $min) {
+            $h = 0; // achromatic
+        } else {
+            switch ($max) {
+                case $r:
+                    $h = ($g - $b) / $d + (($g < $b) ? 6 : 0);
+                    break;
+                case $g:
+                    $h = ($b - $r) / $d + 2;
+                    break;
+                case $b:
+                    $h = ($r - $g) / $d + 4;
+                    break;
+            }
+            $h /= 6;
+        }
+
+        return new self(new HSV(
+            (int)round($h * 360),
+            (int)round($s * 100),
+            (int)round($v * 100)
+        ));
+    }
+
+    public function toLab(): Color
+    {
+        $rgb = $this->toRGB();
+        /** @var RGB $rgbSpace */
+        $rgbSpace = $rgb->getColorSpace();
+        $r = $rgbSpace->getR() / 255;
+        $g = $rgbSpace->getG() / 255;
+        $b = $rgbSpace->getB() / 255;
+
+        // Apply inverse gamma correction
+        $r = ($r > 0.04045) ? pow(($r + 0.055) / 1.055, 2.4) : $r / 12.92;
+        $g = ($g > 0.04045) ? pow(($g + 0.055) / 1.055, 2.4) : $g / 12.92;
+        $b = ($b > 0.04045) ? pow(($b + 0.055) / 1.055, 2.4) : $b / 12.92;
+
+        // Convert to XYZ
+        $x = $r * 0.4124 + $g * 0.3576 + $b * 0.1805;
+        $y = $r * 0.2126 + $g * 0.7152 + $b * 0.0722;
+        $z = $r * 0.0193 + $g * 0.1192 + $b * 0.9505;
+
+        // Normalize for D65 white point
+        $x /= 0.95047;
+        $y /= 1.00000;
+        $z /= 1.08883;
+
+        // Convert to Lab
+        $fx = ($x > 0.008856) ? pow($x, 1/3) : (7.787 * $x) + (16 / 116);
+        $fy = ($y > 0.008856) ? pow($y, 1/3) : (7.787 * $y) + (16 / 116);
+        $fz = ($z > 0.008856) ? pow($z, 1/3) : (7.787 * $z) + (16 / 116);
+
+        $l = (116 * $fy) - 16;
+        $a = 500 * ($fx - $fy);
+        $b = 200 * ($fy - $fz);
+
+        return new self(new Lab(
+            (int)round($l),
+            (int)round($a),
+            (int)round($b)
+        ));
+    }
+    public function toLCh(): Color
+    {
+        $labColor = $this->toLab();
+        /** @var Lab $labSpace */
+        $labSpace = $labColor->getColorSpace();
+        $l = $labSpace->getL();
+        $a = $labSpace->getA();
+        $b = $labSpace->getB();
+
+        $c = sqrt($a * $a + $b * $b);
+        $h = atan2($b, $a);
+        $h = rad2deg($h);
+        if ($h < 0) {
+            $h += 360;
+        }
+
+        return new self(new LCh(
+            (int)round($l),
+            (int)round($c),
+            (int)round($h)
+        ));
+    }
+    public function toXYZ(): Color
+    {
+        $rgb = $this->toRGB();
+        /** @var RGB $rgbSpace */
+        $rgbSpace = $rgb->getColorSpace();
+        $r = $rgbSpace->getR() / 255;
+        $g = $rgbSpace->getG() / 255;
+        $b = $rgbSpace->getB() / 255;
+
+        // Apply inverse gamma correction
+        $r = ($r > 0.04045) ? pow(($r + 0.055) / 1.055, 2.4) : $r / 12.92;
+        $g = ($g > 0.04045) ? pow(($g + 0.055) / 1.055, 2.4) : $g / 12.92;
+        $b = ($b > 0.04045) ? pow(($b + 0.055) / 1.055, 2.4) : $b / 12.92;
+
+        // Convert to XYZ
+        $x = $r * 0.4124 + $g * 0.3576 + $b * 0.1805;
+        $y = $r * 0.2126 + $g * 0.7152 + $b * 0.0722;
+        $z = $r * 0.0193 + $g * 0.1192 + $b * 0.9505;
+
+        // Scale to the range [0, 100]
+        return new self(new XYZ(
+            (float)round($x * 100, 4),
+            (float)round($y * 100, 4),
+            (float)round($z * 100, 4)
+        ));
+    }
+    public function toYCbCr(): Color
+    {
+        $rgb = $this->toRGB();
+        /** @var RGB $rgbSpace */
+        $rgbSpace = $rgb->getColorSpace();
+        $r = $rgbSpace->getR();
+        $g = $rgbSpace->getG();
+        $b = $rgbSpace->getB();
+
+        $y  = (int)round(0.299 * $r + 0.587 * $g + 0.114 * $b);
+        $cb = (int)round(128 - 0.168736 * $r - 0.331264 * $g + 0.5 * $b);
+        $cr = (int)round(128 + 0.5 * $r - 0.460525 * $g - 0.081475 * $b);
+
+        return new self(new YCbCr(
+            max(0, min(255, $y)),
+            max(0, min(255, $cb)),
+            max(0, min(255, $cr))
+        ));
+    }
 }
