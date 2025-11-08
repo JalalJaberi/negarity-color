@@ -30,6 +30,41 @@ final class Color
         return $this->colorSpace;
     }
 
+    public function getColorSpaceName(): string
+    {
+        return $this->colorSpace->getName();
+    }
+
+    public function getChannels(): array
+    {
+        return $this->colorSpace->getChannels();
+    }
+
+    public function getChannel(string $name): int
+    {
+        return $this->colorSpace->getChannel($name);
+    }
+
+    public function toArray(): array
+    {
+        return $this->colorSpace->toArray();
+    }
+
+    public function without(array $channels): self
+    {
+        return new self($this->colorSpace->without($channels));
+    }
+
+    public function with(array $channels): self
+    {
+        return new self($this->colorSpace->with($channels));
+    }
+
+    public function __toString(): string
+    {
+        return $this->getColorSpaceName() . '(' . implode(', ', $this->toArray()) . ')';
+    }
+
     public static function rgb(int $r, int $g, int $b): self
     {
         return new self(new RGB($r, $g, $b));
