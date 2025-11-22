@@ -536,6 +536,7 @@ final class Color
             (int)round($b)
         ));
     }
+
     public function toLCh(): Color
     {
         $labColor = $this->toLab();
@@ -558,6 +559,7 @@ final class Color
             (int)round($h)
         ));
     }
+
     public function toXYZ(): Color
     {
         $rgb = $this->toRGB();
@@ -584,6 +586,7 @@ final class Color
             (float)round($z * 100, 4)
         ));
     }
+
     public function toYCbCr(): Color
     {
         $rgb = $this->toRGB();
@@ -602,5 +605,30 @@ final class Color
             max(0, min(255, $cb)),
             max(0, min(255, $cr))
         ));
+    }
+
+    public function toHex(): string
+    {
+        if (get_class($this->colorSpace) === RGB::class) {
+            /** @var RGB $rgbSpace */
+            $rgbSpace = $this->colorSpace;
+            return sprintf(
+                '#%02X%02X%02X',
+                $rgbSpace->getChannel('r'),
+                $rgbSpace->getChannel('g'),
+                $rgbSpace->getChannel('b')
+            );
+        } else if (get_class($this->colorSpace) === RGBA::class) {
+            /** @var RGBA $rgbaSpace */
+            $rgbaSpace = $this->colorSpace;
+            return sprintf(
+                '#%02X%02X%02X',
+                $rgbaSpace->getChannel('r'),
+                $rgbaSpace->getChannel('g'),
+                $rgbaSpace->getChannel('b')
+            );
+        } else {
+            return $this->toRGB()->toHex();
+        }
     }
 }
