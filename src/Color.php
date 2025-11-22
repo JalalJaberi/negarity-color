@@ -115,6 +115,47 @@ final class Color
         return new self(new YCbCr($y, $cb, $cr));
     }
 
+    public static function hex(string $value, string $colorSpaceName = 'rgb'): self
+    {
+        $value = ltrim($value, '#');
+        $r = $g = $b = $a = '';
+
+        if (strlen($value) === 8) {
+            $r = hexdec(substr($value, 0, 2));
+            $g = hexdec(substr($value, 2, 2));
+            $b = hexdec(substr($value, 4, 2));
+            $a = hexdec(substr($value, 6, 2));
+        } else if (strlen($value) === 6) {
+            $r = hexdec(substr($value, 0, 2));
+            $g = hexdec(substr($value, 2, 2));
+            $b = hexdec(substr($value, 4, 2));
+        } else if (strlen($value) === 4) {
+            $r = hexdec(str_repeat(substr($value, 0, 1), 2));
+            $g = hexdec(str_repeat(substr($value, 1, 1), 2));
+            $b = hexdec(str_repeat(substr($value, 2, 1), 2));
+            $a = hexdec(str_repeat(substr($value, 3, 1), 2));
+        } else if (strlen($value) === 3) {
+            $r = hexdec(str_repeat(substr($value, 0, 1), 2));
+            $g = hexdec(str_repeat(substr($value, 1, 1), 2));
+            $b = hexdec(str_repeat(substr($value, 2, 1), 2));
+        } else {
+            throw new \InvalidArgumentException('Hex value must be 3 (rgb), 4 (rgba), 6 (rrggbb), or 8 (rrggbbaa) characters long.');
+        }
+        return match (strtolower($colorSpaceName)) {
+            'rgb' => self::rgb($r, $g, $b),
+            'rgba' => self::rgba($r, $g, $b, 255),
+            'cmyk' => self::rgb($r, $g, $b)->toCMYK(),
+            'hsl' => self::rgb($r, $g, $b)->toHSL(),
+            'hsla' => self::rgb($r, $g, $b)->toHSLA(255),
+            'hsv' => self::rgb($r, $g, $b)->toHSV(),
+            'lab' => self::rgb($r, $g, $b)->toLab(),
+            'lch' => self::rgb($r, $g, $b)->toLCh(),
+            'xyz' => self::rgb($r, $g, $b)->toXYZ(),
+            'ycbcr' => self::rgb($r, $g, $b)->toYCbCr(),
+            default => throw new \InvalidArgumentException('Unsupported color space for hex input.'),
+        };
+}
+
     public function toRGB(): Color
     {
         switch (get_class($this->colorSpace)) {
