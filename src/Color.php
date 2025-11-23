@@ -154,7 +154,7 @@ final class Color
             'ycbcr' => self::rgb($r, $g, $b)->toYCbCr(),
             default => throw new \InvalidArgumentException('Unsupported color space for hex input.'),
         };
-}
+    }
 
     public function toRGB(): Color
     {
