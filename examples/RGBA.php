@@ -7,9 +7,13 @@ use Negarity\Color\ColorSpace\RGBA;
 $color = new RGBA(255, 100, 50);
 echo $color->getName() .  PHP_EOL; // "rgba"
 echo $color->getChannel('r') .  PHP_EOL; // 255
+echo $color->getR() .  PHP_EOL; // 255
 echo $color->getChannel('g') .  PHP_EOL; // 100
+echo $color->getG() .  PHP_EOL; // 100
 echo $color->getChannel('b') .  PHP_EOL; // 50
+echo $color->getB() .  PHP_EOL; // 50
 echo $color->getChannel('a') .  PHP_EOL; // 255
+echo $color->getA() .  PHP_EOL; // 255
 echo json_encode($color->toArray()) .  PHP_EOL; // {"r":255,"g":100,"b":50,"a":255}
 echo $color .  PHP_EOL; // "rgba(255, 100, 50, 1.00)"
 $withoutR = $color->without(['r']);

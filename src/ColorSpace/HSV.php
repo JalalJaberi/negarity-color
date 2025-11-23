@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-final class HSV implements ColorSpaceInterface
+final class HSV extends AbstractColorSpace
 {
     public function __construct(
         private readonly int $h, // 0–360
@@ -59,11 +59,6 @@ final class HSV implements ColorSpaceInterface
             $channels['s'] ?? $this->s,
             $channels['v'] ?? $this->v
         );
-    }
-
-    public function __toString(): string
-    {
-        return sprintf('hsv(%d, %d%%, %d%%)', $this->h, $this->s, $this->v);
     }
 
     private function assertRange(int $value, int $min, int $max, string $channel): void

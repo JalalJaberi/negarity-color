@@ -7,9 +7,13 @@ use Negarity\Color\ColorSpace\CMYK;
 $color = new CMYK(0, 50, 100, 0);
 echo $color->getName() .  PHP_EOL; // "cmyk"
 echo $color->getChannel('c') .  PHP_EOL; // 0
+echo $color->getC() .  PHP_EOL; // 0
 echo $color->getChannel('m') .  PHP_EOL; // 50
+echo $color->getM() .  PHP_EOL; // 50
 echo $color->getChannel('y') .  PHP_EOL; // 100
+echo $color->getY() .  PHP_EOL; // 100
 echo $color->getChannel('k') .  PHP_EOL; // 0
+echo $color->getK() .  PHP_EOL; // 0
 echo json_encode($color->toArray()) .  PHP_EOL; // {"c":0,"m":50,"y":100,"k":0}
 echo $color .  PHP_EOL; // "cmyk(0%, 50%, 100%, 0%)"
 $withoutC = $color->without(['c']);

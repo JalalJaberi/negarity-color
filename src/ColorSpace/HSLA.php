@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-final class HSLA implements ColorSpaceInterface
+final class HSLA extends AbstractColorSpace
 {
     public function __construct(
         private readonly int $h, // 0–360

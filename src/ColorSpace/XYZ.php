@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-final class XYZ implements ColorSpaceInterface
+final class XYZ extends AbstractColorSpace
 {
     public function __construct(
         private readonly int $x,
@@ -59,11 +59,6 @@ final class XYZ implements ColorSpaceInterface
             $channels['y'] ?? $this->y,
             $channels['z'] ?? $this->z
         );
-    }
-
-    public function __toString(): string
-    {
-        return sprintf('xyz(%d, %d, %d)', $this->x, $this->y, $this->z);
     }
 
     private function assertRange(int $value, int $min, int $max, string $channel): void

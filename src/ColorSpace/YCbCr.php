@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-final class YCbCr implements ColorSpaceInterface
+final class YCbCr extends AbstractColorSpace
 {
     public function __construct(
         private readonly int $y,  // Luminance 0–255
@@ -59,11 +59,6 @@ final class YCbCr implements ColorSpaceInterface
             $channels['cb'] ?? $this->cb,
             $channels['cr'] ?? $this->cr
         );
-    }
-
-    public function __toString(): string
-    {
-        return sprintf('ycbcr(%d, %d, %d)', $this->y, $this->cb, $this->cr);
     }
 
     private function assertRange(int $value, int $min, int $max, string $channel): void

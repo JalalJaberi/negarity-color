@@ -7,8 +7,11 @@ use Negarity\Color\ColorSpace\YCbCr;
 $color = new YCbCr(128, 100, 150);
 echo $color->getName() .  PHP_EOL; // "ycbcr"
 echo $color->getChannel('y') .  PHP_EOL; // 128
+echo $color->getY() .  PHP_EOL; // 128
 echo $color->getChannel('cb') .  PHP_EOL; // 100
+echo $color->getCb() .  PHP_EOL; // 100
 echo $color->getChannel('cr') .  PHP_EOL; // 150
+echo $color->getCr() .  PHP_EOL; // 150
 echo json_encode($color->toArray()) .  PHP_EOL; // {"y":128,"cb":100,"cr":150}
 echo $color .  PHP_EOL; // "ycbcr(128, 100, 150)"
 $withoutY = $color->without(['y']);

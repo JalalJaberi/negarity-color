@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-final class RGB implements ColorSpaceInterface
+final class RGB extends AbstractColorSpace
 {
     public function __construct(
         private readonly int $r,
@@ -59,11 +59,6 @@ final class RGB implements ColorSpaceInterface
         $b = in_array('b', $channels, true) ? 0 : $this->b;
 
         return new self($r, $g, $b);
-    }
-
-    public function __toString(): string
-    {
-        return sprintf('rgb(%d, %d, %d)', $this->r, $this->g, $this->b);
     }
 
     private function assertRange(int $value, string $channel): void

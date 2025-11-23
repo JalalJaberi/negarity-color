@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-final class RGBA implements ColorSpaceInterface
+final class RGBA extends AbstractColorSpace
 {
     public function __construct(
         private readonly int $r,

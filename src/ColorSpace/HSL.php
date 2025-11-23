@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-final class HSL implements ColorSpaceInterface
+final class HSL extends AbstractColorSpace
 {
     public function __construct(
         private readonly int $h, // 0–360
@@ -59,11 +59,6 @@ final class HSL implements ColorSpaceInterface
             $channels['s'] ?? $this->s,
             $channels['l'] ?? $this->l
         );
-    }
-
-    public function __toString(): string
-    {
-        return sprintf('hsl(%d, %d%%, %d%%)', $this->h, $this->s, $this->l);
     }
 
     private function assertRange(int $value, int $min, int $max, string $channel): void

@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-final class LCh implements ColorSpaceInterface
+final class LCh extends AbstractColorSpace
 {
     public function __construct(
         private readonly int $l, // Lightness 0–100
@@ -59,11 +59,6 @@ final class LCh implements ColorSpaceInterface
             $channels['c'] ?? $this->c,
             $channels['h'] ?? $this->h
         );
-    }
-
-    public function __toString(): string
-    {
-        return sprintf('lch(%d, %d, %d)', $this->l, $this->c, $this->h);
     }
 
     private function assertRange(int $value, int $min, int $max, string $channel): void

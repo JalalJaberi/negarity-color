@@ -7,8 +7,11 @@ use Negarity\Color\ColorSpace\HSL;
 $color = new HSL(210, 50, 40);
 echo $color->getName() .  PHP_EOL; // "rgb"
 echo $color->getChannel('h') .  PHP_EOL; // 210
+echo $color->getH() .  PHP_EOL; // 210
 echo $color->getChannel('s') .  PHP_EOL; // 50
+echo $color->getS() .  PHP_EOL; // 50
 echo $color->getChannel('l') .  PHP_EOL; // 40
+echo $color->getL() .  PHP_EOL; // 40
 echo json_encode($color->toArray()) .  PHP_EOL; // {"h":210,"s":50,"l":40}
 echo $color .  PHP_EOL; // "hsl(210, 50%, 40%)"
 $withoutH = $color->without(['h']);

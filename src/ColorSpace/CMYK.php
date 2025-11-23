@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-final class CMYK implements ColorSpaceInterface
+final class CMYK extends AbstractColorSpace
 {
     public function __construct(
         private readonly int $c,
@@ -64,11 +64,6 @@ final class CMYK implements ColorSpaceInterface
             $channels['y'] ?? $this->y,
             $channels['k'] ?? $this->k
         );
-    }
-
-    public function __toString(): string
-    {
-        return sprintf('cmyk(%d%%, %d%%, %d%%, %d%%)', $this->c, $this->m, $this->y, $this->k);
     }
 
     private function assertRange(int $value, string $channel): void

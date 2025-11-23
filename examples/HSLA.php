@@ -7,9 +7,13 @@ use Negarity\Color\ColorSpace\HSLA;
 $color = new HSLA(240, 100, 50, 255);
 echo $color->getName() .  PHP_EOL; // "hsla"
 echo $color->getChannel('h') .  PHP_EOL; // 240
+echo $color->getH() .  PHP_EOL; // 240
 echo $color->getChannel('s') .  PHP_EOL; // 100
+echo $color->getS() .  PHP_EOL; // 100
 echo $color->getChannel('l') .  PHP_EOL; // 50
+echo $color->getL() .  PHP_EOL; // 50
 echo $color->getChannel('a') .  PHP_EOL; // 255
+echo $color->getA() .  PHP_EOL; // 255
 echo json_encode($color->toArray()) .  PHP_EOL; // {"h":240,"s":100,"l":50,"a":255}
 echo $color .  PHP_EOL; // "hsla(240, 100%, 50%, 1)"
 $withoutH = $color->without(['h']);

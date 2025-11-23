@@ -7,8 +7,11 @@ use Negarity\Color\ColorSpace\LCh;
 $color = new LCh(70, 50, 180);
 echo $color->getName() .  PHP_EOL; // "lch"
 echo $color->getChannel('l') .  PHP_EOL; // 70
+echo $color ->getL() .  PHP_EOL; // 70
 echo $color->getChannel('c') .  PHP_EOL; // 50
+echo $color->getC() .  PHP_EOL; // 50
 echo $color->getChannel('h') .  PHP_EOL; // 180
+echo $color->getH() .  PHP_EOL; // 180
 echo json_encode($color->toArray()) .  PHP_EOL; // {"l":70,"c":50,"h":180}
 echo $color .  PHP_EOL; // "lch(70, 50, 180)"
 $withoutL = $color->without(['l']);
