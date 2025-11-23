@@ -4,6 +4,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\Color;
 
+use Negarity\Color\Registry\VGANamedColors;
+
 $color = Color::rgb(255, 100, 50);
 echo $color->getColorSpaceName() .  PHP_EOL; // "rgb"
 echo $color->getChannel('r') .  PHP_EOL; // 255
@@ -24,3 +26,12 @@ $withG = $color->with(['g' => 150]);
 echo json_encode($withG->toArray()) .  PHP_EOL; // {"r":255,"g":150,"b":50}
 $withB = $color->with(['b' => 75]);
 echo json_encode($withB->toArray()) .  PHP_EOL; // {"r":255,"g":100,"b":75}
+
+echo 'Using named colors:' . PHP_EOL;
+
+Color::addRegistry(new VGANamedColors());
+
+$red = Color::red();
+echo 'red:' . $red .  PHP_EOL; // "rgb(255, 0, 0)"
+$navy = Color::navy();
+echo 'navy:' . $navy .  PHP_EOL; // "rgb(0, 0, 128)"

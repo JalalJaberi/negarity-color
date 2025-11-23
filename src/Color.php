@@ -17,146 +17,16 @@ use Negarity\Color\ColorSpace\{
     XYZ,
     YCbCr
 };
+use Negarity\Color\Registry\NamedColorRegistryInterface;
 
-final class Color
+final class Color extends ColorBase
 {
-    public function __construct(
-        private readonly ColorSpaceInterface $colorSpace
-    ) {
-    }
-
-    public function getColorSpace(): ColorSpaceInterface
+    public function __construct(ColorSpaceInterface $colorSpace)
     {
-        return $this->colorSpace;
+        parent::__construct($colorSpace);
     }
 
-    public function getColorSpaceName(): string
-    {
-        return $this->colorSpace->getName();
-    }
-
-    public function getChannels(): array
-    {
-        return $this->colorSpace->getChannels();
-    }
-
-    public function getChannel(string $name): int
-    {
-        return $this->colorSpace->getChannel($name);
-    }
-
-    public function toArray(): array
-    {
-        return $this->colorSpace->toArray();
-    }
-
-    public function without(array $channels): self
-    {
-        return new self($this->colorSpace->without($channels));
-    }
-
-    public function with(array $channels): self
-    {
-        return new self($this->colorSpace->with($channels));
-    }
-
-    public function __toString(): string
-    {
-        return $this->getColorSpaceName() . '(' . implode(', ', $this->toArray()) . ')';
-    }
-
-    public static function rgb(int $r, int $g, int $b): self
-    {
-        return new self(new RGB($r, $g, $b));
-    }
-
-    public static function rgba(int $r, int $g, int $b, float $a): self
-    {
-        return new self(new RGBA($r, $g, $b, $a));
-    }
-
-    public static function cmyk(int $c, int $m, int $y, int $k): self
-    {
-        return new self(new CMYK($c, $m, $y, $k));
-    }
-
-    public static function hsl(int $h, int $s, int $l): self
-    {
-        return new self(new HSL($h, $s, $l));
-    }
-
-    public static function hsla(int $h, int $s, int $l, float $a): self
-    {
-        return new self(new HSLA($h, $s, $l, $a));
-    }
-
-    public static function hsv(int $h, int $s, int $v): self
-    {
-        return new self(new HSV($h, $s, $v));
-    }
-
-    public static function lab(float $l, float $a, float $b): self
-    {
-        return new self(new Lab($l, $a, $b));
-    }
-
-    public static function lch(float $l, float $c, float $h): self
-    {
-        return new self(new LCh($l, $c, $h));
-    }
-
-    public static function xyz(float $x, float $y, float $z): self
-    {
-        return new self(new XYZ($x, $y, $z));
-    }
-
-    public static function ycbcr(int $y, int $cb, int $cr): self
-    {
-        return new self(new YCbCr($y, $cb, $cr));
-    }
-
-    public static function hex(string $value, string $colorSpaceName = 'rgb'): self
-    {
-        $value = ltrim($value, '#');
-        $r = $g = $b = $a = '';
-
-        if (strlen($value) === 8) {
-            $r = hexdec(substr($value, 0, 2));
-            $g = hexdec(substr($value, 2, 2));
-            $b = hexdec(substr($value, 4, 2));
-            $a = hexdec(substr($value, 6, 2));
-        } else if (strlen($value) === 6) {
-            $r = hexdec(substr($value, 0, 2));
-            $g = hexdec(substr($value, 2, 2));
-            $b = hexdec(substr($value, 4, 2));
-        } else if (strlen($value) === 4) {
-            $r = hexdec(str_repeat(substr($value, 0, 1), 2));
-            $g = hexdec(str_repeat(substr($value, 1, 1), 2));
-            $b = hexdec(str_repeat(substr($value, 2, 1), 2));
-            $a = hexdec(str_repeat(substr($value, 3, 1), 2));
-        } else if (strlen($value) === 3) {
-            $r = hexdec(str_repeat(substr($value, 0, 1), 2));
-            $g = hexdec(str_repeat(substr($value, 1, 1), 2));
-            $b = hexdec(str_repeat(substr($value, 2, 1), 2));
-        } else {
-            throw new \InvalidArgumentException('Hex value must be 3 (rgb), 4 (rgba), 6 (rrggbb), or 8 (rrggbbaa) characters long.');
-        }
-        return match (strtolower($colorSpaceName)) {
-            'rgb' => self::rgb($r, $g, $b),
-            'rgba' => self::rgba($r, $g, $b, 255),
-            'cmyk' => self::rgb($r, $g, $b)->toCMYK(),
-            'hsl' => self::rgb($r, $g, $b)->toHSL(),
-            'hsla' => self::rgb($r, $g, $b)->toHSLA(255),
-            'hsv' => self::rgb($r, $g, $b)->toHSV(),
-            'lab' => self::rgb($r, $g, $b)->toLab(),
-            'lch' => self::rgb($r, $g, $b)->toLCh(),
-            'xyz' => self::rgb($r, $g, $b)->toXYZ(),
-            'ycbcr' => self::rgb($r, $g, $b)->toYCbCr(),
-            default => throw new \InvalidArgumentException('Unsupported color space for hex input.'),
-        };
-    }
-
-    public function toRGB(): Color
+    public function toRGB(): static
     {
         switch (get_class($this->colorSpace)) {
             case RGB::class:
@@ -363,7 +233,7 @@ final class Color
         }
     }
 
-    public function toRGBA(int $alpha = 255): Color
+    public function toRGBA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
             throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
@@ -388,7 +258,7 @@ final class Color
         }
     }
 
-    public function toCMYK(): Color
+    public function toCMYK(): static
     {
         $rgb = $this->toRGB();
         /** @var RGB $rgbSpace */
@@ -414,7 +284,7 @@ final class Color
         ));
     }
 
-    public function toHSL(): Color
+    public function toHSL(): static
     {
         $rgb = $this->toRGB();
         /** @var RGB $rgbSpace */
@@ -453,7 +323,7 @@ final class Color
         ));
     }
 
-    public function toHSLA(int $alpha = 255): Color
+    public function toHSLA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
             throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
@@ -498,7 +368,7 @@ final class Color
         }
     }
 
-    public function toHSV(): Color
+    public function toHSV(): static
     {
         $rgb = $this->toRGB();
         /** @var RGB $rgbSpace */
@@ -538,7 +408,7 @@ final class Color
         ));
     }
 
-    public function toLab(): Color
+    public function toLab(): static
     {
         $rgb = $this->toRGB();
         /** @var RGB $rgbSpace */
@@ -578,7 +448,7 @@ final class Color
         ));
     }
 
-    public function toLCh(): Color
+    public function toLCh(): static
     {
         $labColor = $this->toLab();
         /** @var Lab $labSpace */
@@ -601,7 +471,7 @@ final class Color
         ));
     }
 
-    public function toXYZ(): Color
+    public function toXYZ(): static
     {
         $rgb = $this->toRGB();
         /** @var RGB $rgbSpace */
@@ -628,7 +498,7 @@ final class Color
         ));
     }
 
-    public function toYCbCr(): Color
+    public function toYCbCr(): static
     {
         $rgb = $this->toRGB();
         /** @var RGB $rgbSpace */
@@ -646,30 +516,5 @@ final class Color
             max(0, min(255, $cb)),
             max(0, min(255, $cr))
         ));
-    }
-
-    public function toHex(): string
-    {
-        if (get_class($this->colorSpace) === RGB::class) {
-            /** @var RGB $rgbSpace */
-            $rgbSpace = $this->colorSpace;
-            return sprintf(
-                '#%02X%02X%02X',
-                $rgbSpace->getChannel('r'),
-                $rgbSpace->getChannel('g'),
-                $rgbSpace->getChannel('b')
-            );
-        } else if (get_class($this->colorSpace) === RGBA::class) {
-            /** @var RGBA $rgbaSpace */
-            $rgbaSpace = $this->colorSpace;
-            return sprintf(
-                '#%02X%02X%02X',
-                $rgbaSpace->getChannel('r'),
-                $rgbaSpace->getChannel('g'),
-                $rgbaSpace->getChannel('b')
-            );
-        } else {
-            return $this->toRGB()->toHex();
-        }
     }
 }
