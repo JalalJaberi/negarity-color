@@ -20,7 +20,7 @@ use Negarity\Color\ColorSpace\{
 };
 use Negarity\Color\Registry\NamedColorRegistryInterface;
 
-abstract class ColorBase
+abstract class ColorBase implements \JsonSerializable
 {
     /** @var NamedColorRegistryInterface[] */
     private static array $registries = [];
@@ -73,6 +73,11 @@ abstract class ColorBase
     public function __toString(): string
     {
         return $this->getColorSpaceName() . '(' . implode(', ', $this->toArray()) . ')';
+    }
+
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 
     public static function rgb(int $r, int $g, int $b): static

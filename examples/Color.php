@@ -11,7 +11,8 @@ echo $color->getColorSpaceName() .  PHP_EOL; // "rgb"
 echo $color->getChannel('r') .  PHP_EOL; // 255
 echo $color->getChannel('g') .  PHP_EOL; // 100
 echo $color->getChannel('b') .  PHP_EOL; // 50
-echo json_encode($color->toArray()) .  PHP_EOL; // {"r":255,"g":100,"b":50}
+echo var_export($color->toArray(), false) .  PHP_EOL; // {"r":255,"g":100,"b":50}
+echo json_encode($color) .  PHP_EOL; // {"r":255,"g":100,"b":50}
 echo $color .  PHP_EOL; // "rgb(255, 100, 50)"
 echo $color->toHex() .  PHP_EOL; // "#FF6432"
 $withoutR = $color->without(['r']);
