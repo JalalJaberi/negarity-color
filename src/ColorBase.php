@@ -50,7 +50,7 @@ abstract class ColorBase
         return $this->colorSpace->getChannels();
     }
 
-    public function getChannel(string $name): int
+    public function getChannel(string $name): float|int
     {
         return $this->colorSpace->getChannel($name);
     }

@@ -5,8 +5,7 @@
 ## todos:
 ### Add unit tests
 ### Add more named colors (web, ...)
-### move the constant values like color names, color space names, etc. to a file as constants
-### add some helper functions like rgbtohex(r, g, b) to work as single functions\
+### add some helper functions like rgbtohex(r, g, b) to work as standalone functions
 ### add palletes as a feature
 ### add generators: random color generator, random pallete generator, pallet generator having some info, ...
 ### Add filters and modifiers
@@ -17,4 +16,3 @@
  - Hue rotate, temperature/tint (warm/cool shifts).
  - Channel-specific masks and adjustments (e.g., zero green, keep red only).
  - Predefined filters: sepia, posterize, threshold, gamma.
-### Add global functions like rgbTocmyk()

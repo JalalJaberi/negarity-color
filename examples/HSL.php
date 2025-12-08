@@ -12,7 +12,8 @@ echo $color->getChannel('s') .  PHP_EOL; // 50
 echo $color->getS() .  PHP_EOL; // 50
 echo $color->getChannel('l') .  PHP_EOL; // 40
 echo $color->getL() .  PHP_EOL; // 40
-echo json_encode($color->toArray()) .  PHP_EOL; // {"h":210,"s":50,"l":40}
+echo var_export($color->toArray(), false) .  PHP_EOL; // {"h":210,"s":50,"l":40}
+echo json_encode($color) .  PHP_EOL; // {"h":210,"s":50,"l":40}
 echo $color .  PHP_EOL; // "hsl(210, 50%, 40%)"
 $withoutH = $color->without(['h']);
 echo json_encode($withoutH->toArray()) .  PHP_EOL; // {"h":0,"s":50,"l":40}

@@ -14,7 +14,8 @@ echo $color->getChannel('b') .  PHP_EOL; // 50
 echo $color->getB() .  PHP_EOL; // 50
 echo $color->getChannel('a') .  PHP_EOL; // 255
 echo $color->getA() .  PHP_EOL; // 255
-echo json_encode($color->toArray()) .  PHP_EOL; // {"r":255,"g":100,"b":50,"a":255}
+echo var_export($color->toArray(), false) .  PHP_EOL; // {"r":255,"g":100,"b":50,"a":255}
+echo json_encode($color) .  PHP_EOL; // {"r":255,"g":100,"b":50,"a":255}
 echo $color .  PHP_EOL; // "rgba(255, 100, 50, 1.00)"
 $withoutR = $color->without(['r']);
 echo json_encode($withoutR->toArray()) .  PHP_EOL; // {"r":0,"g":100,"b":50,"a":255}

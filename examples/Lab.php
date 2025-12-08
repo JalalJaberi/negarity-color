@@ -12,7 +12,8 @@ echo $color->getChannel('a') .  PHP_EOL; // 20
 echo $color->getA() .  PHP_EOL; // 20
 echo $color->getChannel('b') .  PHP_EOL; // -30
 echo $color->getB() .  PHP_EOL; // -30
-echo json_encode($color->toArray()) .  PHP_EOL; // {"l":50,"a":20,"b":-30}
+echo var_export($color->toArray(), false) .  PHP_EOL; // {"l":50,"a":20,"b":-30}
+echo json_encode($color) .  PHP_EOL; // {"l":50,"a":20,"b":-30}
 echo $color .  PHP_EOL; // "lab(50, 20, -30)"
 $withoutL = $color->without(['l']);
 echo json_encode($withoutL->toArray()) .  PHP_EOL; // {"l":0,"a":20,"b":-30}

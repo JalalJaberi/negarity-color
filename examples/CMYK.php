@@ -14,7 +14,8 @@ echo $color->getChannel('y') .  PHP_EOL; // 100
 echo $color->getY() .  PHP_EOL; // 100
 echo $color->getChannel('k') .  PHP_EOL; // 0
 echo $color->getK() .  PHP_EOL; // 0
-echo json_encode($color->toArray()) .  PHP_EOL; // {"c":0,"m":50,"y":100,"k":0}
+echo var_export($color->toArray(), false) .  PHP_EOL; // {"c":0,"m":50,"y":100,"k":0}
+echo json_encode($color) .  PHP_EOL; // {"c":0,"m":50,"y":100,"k":0}
 echo $color .  PHP_EOL; // "cmyk(0%, 50%, 100%, 0%)"
 $withoutC = $color->without(['c']);
 echo json_encode($withoutC->toArray()) .  PHP_EOL; // {"m":50,"y":100,"k":0}

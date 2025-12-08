@@ -6,7 +6,7 @@ namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
 
-abstract class AbstractColorSpace implements ColorSpaceInterface
+abstract class AbstractColorSpace implements ColorSpaceInterface, \JsonSerializable
 {
     abstract public function getName(): string;
     abstract public function getChannels(): array;
@@ -38,5 +38,10 @@ abstract class AbstractColorSpace implements ColorSpaceInterface
             $this->getName(),
             implode(', ', $channelValues)
         );
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return $this->toArray();
     }
 }

@@ -12,7 +12,8 @@ echo $color->getChannel('y') .  PHP_EOL; // 21
 echo $color->getY() .  PHP_EOL; // 21
 echo $color->getChannel('z') .  PHP_EOL; // 1
 echo $color->getZ() .  PHP_EOL; // 1
-echo json_encode($color->toArray()) .  PHP_EOL; // {"x":41,"y":21,"z":1}
+echo var_export($color->toArray(), false) .  PHP_EOL; // {"x":41,"y":21,"z":1}
+echo json_encode($color) .  PHP_EOL; // {"x":41,"y":21,"z":1}
 echo $color .  PHP_EOL; // "xyz(41, 21, 1)"
 $withoutX = $color->without(['x']);
 echo json_encode($withoutX->toArray()) .  PHP_EOL; // {"x":0,"y":21,"z":1}
