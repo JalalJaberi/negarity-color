@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Negarity\Color;
 
 use Negarity\Color\ColorSpace\{
+    ColorSpaceEnum,
     ColorSpaceInterface,
     RGB,
     RGBA,
@@ -124,7 +125,7 @@ abstract class ColorBase
         return new static(new YCbCr($y, $cb, $cr));
     }
 
-    public static function hex(string $value, string $colorSpaceName = 'rgb'): static
+    public static function hex(string $value, string $colorSpaceName = ColorSpaceEnum::RGB->value): static
     {
         $value = ltrim($value, '#');
         $r = $g = $b = $a = '';
@@ -151,16 +152,16 @@ abstract class ColorBase
             throw new \InvalidArgumentException('Hex value must be 3 (rgb), 4 (rgba), 6 (rrggbb), or 8 (rrggbbaa) characters long.');
         }
         return match (strtolower($colorSpaceName)) {
-            'rgb' => static::rgb($r, $g, $b),
-            'rgba' => static::rgba($r, $g, $b, 255),
-            'cmyk' => static::rgb($r, $g, $b)->toCMYK(),
-            'hsl' => static::rgb($r, $g, $b)->toHSL(),
-            'hsla' => static::rgb($r, $g, $b)->toHSLA(255),
-            'hsv' => static::rgb($r, $g, $b)->toHSV(),
-            'lab' => static::rgb($r, $g, $b)->toLab(),
-            'lch' => static::rgb($r, $g, $b)->toLCh(),
-            'xyz' => static::rgb($r, $g, $b)->toXYZ(),
-            'ycbcr' => static::rgb($r, $g, $b)->toYCbCr(),
+            ColorSpaceEnum::RGB->value => static::rgb($r, $g, $b),
+            ColorSpaceEnum::RGBA->value => static::rgba($r, $g, $b, 255),
+            ColorSpaceEnum::CMYK->value => static::rgb($r, $g, $b)->toCMYK(),
+            ColorSpaceEnum::HSL->value => static::rgb($r, $g, $b)->toHSL(),
+            ColorSpaceEnum::HSLA->value => static::rgb($r, $g, $b)->toHSLA(255),
+            ColorSpaceEnum::HSV->value => static::rgb($r, $g, $b)->toHSV(),
+            ColorSpaceEnum::LAB->value => static::rgb($r, $g, $b)->toLab(),
+            ColorSpaceEnum::LCH->value => static::rgb($r, $g, $b)->toLCh(),
+            ColorSpaceEnum::XYZ->value => static::rgb($r, $g, $b)->toXYZ(),
+            ColorSpaceEnum::YCBCR->value => static::rgb($r, $g, $b)->toYCbCr(),
             default => throw new \InvalidArgumentException('Unsupported color space for hex input.'),
         };
     }
@@ -168,7 +169,7 @@ abstract class ColorBase
     public static function __callStatic(string $name, array $arguments): static
     {
         $colorName = strtolower($name);
-        $targetSpace = $arguments[0] ?? 'rgb';
+        $targetSpace = $arguments[0] ?? ColorSpaceEnum::RGB->value;
 
         foreach (static::$registries as $registry) {
             if ($registry->has($colorName, $targetSpace)) {

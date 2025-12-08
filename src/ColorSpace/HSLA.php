@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
+use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class HSLA extends AbstractColorSpace
 {
@@ -22,7 +23,7 @@ final class HSLA extends AbstractColorSpace
 
     public function getName(): string
     {
-        return 'hsla';
+        return ColorSpaceEnum::HSLA->value;
     }
 
     public function getChannels(): array

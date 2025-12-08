@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
+use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class RGBA extends AbstractColorSpace
 {
@@ -22,7 +23,7 @@ final class RGBA extends AbstractColorSpace
 
     public function getName(): string
     {
-        return 'rgba';
+        return ColorSpaceEnum::RGBA->value;
     }
 
     public function getChannels(): array

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Negarity\Color\ColorSpace;
 
 use Negarity\Color\Exception\InvalidColorValueException;
+use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class LCh extends AbstractColorSpace
 {
@@ -20,7 +21,7 @@ final class LCh extends AbstractColorSpace
 
     public function getName(): string
     {
-        return 'lch';
+        return ColorSpaceEnum::LCH->value;
     }
 
     public function getChannels(): array
