@@ -91,7 +91,7 @@ abstract class ColorBase implements \JsonSerializable
         return new static(new RGB($r, $g, $b));
     }
 
-    public static function rgba(int $r, int $g, int $b, float $a): static
+    public static function rgba(int $r, int $g, int $b, int $a): static
     {
         return new static(new RGBA($r, $g, $b, $a));
     }
@@ -106,7 +106,7 @@ abstract class ColorBase implements \JsonSerializable
         return new static(new HSL($h, $s, $l));
     }
 
-    public static function hsla(int $h, int $s, int $l, float $a): static
+    public static function hsla(int $h, int $s, int $l, int $a): static
     {
         return new static(new HSLA($h, $s, $l, $a));
     }
@@ -116,17 +116,17 @@ abstract class ColorBase implements \JsonSerializable
         return new static(new HSV($h, $s, $v));
     }
 
-    public static function lab(float $l, float $a, float $b): static
+    public static function lab(int $l, int $a, int $b): static
     {
         return new static(new Lab($l, $a, $b));
     }
 
-    public static function lch(float $l, float $c, float $h): static
+    public static function lch(int $l, int $c, int $h): static
     {
         return new static(new LCh($l, $c, $h));
     }
 
-    public static function xyz(float $x, float $y, float $z): static
+    public static function xyz(int $x, int $y, int $z): static
     {
         return new static(new XYZ($x, $y, $z));
     }
@@ -224,10 +224,11 @@ abstract class ColorBase implements \JsonSerializable
             /** @var RGBA $rgbaSpace */
             $rgbaSpace = $this->colorSpace;
             return sprintf(
-                '#%02X%02X%02X',
+                '#%02X%02X%02X%02X',
                 $rgbaSpace->getChannel('r'),
                 $rgbaSpace->getChannel('g'),
-                $rgbaSpace->getChannel('b')
+                $rgbaSpace->getChannel('b'),
+                $rgbaSpace->getChannel('a')
             );
         } else {
             return $this->toRGB()->toHex();

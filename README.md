@@ -4,6 +4,8 @@
 
 ## todos:
 ### Add unit tests
+### more flexibility for channel values (use float and percentage)
+### more flexibility to convert from string (percentage values, float values, regex)
 ### Add more named colors (web, ...)
 ### add some helper functions like rgbtohex(r, g, b) to work as standalone functions
 ### add palletes as a feature

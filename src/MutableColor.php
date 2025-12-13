@@ -242,7 +242,7 @@ final class MutableColor extends ColorBase
 
         switch (get_class($this->colorSpace)) {
             case RGBA::class:
-                $this->colorSpace = new self($this);
+                $this->colorSpace = new self($this->colorSpace);
             case RGB::class:
                 /** @var RGB $rgb */
                 $rgb = $this->colorSpace;
@@ -507,9 +507,9 @@ final class MutableColor extends ColorBase
 
         // Scale to the range [0, 100]
         $this->colorSpace = new self(new XYZ(
-            (float)round($x * 100, 4),
-            (float)round($y * 100, 4),
-            (float)round($z * 100, 4)
+            (int)round($x * 100, 4),
+            (int)round($y * 100, 4),
+            (int)round($z * 100, 4)
         ));
 
         return $this;

@@ -30,7 +30,7 @@ final class Color extends ColorBase
     {
         switch (get_class($this->colorSpace)) {
             case RGB::class:
-                return new self($this);
+                return new self($this->colorSpace);
             case RGBA::class:
                 /** @var RGBA $rgba */
                 $rgba = $this->colorSpace;
@@ -241,7 +241,7 @@ final class Color extends ColorBase
 
         switch (get_class($this->colorSpace)) {
             case RGBA::class:
-                return new self($this);
+                return new self($this->colorSpace);
             case RGB::class:
                 /** @var RGB $rgb */
                 $rgb = $this->colorSpace;
@@ -331,7 +331,7 @@ final class Color extends ColorBase
 
         switch (get_class($this->colorSpace)) {
             case HSLA::class:
-                return new self($this);
+                return new self($this->colorSpace);
             case HSL::class:
                 /** @var HSL $hsl */
                 $hsl = $this->colorSpace;
@@ -465,8 +465,8 @@ final class Color extends ColorBase
         }
 
         return new self(new LCh(
-            (int)round($l),
-            (int)round($c),
+            max(0, min ((int)round($l), 100)),
+            max(0, min ((int)round($c), 100)),
             (int)round($h)
         ));
     }
@@ -492,9 +492,9 @@ final class Color extends ColorBase
 
         // Scale to the range [0, 100]
         return new self(new XYZ(
-            (float)round($x * 100, 4),
-            (float)round($y * 100, 4),
-            (float)round($z * 100, 4)
+            (int)round($x * 100, 4),
+            (int)round($y * 100, 4),
+            (int)round($z * 100, 4)
         ));
     }
 
