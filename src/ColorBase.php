@@ -19,6 +19,12 @@ use Negarity\Color\ColorSpace\{
     YCbCr
 };
 use Negarity\Color\Registry\NamedColorRegistryInterface;
+use Negarity\Color\Filter\{
+    FilterRegistry,
+    Unary\UnaryColorFilterInterface,
+    Parameterized\ParameterizedColorFilterInterface,
+    Binary\BinaryColorFilterInterface
+};
 
 abstract class ColorBase implements \JsonSerializable
 {
@@ -226,5 +232,33 @@ abstract class ColorBase implements \JsonSerializable
         } else {
             return $this->toRGB()->toHex();
         }
+    }
+
+    public function __call(string $name, array $args)
+    {
+        if (!FilterRegistry::has($name)) {
+            throw new \BadMethodCallException("Filter '{$name}' not found.");
+        }
+    
+        $filter = FilterRegistry::get($name);
+    
+        // Unary
+        if ($filter instanceof UnaryColorFilterInterface) {
+            return $filter->apply($this);
+        }
+    
+        // Parameterized
+        if ($filter instanceof ParameterizedColorFilterInterface) {
+            $value = $args[0] ?? null;
+            return $filter->apply($this, $value);
+        }
+    
+        // Binary: $color->blend($otherColor)
+        if ($filter instanceof BinaryColorFilterInterface) {
+            $other = $args[0] ?? null;
+            return $filter->apply($this, $other);
+        }
+    
+        throw new \RuntimeException("Filter '{$name}' cannot be used with this signature.");
     }
 }
