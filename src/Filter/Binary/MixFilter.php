@@ -14,6 +14,10 @@ class MixFilter implements BinaryColorFilterInterface
 
     public function apply(Color $base, Color $blend): Color
     {
+        if ($base->getColorSpace()->getName() != $blend->getColorSpace()->getName()) {
+            throw new \InvalidArgumentException('Colors must be in the same color space to blend.');
+        }
+
         $baseChannels = $base->toArray();
         $blendChannels = $blend->toArray();
         $resultChannels = [];
