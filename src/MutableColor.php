@@ -20,9 +20,9 @@ use Negarity\Color\ColorSpace\{
 
 final class MutableColor extends ColorBase
 {
-    public function __construct(ColorSpaceInterface $colorSpace)
+    public function __construct(ColorSpaceInterface $colorSpace, $channels = [])
     {
-        parent::__construct($colorSpace);
+        parent::__construct($colorSpace, $channels);
     }
 
     public function toRGB(): static

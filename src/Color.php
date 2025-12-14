@@ -21,9 +21,9 @@ use Negarity\Color\Registry\NamedColorRegistryInterface;
 
 final class Color extends ColorBase
 {
-    public function __construct(ColorSpaceInterface $colorSpace)
+    public function __construct(ColorSpaceInterface $colorSpace, $channels = [])
     {
-        parent::__construct($colorSpace);
+        parent::__construct($colorSpace, $channels);
     }
 
     public function toRGB(): static

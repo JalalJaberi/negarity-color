@@ -30,10 +30,31 @@ abstract class ColorBase implements \JsonSerializable
 {
     /** @var NamedColorRegistryInterface[] */
     private static array $registries = [];
+    /** @var ColorSpaceInterface */
+    protected readonly ColorSpaceInterface $colorSpace;
 
-    public function __construct(
-        protected readonly ColorSpaceInterface $colorSpace
-    ) {
+    public function __construct(ColorSpaceInterface $colorSpace, $channels = [])
+    {
+        // @TODO: enable once mutability is supported
+        /*$colorSpaceChannels = $colorSpace->getChannels();
+        if (count($channels) != count($colorSpaceChannels)) {
+            throw new \InvalidArgumentException('Channel count does not match color space requirements.');
+        }
+        foreach ($channels as $value) {
+            $this->colorSpace->setChannel($colorSpaceChannels[$i], $value);
+        }*/
+
+        $colorSpaceChannels = $colorSpace->getChannels();
+        if (count($channels) > 0) {
+            if (count($channels) != count($colorSpaceChannels)) {
+                throw new \InvalidArgumentException('Channel count does not match color space requirements.');
+            }
+            // @Note: the $channels array is expected to have a specific structure,
+            // it's not handled to throw errors if the structure doesn't match.
+            $this->colorSpace = $colorSpace->with(array_combine($colorSpaceChannels, $channels));
+        } else {
+            $this->colorSpace = $colorSpace;
+        }
     }
 
     public static function addRegistry(NamedColorRegistryInterface $registry): void
