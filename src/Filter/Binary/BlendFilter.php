@@ -2,14 +2,14 @@
 
 namespace Negarity\Color\Filter\Binary;
 
-use Negarity\Color\Color;
+use Negarity\Color\ColorInterface;
 use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 class BlendFilter implements BinaryColorFilterInterface
 {
     public function getName(): string { return 'blend'; }
 
-    public function apply(Color $base, Color $blend): Color
+    public function apply(ColorInterface $base, ColorInterface $blend): ColorInterface
     {
         if ($base->getColorSpace()->getName() != $blend->getColorSpace()->getName()) {
             throw new \InvalidArgumentException('Colors must be in the same color space to blend.');
@@ -24,6 +24,6 @@ class BlendFilter implements BinaryColorFilterInterface
             $resultChannels[$channel] = (int)((1 - 0.5) * $value + 0.5 * $blendValue);
         }
 
-        return new Color($base->getColorSpace(), $resultChannels);
+        return $base->with($resultChannels);
     }
 }

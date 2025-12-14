@@ -19,11 +19,21 @@ use Negarity\Color\ColorSpace\{
 };
 use Negarity\Color\Registry\NamedColorRegistryInterface;
 
-final class Color extends ColorBase
+final class Color extends AbstractColor
 {
     public function __construct(ColorSpaceInterface $colorSpace, $channels = [])
     {
         parent::__construct($colorSpace, $channels);
+    }
+
+    public function without(array $channels): static
+    {
+        return new self($this->colorSpace->without($channels));
+    }
+
+    public function with(array $channels): static
+    {
+        return new self($this->colorSpace->with($channels));
     }
 
     public function toRGB(): static

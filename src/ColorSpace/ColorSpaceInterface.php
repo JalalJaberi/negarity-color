@@ -23,13 +23,12 @@ interface ColorSpaceInterface
      */
     public function getChannel(string $name): float|int;
 
-    // @TODO: enable once mutability is supported
     /**
      * Set the channel value by name (normalized float or int).
      *
      * @throws \Negarity\Color\Exception\InvalidColorValueException
      */
-    // public function setChannel(string $name, float|int $value);
+    public function setChannel(string $name, float|int $value);
 
     /**
      * Returns an associative array of all channels and their values.

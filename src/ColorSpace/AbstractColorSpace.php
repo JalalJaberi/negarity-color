@@ -15,15 +15,14 @@ abstract class AbstractColorSpace implements ColorSpaceInterface, \JsonSerializa
     abstract public function with(array $channels): static;
     abstract public function without(array $channels): static;
 
-    // @TODO: enable once mutability is supported
-    /*public function setChannel(string $name, float|int $value)
+    public function setChannel(string $name, float|int $value)
     {
         if (in_array($name, $this->getChannels(), true)) {
             $this->{$name} = $value;
         } else {
             throw new InvalidColorValueException("Channel '{$name}' does not exist in color space '{$this->getName()}'.");
         }
-    }*/
+    }
 
     // magic function for get{ChannelName}() calls
     public function __call(string $name, array $arguments): float|int

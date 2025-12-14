@@ -2,10 +2,10 @@
 
 namespace Negarity\Color\Filter\Parameterized;
 
-use Negarity\Color\Color;
+use Negarity\Color\ColorInterface;
 use Negarity\Color\Filter\FilterInterface;
 
 interface ParameterizedColorFilterInterface extends FilterInterface
 {
-    public function apply(Color $color, mixed $value): Color;
+    public function apply(ColorInterface $color, mixed $value): ColorInterface;
 }

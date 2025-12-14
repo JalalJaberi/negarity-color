@@ -2,10 +2,10 @@
 
 namespace Negarity\Color\Filter\Unary;
 
-use Negarity\Color\Color;
+use Negarity\Color\ColorInterface;
 use Negarity\Color\Filter\FilterInterface;
 
 interface UnaryColorFilterInterface extends FilterInterface
 {
-    public function apply(Color $color): Color;
+    public function apply(ColorInterface $color): ColorInterface;
 }

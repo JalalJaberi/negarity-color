@@ -26,7 +26,7 @@ use Negarity\Color\Filter\{
     Binary\BinaryColorFilterInterface
 };
 
-abstract class ColorBase implements \JsonSerializable
+abstract class AbstractColor implements \JsonSerializable, ColorInterface
 {
     /** @var NamedColorRegistryInterface[] */
     private static array $registries = [];
@@ -85,16 +85,6 @@ abstract class ColorBase implements \JsonSerializable
     public function toArray(): array
     {
         return $this->colorSpace->toArray();
-    }
-
-    public function without(array $channels): static
-    {
-        return new static($this->colorSpace->without($channels));
-    }
-
-    public function with(array $channels): static
-    {
-        return new static($this->colorSpace->with($channels));
     }
 
     public function __toString(): string
@@ -218,6 +208,9 @@ abstract class ColorBase implements \JsonSerializable
             "Named color '{$colorName}' not found in space '{$targetSpace}'"
         );
     }
+
+    public abstract function without(array $channels): static;
+    public abstract function with(array $channels): static;
 
     public abstract function toRGB(): static;
     public abstract function toRGBA(int $alpha = 255): static;

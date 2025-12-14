@@ -18,11 +18,37 @@ use Negarity\Color\ColorSpace\{
     YCbCr
 };
 
-final class MutableColor extends ColorBase
+final class MutableColor extends AbstractColor
 {
     public function __construct(ColorSpaceInterface $colorSpace, $channels = [])
     {
         parent::__construct($colorSpace, $channels);
+    }
+
+    public function without(array $channels): static
+    {
+        foreach ($channels as $channel) {
+            // @TODO: check if 0 is a valid default value for all color spaces, and all their channels
+            $this->colorSpace->setChannel($channel, 0);
+        }
+
+        return $this;
+    }
+
+    public function with(array $channels): static
+    {
+        foreach ($channels as $channel => $value) {
+            $this->colorSpace->setChannel($channel, $value);
+        }
+
+        return $this;
+    }
+
+    public function setChannel(string $channel, int|float $value): static
+    {
+        $this->colorSpace->setChannel($channel, $value);
+
+        return $this;
     }
 
     public function toRGB(): static
