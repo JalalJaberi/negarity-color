@@ -7,5 +7,5 @@ use Negarity\Color\Filter\FilterInterface;
 
 interface BinaryColorFilterInterface extends FilterInterface
 {
-    public function apply(Color $a, Color $b): Color;
+    public function apply(Color $base, Color $blend): Color;
 }
