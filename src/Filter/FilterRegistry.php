@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Negarity\Color\Filter;
 
 use Negarity\Color\Exception\FilterNotFoundException;

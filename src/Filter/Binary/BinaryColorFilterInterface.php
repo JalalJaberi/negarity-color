@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Negarity\Color\Filter\Binary;
 
 use Negarity\Color\ColorInterface;

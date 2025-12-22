@@ -19,3 +19,4 @@
  - Channel-specific masks and adjustments (e.g., zero green, keep red only).
  - Predefined filters: sepia, posterize, threshold, gamma.
 ### Think about moving convertets like toRgb to separate classes or color space classes
+### Use ColorSpaceRegistry as we did for filters and color names.
