@@ -3,15 +3,16 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\HSL;
+use Negarity\Color\Color;
 
-$color = new HSL(210, 50, 40);
-echo $color->getName() .  PHP_EOL; // "rgb"
-echo $color->getChannel('h') .  PHP_EOL; // 210
-echo $color->getH() .  PHP_EOL; // 210
-echo $color->getChannel('s') .  PHP_EOL; // 50
-echo $color->getS() .  PHP_EOL; // 50
-echo $color->getChannel('l') .  PHP_EOL; // 40
-echo $color->getL() .  PHP_EOL; // 40
+$color = new Color(HSL::class, ['h' => 210, 's' => 50, 'l' => 40]);
+echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "hsl"
+echo 'h => ' . $color->getChannel('h') .  PHP_EOL; // 210
+echo 'h => ' . $color->getH() .  PHP_EOL; // 210
+echo 's => ' . $color->getChannel('s') .  PHP_EOL; // 50
+echo 's => ' . $color->getS() .  PHP_EOL; // 50
+echo 'l => ' . $color->getChannel('l') .  PHP_EOL; // 40
+echo 'l => ' . $color->getL() .  PHP_EOL; // 40
 echo var_export($color->toArray(), false) .  PHP_EOL; // {"h":210,"s":50,"l":40}
 echo json_encode($color) .  PHP_EOL; // {"h":210,"s":50,"l":40}
 echo $color .  PHP_EOL; // "hsl(210, 50%, 40%)"

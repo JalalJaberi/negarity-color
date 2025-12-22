@@ -9,65 +9,34 @@ use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class RGB extends AbstractColorSpace
 {
-    public function __construct(
-        private readonly int $r,
-        private readonly int $g,
-        private readonly int $b
-    ) {
-        $this->assertRange($r, 'r');
-        $this->assertRange($g, 'g');
-        $this->assertRange($b, 'b');
-    }
-
-    public function getName(): string
+    public static function getName(): string
     {
         return ColorSpaceEnum::RGB->value;
     }
 
-    public function getChannels(): array
+    public static function getChannels(): array
     {
         return ['r', 'g', 'b'];
     }
 
-    public function getChannel(string $name): int
+    public static function getChannelDefaultValue(string $name): int
     {
         return match ($name) {
-            'r' => $this->r,
-            'g' => $this->g,
-            'b' => $this->b,
-            default => throw new InvalidColorValueException("Unknown channel: $name"),
+            'r', 'g', 'b' => 0,
+            default => throw new InvalidColorValueException("Channel '{$name}' does not exist in RGB color space."),
         };
     }
 
-    public function toArray(): array
+    public static function hasChannel(string $name): bool
     {
-        return ['r' => $this->r, 'g' => $this->g, 'b' => $this->b];
+        return in_array($name, ['r', 'g', 'b'], true);
     }
 
-    public function with(array $channels): static
+    public static function validateValue(string $channel, int|float $value): void
     {
-        return new self(
-            $channels['r'] ?? $this->r,
-            $channels['g'] ?? $this->g,
-            $channels['b'] ?? $this->b
-        );
-    }
-
-    public function without(array $channels): static
-    {
-        $r = in_array('r', $channels, true) ? 0 : $this->r;
-        $g = in_array('g', $channels, true) ? 0 : $this->g;
-        $b = in_array('b', $channels, true) ? 0 : $this->b;
-
-        return new self($r, $g, $b);
-    }
-
-    private function assertRange(int $value, string $channel): void
-    {
-        if ($value < 0 || $value > 255) {
-            throw new InvalidColorValueException(
-                sprintf('Channel "%s" must be between 0 and 255, got %f', $channel, $value)
-            );
-        }
+        match ($channel) {
+            'r', 'g', 'b' => static::assertRange((int)$value, 0, 255, $channel),
+            default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in RGB color space."),
+        };
     }
 }

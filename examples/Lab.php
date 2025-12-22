@@ -3,15 +3,16 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\Lab;
+use Negarity\Color\Color;
 
-$color = new Lab(50, 20, -30);
-echo $color->getName() .  PHP_EOL; // "lab"
-echo $color->getChannel('l') .  PHP_EOL; // 50
-echo $color->getL() .  PHP_EOL; // 50
-echo $color->getChannel('a') .  PHP_EOL; // 20
-echo $color->getA() .  PHP_EOL; // 20
-echo $color->getChannel('b') .  PHP_EOL; // -30
-echo $color->getB() .  PHP_EOL; // -30
+$color = new Color(Lab::class, ['l' => 50, 'a' => 20, 'b' => -30]);
+echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "lab"
+echo 'l => ' . $color->getChannel('l') .  PHP_EOL; // 50
+echo 'l => ' . $color->getL() .  PHP_EOL; // 50
+echo 'a => ' . $color->getChannel('a') .  PHP_EOL; // 20
+echo 'a => ' . $color->getA() .  PHP_EOL; // 20
+echo 'b => ' . $color->getChannel('b') .  PHP_EOL; // -30
+echo 'b => ' . $color->getB() .  PHP_EOL; // -30
 echo var_export($color->toArray(), false) .  PHP_EOL; // {"l":50,"a":20,"b":-30}
 echo json_encode($color) .  PHP_EOL; // {"l":50,"a":20,"b":-30}
 echo $color .  PHP_EOL; // "lab(50, 20, -30)"

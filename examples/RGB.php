@@ -3,15 +3,16 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\RGB;
+use Negarity\Color\Color;
 
-$color = new RGB(255, 100, 50);
-echo $color->getName() .  PHP_EOL; // "rgb"
-echo $color->getChannel('r') .  PHP_EOL; // 255
-echo $color->getR() .  PHP_EOL; // 255
-echo $color->getChannel('g') .  PHP_EOL; // 100
-echo $color->getG() .  PHP_EOL; // 100
-echo $color->getChannel('b') .  PHP_EOL; // 50
-echo $color->getB() .  PHP_EOL; // 50
+$color = new Color(RGB::class, ['r' => 255, 'g' => 100, 'b' => 50]);
+echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "rgb"
+echo 'r => ' . $color->getChannel('r') .  PHP_EOL; // 255
+echo 'r => ' . $color->getR() .  PHP_EOL; // 255
+echo 'g => ' . $color->getChannel('g') .  PHP_EOL; // 100
+echo 'g => ' . $color->getG() .  PHP_EOL; // 100
+echo 'b => ' . $color->getChannel('b') .  PHP_EOL; // 50
+echo 'b => ' . $color->getB() .  PHP_EOL; // 50
 echo var_export($color->toArray(), false) .  PHP_EOL; // {"r":255,"g":100,"b":50}
 echo json_encode($color) .  PHP_EOL; // {"r":255,"g":100,"b":50}
 echo $color .  PHP_EOL; // "rgb(255, 100, 50)"

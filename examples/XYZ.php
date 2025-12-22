@@ -3,15 +3,16 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\XYZ;
+use Negarity\Color\Color;
 
-$color = new XYZ(41, 21, 1);
-echo $color->getName() .  PHP_EOL; // "xyz"
-echo $color->getChannel('x') .  PHP_EOL; // 41
-echo $color->getX() .  PHP_EOL; // 41
-echo $color->getChannel('y') .  PHP_EOL; // 21
-echo $color->getY() .  PHP_EOL; // 21
-echo $color->getChannel('z') .  PHP_EOL; // 1
-echo $color->getZ() .  PHP_EOL; // 1
+$color = new Color(XYZ::class, ['x' => 41, 'y' => 21, 'z' => 1]);
+echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "xyz"
+echo 'x => ' . $color->getChannel('x') .  PHP_EOL; // 41
+echo 'x => ' . $color->getX() .  PHP_EOL; // 41
+echo 'y => ' . $color->getChannel('y') .  PHP_EOL; // 21
+echo 'y => ' . $color->getY() .  PHP_EOL; // 21
+echo 'z => ' . $color->getChannel('z') .  PHP_EOL; // 1
+echo 'z => ' . $color->getZ() .  PHP_EOL; // 1
 echo var_export($color->toArray(), false) .  PHP_EOL; // {"x":41,"y":21,"z":1}
 echo json_encode($color) .  PHP_EOL; // {"x":41,"y":21,"z":1}
 echo $color .  PHP_EOL; // "xyz(41, 21, 1)"

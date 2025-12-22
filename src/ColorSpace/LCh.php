@@ -9,65 +9,36 @@ use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class LCh extends AbstractColorSpace
 {
-    public function __construct(
-        private readonly int $l, // Lightness 0–100
-        private readonly int $c, // Chroma 0–100 (approx, depends on gamut)
-        private readonly int $h  // Hue angle 0–360
-    ) {
-        $this->assertRange($l, 0, 100, 'l');
-        $this->assertRange($c, 0, 100, 'c');
-        $this->assertRange($h, 0, 360, 'h');
-    }
-
-    public function getName(): string
+    public static function getName(): string
     {
         return ColorSpaceEnum::LCH->value;
     }
 
-    public function getChannels(): array
+    public static function getChannels(): array
     {
         return ['l', 'c', 'h'];
     }
 
-    public function getChannel(string $name): int
+    public static function getChannelDefaultValue(string $name): int
     {
         return match ($name) {
-            'l' => $this->l,
-            'c' => $this->c,
-            'h' => $this->h,
-            default => throw new InvalidColorValueException("Unknown channel: $name"),
+            'l', 'c', 'h' => 0,
+            default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in Lab color space.', $name)),
         };
     }
 
-    public function toArray(): array
+    public static function hasChannel(string $name): bool
     {
-        return ['l' => $this->l, 'c' => $this->c, 'h' => $this->h];
+        return in_array($name, ['l', 'c', 'h'], true);
     }
 
-    public function without(array $channels): static
+    public static function validateValue(string $channel, int|float $value): void
     {
-        return new self(
-            $channels['l'] ?? 0,
-            $channels['c'] ?? 0,
-            $channels['h'] ?? 0
-        );
-    }
-
-    public function with(array $channels): static
-    {
-        return new self(
-            $channels['l'] ?? $this->l,
-            $channels['c'] ?? $this->c,
-            $channels['h'] ?? $this->h
-        );
-    }
-
-    private function assertRange(int $value, int $min, int $max, string $channel): void
-    {
-        if ($value < $min || $value > $max) {
-            throw new InvalidColorValueException(
-                sprintf('Channel "%s" must be between %d and %d, got %d', $channel, $min, $max, $value)
-            );
-        }
+        match ($channel) {
+            'l' => static::assertRange((int)$value, 0, 100, $channel),
+            'c' => static::assertRange((int)$value, 0, 127, $channel),
+            'h' => static::assertRange((int)$value, 0, 360, $channel),
+            default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space '{static::getName()}'."),
+        };
     }
 }

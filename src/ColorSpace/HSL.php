@@ -9,65 +9,35 @@ use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class HSL extends AbstractColorSpace
 {
-    public function __construct(
-        private readonly int $h, // 0–360
-        private readonly int $s, // 0–100
-        private readonly int $l  // 0–100
-    ) {
-        $this->assertRange($h, 0, 360, 'h');
-        $this->assertRange($s, 0, 100, 's');
-        $this->assertRange($l, 0, 100, 'l');
-    }
-
-    public function getName(): string
+    public static function getName(): string
     {
         return ColorSpaceEnum::HSL->value;
     }
 
-    public function getChannels(): array
+    public static function getChannels(): array
     {
         return ['h', 's', 'l'];
     }
 
-    public function getChannel(string $name): int
+    public static function getChannelDefaultValue(string $name): int
     {
         return match ($name) {
-            'h' => $this->h,
-            's' => $this->s,
-            'l' => $this->l,
-            default => throw new InvalidColorValueException("Unknown channel: $name"),
+            'h', 's', 'l' => 0,
+            default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSL color space.', $name)),
         };
     }
 
-    public function toArray(): array
+    public static function hasChannel(string $name): bool
     {
-        return ['h' => $this->h, 's' => $this->s, 'l' => $this->l];
+        return in_array($name, ['h', 's', 'l'], true);
     }
 
-    public function without(array $channels): static
+    public static function validateValue(string $channel, int|float $value): void
     {
-        return new self(
-            in_array('h', $channels, true) ? 0 : $this->h,
-            in_array('s', $channels, true) ? 0 : $this->s,
-            in_array('l', $channels, true) ? 0 : $this->l
-        );
-    }
-
-    public function with(array $channels): static
-    {
-        return new self(
-            $channels['h'] ?? $this->h,
-            $channels['s'] ?? $this->s,
-            $channels['l'] ?? $this->l
-        );
-    }
-
-    private function assertRange(int $value, int $min, int $max, string $channel): void
-    {
-        if ($value < $min || $value > $max) {
-            throw new InvalidColorValueException(
-                sprintf('Channel "%s" must be between %d and %d, got %d', $channel, $min, $max, $value)
-            );
-        }
+        match ($channel) {
+            'h' => static::assertRange((int)$value, 0, 360, $channel),
+            's', 'l' => static::assertRange((int)$value, 0, 100, $channel),
+            default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSL color space.', $channel)),
+        };
     }
 }

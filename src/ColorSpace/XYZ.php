@@ -9,65 +9,34 @@ use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class XYZ extends AbstractColorSpace
 {
-    public function __construct(
-        private readonly int $x,
-        private readonly int $y,
-        private readonly int $z
-    ) {
-        $this->assertRange($x, 0, 100, 'x');
-        $this->assertRange($y, 0, 100, 'y');
-        $this->assertRange($z, 0, 100, 'z');
-    }
-
-    public function getName(): string
+    public static function getName(): string
     {
         return ColorSpaceEnum::XYZ->value;
     }
 
-    public function getChannels(): array
+    public static function getChannels(): array
     {
         return ['x', 'y', 'z'];
     }
 
-    public function getChannel(string $name): int
+    public static function getChannelDefaultValue(string $name): float|int
     {
         return match ($name) {
-            'x' => $this->x,
-            'y' => $this->y,
-            'z' => $this->z,
-            default => throw new InvalidColorValueException("Unknown channel: $name"),
+            'x', 'y', 'z' => 0,
+            default => throw new InvalidColorValueException("Channel '{$name}' does not exist in color space 'xyz'."),
         };
     }
 
-    public function toArray(): array
+    public static function hasChannel(string $name): bool
     {
-        return ['x' => $this->x, 'y' => $this->y, 'z' => $this->z];
+        return in_array($name, ['x', 'y', 'z'], true);
     }
 
-    public function without(array $channels): static
+    public static function validateValue(string $channel, int|float $value): void
     {
-        return new self(
-            in_array('x', $channels, true) ? 0 : $this->x,
-            in_array('y', $channels, true) ? 0 : $this->y,
-            in_array('z', $channels, true) ? 0 : $this->z
-        );
-    }
-
-    public function with(array $channels): static
-    {
-        return new self(
-            $channels['x'] ?? $this->x,
-            $channels['y'] ?? $this->y,
-            $channels['z'] ?? $this->z
-        );
-    }
-
-    private function assertRange(int $value, int $min, int $max, string $channel): void
-    {
-        if ($value < $min || $value > $max) {
-            throw new InvalidColorValueException(
-                sprintf('Channel "%s" must be between %d and %d, got %d', $channel, $min, $max, $value)
-            );
-        }
+        match ($channel) {
+            'x', 'y', 'z' => static::assertRange((float)$value, 0.0, 100.0, $channel),
+            default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space 'xyz'."),
+        };
     }
 }

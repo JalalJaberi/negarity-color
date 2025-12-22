@@ -3,15 +3,16 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\YCbCr;
+use Negarity\Color\Color;
 
-$color = new YCbCr(128, 100, 150);
-echo $color->getName() .  PHP_EOL; // "ycbcr"
-echo $color->getChannel('y') .  PHP_EOL; // 128
-echo $color->getY() .  PHP_EOL; // 128
-echo $color->getChannel('cb') .  PHP_EOL; // 100
-echo $color->getCb() .  PHP_EOL; // 100
-echo $color->getChannel('cr') .  PHP_EOL; // 150
-echo $color->getCr() .  PHP_EOL; // 150
+$color = new Color(YCbCr::class, ['y' => 128, 'cb' => 100, 'cr' => 150]);
+echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "ycbcr"
+echo 'y => ' . $color->getChannel('y') .  PHP_EOL; // 128
+echo 'y => ' . $color->getY() .  PHP_EOL; // 128
+echo 'cb => ' . $color->getChannel('cb') .  PHP_EOL; // 100
+echo 'cb => ' . $color->getCb() .  PHP_EOL; // 100
+echo 'cr => ' . $color->getChannel('cr') .  PHP_EOL; // 150
+echo 'cr => ' . $color->getCr() .  PHP_EOL; // 150
 echo var_export($color->toArray(), false) .  PHP_EOL; // {"y":128,"cb":100,"cr":150}
 echo json_encode($color) .  PHP_EOL; // {"y":128,"cb":100,"cr":150}
 echo $color .  PHP_EOL; // "ycbcr(128, 100, 150)"

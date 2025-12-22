@@ -3,17 +3,18 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\CMYK;
+use Negarity\Color\Color;
 
-$color = new CMYK(0, 50, 100, 0);
-echo $color->getName() .  PHP_EOL; // "cmyk"
-echo $color->getChannel('c') .  PHP_EOL; // 0
-echo $color->getC() .  PHP_EOL; // 0
-echo $color->getChannel('m') .  PHP_EOL; // 50
-echo $color->getM() .  PHP_EOL; // 50
-echo $color->getChannel('y') .  PHP_EOL; // 100
-echo $color->getY() .  PHP_EOL; // 100
-echo $color->getChannel('k') .  PHP_EOL; // 0
-echo $color->getK() .  PHP_EOL; // 0
+$color = new Color(CMYK::class, ['c' => 0, 'm' => 50, 'y' => 100, 'k' => 0]);
+echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "cmyk"
+echo 'c => ' . $color->getChannel('c') .  PHP_EOL; // 0
+echo 'c => ' . $color->getC() .  PHP_EOL; // 0
+echo 'm => ' . $color->getChannel('m') .  PHP_EOL; // 50
+echo 'm => ' . $color->getM() .  PHP_EOL; // 50
+echo 'y => ' . $color->getChannel('y') .  PHP_EOL; // 100
+echo 'y => ' . $color->getY() .  PHP_EOL; // 100
+echo 'k => ' . $color->getChannel('k') .  PHP_EOL; // 0
+echo 'k => ' . $color->getK() .  PHP_EOL; // 0
 echo var_export($color->toArray(), false) .  PHP_EOL; // {"c":0,"m":50,"y":100,"k":0}
 echo json_encode($color) .  PHP_EOL; // {"c":0,"m":50,"y":100,"k":0}
 echo $color .  PHP_EOL; // "cmyk(0%, 50%, 100%, 0%)"

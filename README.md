@@ -18,3 +18,4 @@
  - Hue rotate, temperature/tint (warm/cool shifts).
  - Channel-specific masks and adjustments (e.g., zero green, keep red only).
  - Predefined filters: sepia, posterize, threshold, gamma.
+### Think about moving convertets like toRgb to separate classes or color space classes

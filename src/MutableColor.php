@@ -20,16 +20,27 @@ use Negarity\Color\ColorSpace\{
 
 final class MutableColor extends AbstractColor
 {
-    public function __construct(ColorSpaceInterface $colorSpace, $channels = [])
+    public function __construct(string $colorSpace, $values = [])
     {
-        parent::__construct($colorSpace, $channels);
+        parent::__construct($colorSpace, $values);
+    }
+
+    public function setChannel(string $name, float|int $value)
+    {
+        if (in_array($name, $this->getChannels(), true)) {
+            $this->values[$name] = $value;
+        } else {
+            throw new InvalidColorValueException("Channel '{$name}' does not exist in color space '{$this->getName()}'.");
+        }
     }
 
     public function without(array $channels): static
     {
         foreach ($channels as $channel) {
-            // @TODO: check if 0 is a valid default value for all color spaces, and all their channels
-            $this->colorSpace->setChannel($channel, 0);
+            if (!in_array($channel, $this->getChannels(), true)) {
+                throw new \InvalidArgumentException("Channel '{$channel}' does not exist in color space '{$this->getColorSpaceName()}'.");
+            }
+            $this->values[$channel] = $this->colorSpace::getChannelDefaultValue($channel);
         }
 
         return $this;
@@ -38,43 +49,44 @@ final class MutableColor extends AbstractColor
     public function with(array $channels): static
     {
         foreach ($channels as $channel => $value) {
-            $this->colorSpace->setChannel($channel, $value);
+            if (!in_array($channel, $this->getChannels(), true)) {
+                throw new \InvalidArgumentException("Channel '{$channel}' does not exist in color space '{$this->getColorSpaceName()}'.");
+            }
+            if (gettype($value) !== 'integer' && gettype($value) !== 'float') {
+                throw new \InvalidArgumentException("Channel '{$channel}' must be of type int or float.");
+            }
+            $this->values[$channel] = $value;
         }
-
-        return $this;
-    }
-
-    public function setChannel(string $channel, int|float $value): static
-    {
-        $this->colorSpace->setChannel($channel, $value);
 
         return $this;
     }
 
     public function toRGB(): static
     {
-        switch (get_class($this->colorSpace)) {
+        $r = $g = $b = 0;
+
+        switch ($this->colorSpace) {
             case RGB::class:
+                $r = $this->getR();
+                $g = $this->getG();
+                $b = $this->getB();
                 break;
             case RGBA::class:
-                /** @var RGBA $rgba */
-                $rgba = $this->colorSpace;
-                $this->colorSpace = self::rgb($rgba->getR(), $rgba->getG(), $rgba->getB());
+                $r = $this->getR();
+                $g = $this->getG();
+                $b = $this->getB();
+                break;
             case CMYK::class:
-                /** @var CMYK $cmyk */
-                $cmyk = $this->colorSpace;
-                $r = 255 * (1 - $cmyk->getC() / 100) * (1 - $cmyk->getK() / 100);
-                $g = 255 * (1 - $cmyk->getM() / 100) * (1 - $cmyk->getK() / 100);
-                $b = 255 * (1 - $cmyk->getY() / 100) * (1 - $cmyk->getK() / 100);
-                $this->colorSpace = self::rgb((int)$r, (int)$g, (int)$b);
+                $r = 255 * (1 - $this->getC() / 100) * (1 - $this->getK() / 100);
+                $g = 255 * (1 - $this->getM() / 100) * (1 - $this->getK() / 100);
+                $b = 255 * (1 - $this->getY() / 100) * (1 - $this->getK() / 100);
+                break;
             case HSL::class:
-                /** @var HSL $hsl */
-                $hsl = $this->colorSpace;
-                $c = (1 - abs(2 * ($hsl->getL() / 100) - 1)) * ($hsl->getS() / 100);
-                $x = $c * (1 - abs(fmod($hsl->getH() / 60, 2) - 1));
-                $m = ($hsl->getL() / 100) - $c / 2;
+                $c = (1 - abs(2 * ($this->getL() / 100) - 1)) * ($this->getS() / 100);
+                $x = $c * (1 - abs(fmod($this->getH() / 60, 2) - 1));
+                $m = ($this->getL() / 100) - $c / 2;
                 $r = $g = $b = 0;
-                if ($hsl->getH() < 60) {
+                if ($this->getH() < 60) {
                     $r = $c;
                     $g = $x;
                 } elseif ($hsl->getH() < 120) {
@@ -84,49 +96,43 @@ final class MutableColor extends AbstractColor
                 $r = ($r + $m) * 255;
                 $g = ($g + $m) * 255;
                 $b = ($b + $m) * 255;
-                $this->colorSpace = self::rgb((int)$r, (int)$g, (int)$b);
+                break;
             case HSLA::class:
-                /** @var HSLA $hsla */
-                $hsla = $this->colorSpace;
-                $c = (1 - abs(2 * ($hsla->getL() / 100) - 1)) * ($hsla->getS() / 100);
-                $x = $c * (1 - abs(fmod($hsla->getH() / 60, 2) - 1));
-                $m = ($hsla->getL() / 100) - $c / 2;
+                $c = (1 - abs(2 * ($this->getL() / 100) - 1)) * ($this->getS() / 100);
+                $x = $c * (1 - abs(fmod($this->getH() / 60, 2) - 1));
+                $m = ($this->getL() / 100) - $c / 2;
                 $r = $g = $b = 0;
-                if ($hsla->getH() < 60) {
+                if ($this->getH() < 60) {
                     $r = $c;
                     $g = $x;
-                } elseif ($hsla->getH() < 120) {
+                } elseif ($this->getH() < 120) {
                     $r = $x;
                     $g = $c;
                 }
                 $r = ($r + $m) * 255;
                 $g = ($g + $m) * 255;
                 $b = ($b + $m) * 255;
-                $this->colorSpace = self::rgb((int)$r, (int)$g, (int)$b);
+                break;
             case HSV::class:
-                /** @var HSV $hsv */
-                $hsv = $this->colorSpace;
-                $c = ($hsv->getV() / 100) * ($hsv->getS() / 100);
-                $x = $c * (1 - abs(fmod($hsv->getH() / 60, 2) - 1));
-                $m = ($hsv->getV() / 100) - $c;
+                $c = ($this->getV() / 100) * ($this->getS() / 100);
+                $x = $c * (1 - abs(fmod($this->getH() / 60, 2) - 1));
+                $m = ($this->getV() / 100) - $c;
                 $r = $g = $b = 0;
-                if ($hsv->getH() < 60) {
+                if ($this->getH() < 60) {
                     $r = $c;
                     $g = $x;
-                } elseif ($hsv->getH() < 120) {
+                } elseif ($this->getH() < 120) {
                     $r = $x;
                     $g = $c;
                 }
                 $r = ($r + $m) * 255;
                 $g = ($g + $m) * 255;
                 $b = ($b + $m) * 255;
-                $this->colorSpace = self::rgb((int)$r, (int)$g, (int)$b);
+                break;
             case Lab::class:
-                /** @var Lab $lab */
-                $lab = $this->colorSpace;
-                $l = $lab->getL();
-                $a = $lab->getA();
-                $b = $lab->getB();
+                $l = $this->getL();
+                $a = $this->getA();
+                $b = $this->getB();
                 /*
                  * Convert Lab to XYZ
                  * Reference white D65
@@ -168,13 +174,14 @@ final class MutableColor extends AbstractColor
                 }
                 unset($val);
 
-                $this->colorSpace = self::rgb($rgb[0], $rgb[1], $rgb[2]);
+                $r = $rgb[0];
+                $g = $rgb[1];
+                $b = $rgb[2];
+                break;
             case LCh::class:
-                /** @var LCh $lch */
-                $lch = $this->colorSpace;
-                $l = $lch->getL();
-                $c = $lch->getC();
-                $h = deg2rad($lch->getH());
+                $l = $this->getL();
+                $c = $this->getC();
+                $h = deg2rad($this->getH());
                 $a = cos($h) * $c;
                 $b = sin($h) * $c;
 
@@ -212,13 +219,14 @@ final class MutableColor extends AbstractColor
                 }
                 unset($val);
 
-                $this->colorSpace = self::rgb($rgb[0], $rgb[1], $rgb[2]);
+                $r = $rgb[0];
+                $g = $rgb[1];
+                $b = $rgb[2];
+                break;
             case XYZ::class:
-                /** @var XYZ $xyz */
-                $xyz = $this->colorSpace;
-                $x = $xyz->getX();
-                $y = $xyz->getY();
-                $z = $xyz->getZ();
+                $x = $this->getX();
+                $y = $this->getY();
+                $z = $this->getZ();
                 // implement it even if it's neeeded a intermediate convrersion to RGB
                 $x = $x / 100;
                 $y = $y / 100;
@@ -242,20 +250,27 @@ final class MutableColor extends AbstractColor
                 }
                 unset($val);
 
-                $this->colorSpace = self::rgb($rgb[0], $rgb[1], $rgb[2]);
+                $r = $rgb[0];
+                $g = $rgb[1];
+                $b = $rgb[2];
+                break;
             case YCbCr::class:
-                /** @var YCbCr $ycbcr */
-                $ycbcr = $this->colorSpace;
                 $y = $ycbcr->getY();
                 $cb = $ycbcr->getCb();
                 $cr = $ycbcr->getCr();
                 $r = $y + 1.402 * ($cr - 128);
                 $g = $y - 0.344136 * ($cb - 128) - 0.714136 * ($cr - 128);
                 $b = $y + 1.772 * ($cb - 128);
-                $this->colorSpace = self::rgb((int)max(0, min(255, $r)), (int)max(0, min(255, $g)), (int)max(0, min(255, $b)));
+                break;
             default:
                 throw new \RuntimeException('Conversion to RGB not implemented for this color space.');
         }
+
+        $this->colorSpace = RGB::class;
+        $this->values = [];
+        $this->values['r'] = max(0, min(255, (int)round($r)));
+        $this->values['g'] = max(0, min(255, (int)round($g)));
+        $this->values['b'] = max(0, min(255, (int)round($b)));
 
         return $this;
     }
@@ -266,23 +281,35 @@ final class MutableColor extends AbstractColor
             throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
         }
 
-        switch (get_class($this->colorSpace)) {
+        $r = $g = $b = 0;
+
+        switch ($this->colorSpace) {
             case RGBA::class:
-                $this->colorSpace = new self($this->colorSpace);
+                $r = $this->getR();
+                $g = $this->getG();
+                $b = $this->getB();
+                $alpha = $this->getA();
+                break;
             case RGB::class:
-                /** @var RGB $rgb */
-                $rgb = $this->colorSpace;
-                $this->colorSpace = new self(new RGBA($rgb->getR(), $rgb->getG(), $rgb->getB(), $alpha));
+                $r = $rgb->getR();
+                $g = $rgb->getG();
+                $b = $rgb->getB();
+                break;
             case HSLA::class:
-                /** @var HSLA $hsla */
-                $hsla = $this->colorSpace;
-                $rgb = $hsla->toRGB();
-                $this->colorSpace = new self(new RGBA($rgb->getR(), $rgb->getG(), $rgb->getB(), $hsla->getA()));
             default:
-                /** @var RGB $rgb */
-                $rgb = $this->toRGB();
-                $this->colorSpace = new self(new RGBA($rgb->getR(), $rgb->getG(), $rgb->getB(), $alpha));
+                $rgb = $hsla->toRGB();
+                $r = $rgb->getR();
+                $g = $rgb->getG();
+                $b = $rgb->getB();
+                $alpha = $hsla->getA();
         }
+
+        $this->colorSpace = RGBA::class;
+        $this->values = [];
+        $this->values['r'] = max(0, min(255, (int)round($r)));
+        $this->values['g'] = max(0, min(255, (int)round($g)));
+        $this->values['b'] = max(0, min(255, (int)round($b)));
+        $this->values['a'] = $alpha;
 
         return $this;
     }
@@ -290,11 +317,9 @@ final class MutableColor extends AbstractColor
     public function toCMYK(): static
     {
         $rgb = $this->toRGB();
-        /** @var RGB $rgbSpace */
-        $rgbSpace = $rgb->getColorSpace();
-        $r = $rgbSpace->getR() / 255;
-        $g = $rgbSpace->getG() / 255;
-        $b = $rgbSpace->getB() / 255;
+        $r = $rgb->getR() / 255;
+        $g = $rgb->getG() / 255;
+        $b = $rgb->getB() / 255;
 
         $k = 1 - max($r, $g, $b);
         if ($k == 1) {
@@ -305,12 +330,12 @@ final class MutableColor extends AbstractColor
         $m = (1 - $g - $k) / (1 - $k);
         $y = (1 - $b - $k) / (1 - $k);
 
-        $this->colorSpace = new self(new CMYK(
-            (int)round($c * 100),
-            (int)round($m * 100),
-            (int)round($y * 100),
-            (int)round($k * 100)
-        ));
+        $this->colorSpace = CMYK::class;
+        $this->values = [];
+        $this->values['c'] = (int)round($c * 100);
+        $this->values['m'] = (int)round($m * 100);
+        $this->values['y'] = (int)round($y * 100);
+        $this->values['k'] = (int)round($k * 100);
 
         return $this;
     }
@@ -318,11 +343,9 @@ final class MutableColor extends AbstractColor
     public function toHSL(): static
     {
         $rgb = $this->toRGB();
-        /** @var RGB $rgbSpace */
-        $rgbSpace = $rgb->getColorSpace();
-        $r = $rgbSpace->getR() / 255;
-        $g = $rgbSpace->getG() / 255;
-        $b = $rgbSpace->getB() / 255;
+        $r = $rgb->getR() / 255;
+        $g = $rgb->getG() / 255;
+        $b = $rgb->getB() / 255;
 
         $max = max($r, $g, $b);
         $min = min($r, $g, $b);
@@ -347,11 +370,11 @@ final class MutableColor extends AbstractColor
             $h /= 6;
         }
 
-        $this->colorSpace = new self(new HSL(
-            (int)round($h * 360),
-            (int)round($s * 100),
-            (int)round($l * 100)
-        ));
+        $this->colorSpace = HSL::class;
+        $this->values = [];
+        $this->values['h'] = (int)round($h * 360);
+        $this->values['s'] = (int)round($s * 100);
+        $this->values['l'] = (int)round($l * 100);
 
         return $this;
     }
@@ -362,43 +385,41 @@ final class MutableColor extends AbstractColor
             throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
         }
 
-        switch (get_class($this->colorSpace)) {
+        $h = $s = $l = 0;
+
+        switch ($this->colorSpace) {
             case HSLA::class:
+                $h = $this->getH();
+                $s = $this->getS();
+                $l = $this->getL();
+                $alpha = $this->getA();
                 break;
             case HSL::class:
-                /** @var HSL $hsl */
-                $hsl = $this->colorSpace;
-                $this->colorSpace = new self(new HSLA(
-                    $hsl->getH(),
-                    $hsl->getS(),
-                    $hsl->getL(),
-                    $alpha
-                ));
+                $h = $hsl->getH();
+                $s = $hsl->getS();
+                $l = $hsl->getL();
+                break;
             case RGBA::class:
-                /** @var RGBA $rgba */
-                $rgba = $this->colorSpace;
-                $rgbColor = self::rgb($rgba->getR(), $rgba->getG(), $rgba->getB());
+                $rgbColor = self::rgb($this->getR(), $this->getG(), $this->getB());
                 $hslColor = $rgbColor->toHSL();
-                /** @var HSL $hslSpace */
-                $hslSpace = $hslColor->getColorSpace();
-                $this->colorSpace = new self(new HSLA(
-                    $hslSpace->getH(),
-                    $hslSpace->getS(),
-                    $hslSpace->getL(),
-                    $rgba->getA()
-                ));
+                $h = $hsl->getH();
+                $s = $hsl->getS();
+                $l = $hsl->getL();
+                $alpha = $this->getA();
+                break;
             default:
-                /** @var HSL $hsl */
                 $hsl = $this->toHSL();
-                /** @var HSL $hslSpace */
-                $hslSpace = $hsl->getColorSpace();
-                $this->colorSpace = new self(new HSLA(
-                    $hslSpace->getH(),
-                    $hslSpace->getS(),
-                    $hslSpace->getL(),
-                    $alpha
-                ));
+                $h = $hsl->getH();
+                $s = $hsl->getS();
+                $l = $hsl->getL();
         }
+
+        $this->colorSpace = HSLA::class;
+        $this->values = [];
+        $this->values['h'] = (int)round($h);
+        $this->values['s'] = (int)round($s);
+        $this->values['l'] = (int)round($l);
+        $this->values['a'] = $alpha;
 
         return $this;
     }
@@ -406,11 +427,9 @@ final class MutableColor extends AbstractColor
     public function toHSV(): static
     {
         $rgb = $this->toRGB();
-        /** @var RGB $rgbSpace */
-        $rgbSpace = $rgb->getColorSpace();
-        $r = $rgbSpace->getR() / 255;
-        $g = $rgbSpace->getG() / 255;
-        $b = $rgbSpace->getB() / 255;
+        $r = $rgb->getR() / 255;
+        $g = $rgb->getG() / 255;
+        $b = $rgb->getB() / 255;
 
         $max = max($r, $g, $b);
         $min = min($r, $g, $b);
@@ -436,11 +455,11 @@ final class MutableColor extends AbstractColor
             $h /= 6;
         }
 
-        $this->colorSpace = new self(new HSV(
-            (int)round($h * 360),
-            (int)round($s * 100),
-            (int)round($v * 100)
-        ));
+        $this->colorSpace = HSV::class;
+        $this->values = [];
+        $this->values['h'] = (int)round($h * 360);
+        $this->values['s'] = (int)round($s * 100);
+        $this->values['v'] = (int)round($v * 100);
 
         return $this;
     }
@@ -448,11 +467,9 @@ final class MutableColor extends AbstractColor
     public function toLab(): static
     {
         $rgb = $this->toRGB();
-        /** @var RGB $rgbSpace */
-        $rgbSpace = $rgb->getColorSpace();
-        $r = $rgbSpace->getR() / 255;
-        $g = $rgbSpace->getG() / 255;
-        $b = $rgbSpace->getB() / 255;
+        $r = $rgb->getR() / 255;
+        $g = $rgb->getG() / 255;
+        $b = $rgb->getB() / 255;
 
         // Apply inverse gamma correction
         $r = ($r > 0.04045) ? pow(($r + 0.055) / 1.055, 2.4) : $r / 12.92;
@@ -478,11 +495,11 @@ final class MutableColor extends AbstractColor
         $a = 500 * ($fx - $fy);
         $b = 200 * ($fy - $fz);
 
-        $this->colorSpace = new self(new Lab(
-            (int)round($l),
-            (int)round($a),
-            (int)round($b)
-        ));
+        $this->colorSpace = Lab::class;
+        $this->values = [];
+        $this->values['l'] = (int)round($l);
+        $this->values['a'] = (int)round($a);
+        $this->values['b'] = (int)round($b);
 
         return $this;
     }
@@ -490,11 +507,9 @@ final class MutableColor extends AbstractColor
     public function toLCh(): static
     {
         $labColor = $this->toLab();
-        /** @var Lab $labSpace */
-        $labSpace = $labColor->getColorSpace();
-        $l = $labSpace->getL();
-        $a = $labSpace->getA();
-        $b = $labSpace->getB();
+        $l = $lab->getL();
+        $a = $lab->getA();
+        $b = $lab->getB();
 
         $c = sqrt($a * $a + $b * $b);
         $h = atan2($b, $a);
@@ -503,11 +518,11 @@ final class MutableColor extends AbstractColor
             $h += 360;
         }
 
-        $this->colorSpace = new self(new LCh(
-            (int)round($l),
-            (int)round($c),
-            (int)round($h)
-        ));
+        $this->colorSpace = LCh::class;
+        $this->values = [];
+        $this->values['l'] = (int)round($l);
+        $this->values['c'] = (int)round($c);
+        $this->values['h'] = (int)round($h);
 
         return $this;
     }
@@ -515,11 +530,9 @@ final class MutableColor extends AbstractColor
     public function toXYZ(): static
     {
         $rgb = $this->toRGB();
-        /** @var RGB $rgbSpace */
-        $rgbSpace = $rgb->getColorSpace();
-        $r = $rgbSpace->getR() / 255;
-        $g = $rgbSpace->getG() / 255;
-        $b = $rgbSpace->getB() / 255;
+        $r = $rgb->getR() / 255;
+        $g = $rgb->getG() / 255;
+        $b = $rgb->getB() / 255;
 
         // Apply inverse gamma correction
         $r = ($r > 0.04045) ? pow(($r + 0.055) / 1.055, 2.4) : $r / 12.92;
@@ -531,12 +544,11 @@ final class MutableColor extends AbstractColor
         $y = $r * 0.2126 + $g * 0.7152 + $b * 0.0722;
         $z = $r * 0.0193 + $g * 0.1192 + $b * 0.9505;
 
-        // Scale to the range [0, 100]
-        $this->colorSpace = new self(new XYZ(
-            (int)round($x * 100, 4),
-            (int)round($y * 100, 4),
-            (int)round($z * 100, 4)
-        ));
+        $this->colorSpace = XYZ::class;
+        $this->values = [];
+        $this->values['x'] = (int)round($x * 100, 4);
+        $this->values['y'] = (int)round($y * 100, 4);
+        $this->values['z'] = (int)round($z * 100, 4);
 
         return $this;
     }
@@ -544,21 +556,19 @@ final class MutableColor extends AbstractColor
     public function toYCbCr(): static
     {
         $rgb = $this->toRGB();
-        /** @var RGB $rgbSpace */
-        $rgbSpace = $rgb->getColorSpace();
-        $r = $rgbSpace->getR();
-        $g = $rgbSpace->getG();
-        $b = $rgbSpace->getB();
+        $r = $rgb->getR();
+        $g = $rgb->getG();
+        $b = $rgb->getB();
 
         $y  = (int)round(0.299 * $r + 0.587 * $g + 0.114 * $b);
         $cb = (int)round(128 - 0.168736 * $r - 0.331264 * $g + 0.5 * $b);
         $cr = (int)round(128 + 0.5 * $r - 0.460525 * $g - 0.081475 * $b);
 
-        $this->colorSpace = new self(new YCbCr(
-            max(0, min(255, $y)),
-            max(0, min(255, $cb)),
-            max(0, min(255, $cr))
-        ));
+        $this->colorSpace = YCbCr::class;
+        $this->values = [];
+        $this->values['y'] = max(0, min(255, $y));
+        $this->values['cb'] = max(0, min(255, $cb));
+        $this->values['cr'] = max(0, min(255, $cr));
 
         return $this;
     }

@@ -3,10 +3,11 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\Color;
+use Negarity\Color\ColorSpace\RGB;
 
 use Negarity\Color\Registry\VGANamedColors;
 
-$color = Color::rgb(255, 100, 50);
+$color = new Color(RGB::class, ['r' => 255, 'g' => 100, 'b' => 50]);
 echo $color->getColorSpaceName() .  PHP_EOL; // "rgb"
 echo $color->getChannel('r') .  PHP_EOL; // 255
 echo $color->getChannel('g') .  PHP_EOL; // 100
@@ -33,6 +34,6 @@ echo 'Using named colors:' . PHP_EOL;
 Color::addRegistry(new VGANamedColors());
 
 $red = Color::red();
-echo 'red:' . $red .  PHP_EOL; // "rgb(255, 0, 0)"
+echo 'red:' . json_encode($red) .  PHP_EOL; // "rgb(255, 0, 0)"
 $navy = Color::navy();
-echo 'navy:' . $navy .  PHP_EOL; // "rgb(0, 0, 128)"
+echo 'navy:' . json_encode($navy) .  PHP_EOL; // "rgb(0, 0, 128)"

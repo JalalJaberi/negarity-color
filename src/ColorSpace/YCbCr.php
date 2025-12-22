@@ -9,65 +9,35 @@ use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class YCbCr extends AbstractColorSpace
 {
-    public function __construct(
-        private readonly int $y,  // Luminance 0–255
-        private readonly int $cb, // Blue-difference Chroma 0–255
-        private readonly int $cr  // Red-difference Chroma 0–255
-    ) {
-        $this->assertRange($y, 0, 255, 'y');
-        $this->assertRange($cb, 0, 255, 'cb');
-        $this->assertRange($cr, 0, 255, 'cr');
-    }
-
-    public function getName(): string
+    public static function getName(): string
     {
         return ColorSpaceEnum::YCBCR->value;
     }
 
-    public function getChannels(): array
+    public static function getChannels(): array
     {
         return ['y', 'cb', 'cr'];
     }
 
-    public function getChannel(string $name): int
+    public static function getChannelDefaultValue(string $name): float|int
     {
         return match ($name) {
-            'y' => $this->y,
-            'cb' => $this->cb,
-            'cr' => $this->cr,
-            default => throw new InvalidColorValueException("Unknown channel: $name"),
+            'y', 'cb', 'cr' => 0,
+            default => throw new InvalidColorValueException("Channel '{$name}' does not exist in color space 'ycbcr'."),
         };
     }
 
-    public function toArray(): array
+    public static function hasChannel(string $name): bool
     {
-        return ['y' => $this->y, 'cb' => $this->cb, 'cr' => $this->cr];
+        return in_array($name, ['y', 'cb', 'cr'], true);
     }
 
-    public function without(array $channels): static
+    public static function validateValue(string $channel, int|float $value): void
     {
-        return new self(
-            in_array('y', $channels, true) ? 0 : $this->y,
-            in_array('cb', $channels, true) ? 0 : $this->cb,
-            in_array('cr', $channels, true) ? 0 : $this->cr
-        );
-    }
-
-    public function with(array $channels): static
-    {
-        return new self(
-            $channels['y'] ?? $this->y,
-            $channels['cb'] ?? $this->cb,
-            $channels['cr'] ?? $this->cr
-        );
-    }
-
-    private function assertRange(int $value, int $min, int $max, string $channel): void
-    {
-        if ($value < $min || $value > $max) {
-            throw new InvalidColorValueException(
-                sprintf('Channel "%s" must be between %d and %d, got %d', $channel, $min, $max, $value)
-            );
-        }
+        match ($channel) {
+            'y' => static::assertRange((float)$value, 0.0, 100.0, $channel),
+            'cb', 'cr' => static::assertRange((float)$value, -128.0, 127.0, $channel),
+            default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space 'ycbcr'."),
+        };
     }
 }
