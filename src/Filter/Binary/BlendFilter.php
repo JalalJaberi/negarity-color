@@ -9,7 +9,10 @@ use Negarity\Color\ColorInterface;
 final class BlendFilter implements BinaryColorFilterInterface
 {
     #[\Override]
-    public function getName(): string { return 'blend'; }
+    public function getName(): string
+    {
+        return 'blend';
+    }
 
     #[\Override]
     public function apply(ColorInterface $base, ColorInterface $blend): ColorInterface

@@ -21,7 +21,10 @@ use Negarity\Color\ColorSpace\{
 final class BrightnessFilter implements ParameterizedColorFilterInterface
 {
     #[\Override]
-    public function getName(): string { return 'brightness'; }
+    public function getName(): string
+    {
+        return 'brightness';
+    }
 
     #[\Override]
     public function apply(ColorInterface $color, mixed $value): ColorInterface
