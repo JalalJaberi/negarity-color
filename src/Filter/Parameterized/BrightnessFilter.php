@@ -18,10 +18,12 @@ use Negarity\Color\ColorSpace\{
     YCbCr
 };
 
-class BrightnessFilter implements ParameterizedColorFilterInterface
+final class BrightnessFilter implements ParameterizedColorFilterInterface
 {
+    #[\Override]
     public function getName(): string { return 'brightness'; }
 
+    #[\Override]
     public function apply(ColorInterface $color, mixed $value): ColorInterface
     {
         $factor = (int)$value;

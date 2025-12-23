@@ -6,5 +6,10 @@ namespace Negarity\Color\Filter;
 
 interface FilterInterface
 {
+    /**
+     * Get the name of the filter.
+     * 
+     * @return string
+     */
     public function getName(): string;
 }

@@ -9,16 +9,19 @@ use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class Lab extends AbstractColorSpace
 {
+    #[\Override]
     public static function getName(): string
     {
         return ColorSpaceEnum::LAB->value;
     }
 
+    #[\Override]
     public static function getChannels(): array
     {
         return ['l', 'a', 'b'];
     }
 
+    #[\Override]
     public static function getChannelDefaultValue(string $name): int
     {
         return match ($name) {
@@ -27,11 +30,13 @@ final class Lab extends AbstractColorSpace
         };
     }
 
+    #[\Override]
     public static function hasChannel(string $name): bool
     {
         return in_array($name, ['l', 'a', 'b'], true);
     }
 
+    #[\Override]
     public static function validateValue(string $channel, int|float $value): void
     {
         match ($channel) {

@@ -9,16 +9,19 @@ use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class RGBA extends AbstractColorSpace
 {
+    #[\Override]
     public static function getName(): string
     {
         return ColorSpaceEnum::RGBA->value;
     }
 
+    #[\Override]
     public static function getChannels(): array
     {
         return ['r', 'g', 'b', 'a'];
     }
 
+    #[\Override]
     public static function getChannelDefaultValue(string $name): int
     {
         return match ($name) {
@@ -28,11 +31,13 @@ final class RGBA extends AbstractColorSpace
         };
     }
 
+    #[\Override]
     public static function hasChannel(string $name): bool
     {
         return in_array($name, ['r', 'g', 'b', 'a'], true);
     }
 
+    #[\Override]
     public static function validateValue(string $channel, int|float $value): void
     {
         match ($channel) {

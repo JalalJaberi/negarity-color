@@ -9,16 +9,19 @@ use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
 final class HSV extends AbstractColorSpace
 {
+    #[\Override]
     public static function getName(): string
     {
         return ColorSpaceEnum::HSV->value;
     }
 
+    #[\Override]
     public static function getChannels(): array
     {
         return ['h', 's', 'v'];
     }
 
+    #[\Override]
     public static function getChannelDefaultValue(string $name): int
     {
         return match ($name) {
@@ -27,11 +30,13 @@ final class HSV extends AbstractColorSpace
         };
     }
 
+    #[\Override]
     public static function hasChannel(string $name): bool
     {
         return in_array($name, ['h', 's', 'v'], true);
     }
 
+    #[\Override]
     public static function validateValue(string $channel, int|float $value): void
     {
         match ($channel) {

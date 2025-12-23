@@ -8,13 +8,55 @@ use Negarity\Color\ColorSpace\ColorSpaceInterface;
 
 interface ColorInterface
 {
-    /** @return class-string<ColorSpaceInterface> */
+    /**
+     * Get the color space class name.
+     * 
+     * @return class-string<ColorSpaceInterface>
+     */
     public function getColorSpace(): string;
+    /**
+     * Get the color space name.
+     * 
+     * @return string
+     */
     public function getColorSpaceName(): string;
+    /**
+     * Get all color channels as an associative array.
+     * 
+     * @return array<string, float|int>
+     */
     public function getChannels(): array;
+    /**
+     * Get a specific color channel by name.
+     * 
+     * @param string $name
+     * @return float|int
+     */
     public function getChannel(string $name): float|int;
+    /**
+     * Get all color channels as a numeric array.
+     * 
+     * @return array<int, float|int>
+     */
     public function toArray(): array;
+    /**
+     * Create a new color instance without the specified channels.
+     * 
+     * @param array<string> $channels
+     * @return static
+     */
     public function without(array $channels): static;
+    /**
+     * Create a new color instance with the specified channels.
+     * 
+     * @param array<string, float|int> $channels
+     * @return static
+     */
     public function with(array $channels): static;
+    /**
+     * Get the string representation of the color.
+     * 
+     * @return string
+     */
     public function __toString(): string;
 }

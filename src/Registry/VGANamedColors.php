@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Negarity\Color\Registry;
 
 use Negarity\Color\ColorSpace\{
-    ColorSpaceEnum,
     ColorSpaceInterface,
     RGB,
     RGBA,
@@ -21,6 +20,9 @@ use Negarity\Color\ColorSpace\{
 
 class VGANamedColors implements NamedColorRegistryInterface
 {
+    /**
+     * @var array<string, array<class-string<ColorSpaceInterface>, array<string, float|int>>>
+    */
     private array $colors = [
         'white' => [
             RGB::class => ['r' => 255, 'g' => 255, 'b' => 255],
@@ -216,11 +218,13 @@ class VGANamedColors implements NamedColorRegistryInterface
         ],
     ];
 
+    #[\Override]
     public function has(string $colorName, string $colorSpace): bool
     {
         return isset($this->colors[$colorName][$colorSpace]);
     }
 
+    #[\Override]
     public function getColorValuesByName(string $colorName, string $colorSpace): array
     {
         return $this->colors[$colorName][$colorSpace];

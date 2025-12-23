@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Negarity\Color;
 
 use Negarity\Color\ColorSpace\{
-    ColorSpaceEnum,
     ColorSpaceInterface,
     RGB,
     RGBA,
@@ -32,13 +31,17 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     private static array $registries = [];
     /** @var class-string<ColorSpaceInterface> */
     protected string $colorSpace;
+    /** @var array<string, float|int> */
     protected array $values = [];
 
     /**
+     * Constructor.
+     * 
      * @param class-string<ColorSpaceInterface> $colorSpace
      * @param array<string, float|int> $values
+     * @throws \InvalidArgumentException
      */
-    public function __construct(string $colorSpace, $values = [])
+    public function __construct(string $colorSpace, array $values = [])
     {
         if (!is_subclass_of($colorSpace, ColorSpaceInterface::class)) {
             throw new \InvalidArgumentException(
@@ -61,28 +64,37 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         }
     }
 
+    /**
+     * Add a named color registry.
+     * 
+     * @param NamedColorRegistryInterface $registry
+     * @return void
+     */
     public static function addRegistry(NamedColorRegistryInterface $registry): void
     {
         static::$registries[] = $registry;
     }
 
-    /** @return class-string<ColorSpaceInterface> */
-    public function getColorSpace(): string
+    #[\Override]
+    final public function getColorSpace(): string
     {
         return $this->colorSpace;
     }
 
-    public function getColorSpaceName(): string
+    #[\Override]
+    final public function getColorSpaceName(): string
     {
         return $this->colorSpace::getName();
     }
 
-    public function getChannels(): array
+    #[\Override]
+    final public function getChannels(): array
     {
         return $this->colorSpace::getChannels();
     }
 
-    public function getChannel(string $name): float|int
+    #[\Override]
+    final public function getChannel(string $name): float|int
     {
         if (!in_array($name, $this->getChannels(), true)) {
             throw new \InvalidArgumentException("Channel '{$name}' does not exist in color space '{$this->getColorSpaceName()}'.");
@@ -90,7 +102,8 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         return $this->values[$name];
     }
 
-    public function toArray(): array
+    #[\Override]
+    final public function toArray(): array
     {
         return [
             'color-space' => $this->getColorSpaceName(),
@@ -98,72 +111,170 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         ];
     }
 
-    public function __toString(): string
+    #[\Override]
+    final public function __toString(): string
     {
         return $this->getColorSpaceName() . '(' . implode(', ', array_values($this->values)) . ')';
     }
 
-    public function jsonSerialize(): array
+    abstract public function without(array $channels): static;
+    abstract public function with(array $channels): static;
+
+    /**
+     * Serialize the color to JSON.
+     * 
+     * @return array<string, mixed>
+     *
+     * @see \JsonSerializable::jsonSerialize()
+     */
+    final public function jsonSerialize(): array
     {
         return $this->toArray();
     }
 
-    public static function rgb(int $r, int $g, int $b): static
+    final public static function rgb(int $r, int $g, int $b): static
     {
         return new static(RGB::class, ['r' => $r, 'g' => $g, 'b' => $b]);
     }
 
-    public static function rgba(int $r, int $g, int $b, int $a): static
+    /**
+     * Create a Color in RGBA color space.
+     * 
+     * @param int $r Red channel (0-255)
+     * @param int $g Green channel (0-255)
+     * @param int $b Blue channel (0-255)
+     * @param int $a Alpha channel (0-255)
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    final public static function rgba(int $r, int $g, int $b, int $a): static
     {
         return new static(RGBA::class, ['r' => $r, 'g' => $g, 'b' => $b, 'a' => $a]);
     }
 
-    public static function cmyk(int $c, int $m, int $y, int $k): static
+    /**
+     * Create a Color in CMYK color space.
+     * 
+     * @param int $c Cyan channel (0-100)
+     * @param int $m Magenta channel (0-100)
+     * @param int $y Yellow channel (0-100)
+     * @param int $k Black channel (0-100)
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    final public static function cmyk(int $c, int $m, int $y, int $k): static
     {
         return new static(CMYK::class, ['c' => $c, 'm' => $m, 'y' => $y, 'k' => $k]);
     }
 
-    public static function hsl(int $h, int $s, int $l): static
+    /**
+     * Create a Color in HSL color space.
+     * 
+     * @param int $h Hue channel (0-360)
+     * @param int $s Saturation channel (0-100)
+     * @param int $l Lightness channel (0-100)
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    final public static function hsl(int $h, int $s, int $l): static
     {
         return new static(HSL::class, ['h' => $h, 's' => $s, 'l' => $l]);
     }
 
-    public static function hsla(int $h, int $s, int $l, int $a): static
+    /**
+     * Create a Color in HSLA color space.
+     * 
+     * @param int $h Hue channel (0-360)
+     * @param int $s Saturation channel (0-100)
+     * @param int $l Lightness channel (0-100)
+     * @param int $a Alpha channel (0-100)
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    final public static function hsla(int $h, int $s, int $l, int $a): static
     {
         return new static(HSLA::class, ['h' => $h, 's' => $s, 'l' => $l, 'a' => $a]);
     }
 
-    public static function hsv(int $h, int $s, int $v): static
+    /**
+     * Create a Color in HSV color space.
+     * 
+     * @param int $h Hue channel (0-360)
+     * @param int $s Saturation channel (0-100)
+     * @param int $v Value channel (0-100)
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    final public static function hsv(int $h, int $s, int $v): static
     {
         return new static(HSV::class, ['h' => $h, 's' => $s, 'v' => $v]);
     }
 
-    public static function lab(int $l, int $a, int $b): static
+    /**
+     * Create a Color in Lab color space.
+     * 
+     * @param int $l Lightness channel (0-100)
+     * @param int $a A channel (-128 to 127)
+     * @param int $b B channel (-128 to 127)
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    final public static function lab(int $l, int $a, int $b): static
     {
         return new static(Lab::class, ['l' => $l, 'a' => $a, 'b' => $b]);
     }
 
-    public static function lch(int $l, int $c, int $h): static
+    /**
+     * Create a Color in LCh color space.
+     * 
+     * @param int $l Lightness channel (0-100)
+     * @param int $c Chroma channel (0-100)
+     * @param int $h Hue channel (0-360)
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    final public static function lch(int $l, int $c, int $h): static
     {
         return new static(LCh::class, ['l' => $l, 'c' => $c, 'h' => $h]);
     }
 
-    public static function xyz(int $x, int $y, int $z): static
+    /**
+     * Create a Color in XYZ color space.
+     * 
+     * @param int $x X channel
+     * @param int $y Y channel
+     * @param int $z Z channel
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    final public static function xyz(int $x, int $y, int $z): static
     {
         return new static(XYZ::class, ['x' => $x, 'y' => $y, 'z' => $z]);
     }
 
-    public static function ycbcr(int $y, int $cb, int $cr): static
+    /**
+     * Create a Color in YCbCr color space.
+     * 
+     * @param int $y Y channel
+     * @param int $cb Cb channel
+     * @param int $cr Cr channel
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    final public static function ycbcr(int $y, int $cb, int $cr): static
     {
         return new static(YCbCr::class, ['y' => $y, 'cb' => $cb, 'cr' => $cr]);
     }
 
     /**
      * Create a Color from a hex string.
+     * 
      * @param string $value Hex string (e.g. "#RRGGBB" or "RRGGBBAA")
      * @param class-string<ColorSpaceInterface> $colorSpace
+     * @return static
+     * @throws \InvalidArgumentException
      */
-    public static function hex(string $value, string $colorSpace = RGB::class): static
+    final public static function hex(string $value, string $colorSpace = RGB::class): static
     {
         $value = ltrim($value, '#');
         $r = $g = $b = $a = '';
@@ -206,6 +317,14 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         };
     }
 
+    /**
+     * Create a Color from a named color.
+     * 
+     * @param string $name Named color (e.g. "red", "blue", "cyan")
+     * @param class-string<ColorSpaceInterface> $colorSpace
+     * @return static
+     * @throws \InvalidArgumentException
+     */
     public static function __callStatic(string $name, array $arguments): static
     {
         $colorName = strtolower($name);
@@ -227,7 +346,15 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         );
     }
 
-    // magic function for get{ChannelName}() calls
+    /**
+     * Dynamically handle filter method calls.
+     * 
+     * @param string $name
+     * @param array<int, mixed> $arguments
+     * @return mixed
+     * @throws \BadMethodCallException
+     * @see FilterRegistry
+     */
     public function __call(string $name, array $arguments): mixed
     {
         $reservedMrthods = [ 'ColorSpace', 'ColorSpaceName', 'Channels', 'Channel' ];
@@ -267,21 +394,76 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         throw new \BadMethodCallException("Method {$name} does not exist.");
     }
 
-    public abstract function without(array $channels): static;
-    public abstract function with(array $channels): static;
+    /**
+     * Convert the color to RGB color space.
+     * 
+     * @return static
+     */
+    abstract public function toRGB(): static;
+    /**
+     * Convert the color to RGBA color space.
+     * 
+     * @param int $alpha Alpha channel (0-255)
+     * @return static
+     */
+    abstract public function toRGBA(int $alpha = 255): static;
+    /**
+     * Convert the color to CMYK color space.
+     * 
+     * @return static
+     */
+    abstract public function toCMYK(): static;
+    /**
+     * Convert the color to HSL color space.
+     * 
+     * @return static
+     */
+    abstract public function toHSL(): static;
+    /**
+     * Convert the color to HSLA color space.
+     * 
+     * @param int $alpha Alpha channel (0-255)
+     * @return static
+     */
+    abstract public function toHSLA(int $alpha = 255): static;
+    /**
+     * Convert the color to HSV color space.
+     * 
+     * @return static
+     */
+    abstract public function toHSV(): static;
+    /**
+     * Convert the color to Lab color space.
+     * 
+     * @return static
+     */
+    abstract public function toLab(): static;
+    /**
+     * Convert the color to LCh color space.
+     * 
+     * @return static
+     */
+    abstract public function toLCh(): static;
+    /**
+     * Convert the color to XYZ color space.
+     * 
+     * @return static
+     */
+    abstract public function toXYZ(): static;
+    /**
+     * Convert the color to YCbCr color space.
+     * 
+     * @return static
+     */
+    abstract public function toYCbCr(): static;
 
-    public abstract function toRGB(): static;
-    public abstract function toRGBA(int $alpha = 255): static;
-    public abstract function toCMYK(): static;
-    public abstract function toHSL(): static;
-    public abstract function toHSLA(int $alpha = 255): static;
-    public abstract function toHSV(): static;
-    public abstract function toLab(): static;
-    public abstract function toLCh(): static;
-    public abstract function toXYZ(): static;
-    public abstract function toYCbCr(): static;
-
-    public function toHex(): string
+    /**
+     * Convert the color to a hex string.
+     * 
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    final public function toHex(): string
     {
         if ($this->colorSpace === RGB::class) {
             return sprintf(

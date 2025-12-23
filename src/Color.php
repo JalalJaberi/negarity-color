@@ -21,11 +21,20 @@ use Negarity\Color\Registry\NamedColorRegistryInterface;
 
 final class Color extends AbstractColor
 {
-    public function __construct(string $colorSpace, $values = [])
+    /**
+     * Create a new Color instance.
+     * 
+     * @param class-string<ColorSpaceInterface> $colorSpace
+     * @param array<string, float|int> $values
+     * @return void
+     * @throws \InvalidArgumentException
+     */
+    public function __construct(string $colorSpace, array $values = [])
     {
         parent::__construct($colorSpace, $values);
     }
 
+    #[\Override]
     public function without(array $channels): static
     {
         $values = $this->values;
@@ -39,6 +48,7 @@ final class Color extends AbstractColor
         return new self($this->colorSpace, $values);
     }
 
+    #[\Override]
     public function with(array $channels): static
     {
         $values = $this->values;
@@ -55,6 +65,7 @@ final class Color extends AbstractColor
         return new self($this->colorSpace, $values);
     }
 
+    #[\Override]
     public function toRGB(): static
     {
         switch ($this->colorSpace) {
@@ -246,6 +257,7 @@ final class Color extends AbstractColor
         }
     }
 
+    #[\Override]
     public function toRGBA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
@@ -266,6 +278,7 @@ final class Color extends AbstractColor
         }
     }
 
+    #[\Override]
     public function toCMYK(): static
     {
         $rgb = $this->toRGB();
@@ -291,6 +304,7 @@ final class Color extends AbstractColor
         );
     }
 
+    #[\Override]
     public function toHSL(): static
     {
         $rgb = $this->toRGB();
@@ -328,6 +342,7 @@ final class Color extends AbstractColor
         );
     }
 
+    #[\Override]
     public function toHSLA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
@@ -365,6 +380,7 @@ final class Color extends AbstractColor
         }
     }
 
+    #[\Override]
     public function toHSV(): static
     {
         $rgb = $this->toRGB();
@@ -403,6 +419,7 @@ final class Color extends AbstractColor
         );
     }
 
+    #[\Override]
     public function toLab(): static
     {
         $rgb = $this->toRGB();
@@ -441,6 +458,7 @@ final class Color extends AbstractColor
         );
     }
 
+    #[\Override]
     public function toLCh(): static
     {
         $lab = $this->toLab();
@@ -462,6 +480,7 @@ final class Color extends AbstractColor
         );
     }
 
+    #[\Override]
     public function toXYZ(): static
     {
         $rgb = $this->toRGB();
@@ -487,6 +506,7 @@ final class Color extends AbstractColor
         );
     }
 
+    #[\Override]
     public function toYCbCr(): static
     {
         $rgb = $this->toRGB();

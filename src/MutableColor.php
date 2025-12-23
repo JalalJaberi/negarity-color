@@ -20,11 +20,27 @@ use Negarity\Color\ColorSpace\{
 
 final class MutableColor extends AbstractColor
 {
-    public function __construct(string $colorSpace, $values = [])
+    /**
+     * Constructor.
+     * 
+     * @param class-string<ColorSpaceInterface> $colorSpace
+     * @param array<string, float|int> $values
+     * @return void
+     * @throws \InvalidArgumentException
+     */
+    public function __construct(string $colorSpace, array $values = [])
     {
         parent::__construct($colorSpace, $values);
     }
 
+    /**
+     * Set a specific color channel by name.
+     * 
+     * @param string $name
+     * @param float|int $value
+     * @return void
+     * @throws InvalidColorValueException
+     */
     public function setChannel(string $name, float|int $value)
     {
         if (in_array($name, $this->getChannels(), true)) {
@@ -34,6 +50,7 @@ final class MutableColor extends AbstractColor
         }
     }
 
+    #[\Override]
     public function without(array $channels): static
     {
         foreach ($channels as $channel) {
@@ -46,6 +63,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function with(array $channels): static
     {
         foreach ($channels as $channel => $value) {
@@ -61,6 +79,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toRGB(): static
     {
         $r = $g = $b = 0;
@@ -275,6 +294,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toRGBA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
@@ -314,6 +334,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toCMYK(): static
     {
         $rgb = $this->toRGB();
@@ -340,6 +361,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toHSL(): static
     {
         $rgb = $this->toRGB();
@@ -379,6 +401,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toHSLA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
@@ -424,6 +447,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toHSV(): static
     {
         $rgb = $this->toRGB();
@@ -464,6 +488,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toLab(): static
     {
         $rgb = $this->toRGB();
@@ -504,6 +529,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toLCh(): static
     {
         $labColor = $this->toLab();
@@ -527,6 +553,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toXYZ(): static
     {
         $rgb = $this->toRGB();
@@ -553,6 +580,7 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
+    #[\Override]
     public function toYCbCr(): static
     {
         $rgb = $this->toRGB();

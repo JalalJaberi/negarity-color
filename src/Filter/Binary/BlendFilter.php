@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Negarity\Color\Filter\Binary;
 
 use Negarity\Color\ColorInterface;
-use Negarity\Color\ColorSpace\ColorSpaceEnum;
 
-class BlendFilter implements BinaryColorFilterInterface
+final class BlendFilter implements BinaryColorFilterInterface
 {
+    #[\Override]
     public function getName(): string { return 'blend'; }
 
+    #[\Override]
     public function apply(ColorInterface $base, ColorInterface $blend): ColorInterface
     {
         if ($base->getColorSpace() != $blend->getColorSpace()) {
