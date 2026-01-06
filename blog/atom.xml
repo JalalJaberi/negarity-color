@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xsl" href="atom.xsl"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://jalaljaberi.github.io/negarity-color/blog</id>
+    <title>Negarity Color Blog</title>
+    <updated>2024-12-19T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://jalaljaberi.github.io/negarity-color/blog"/>
+    <subtitle>Negarity Color Blog</subtitle>
+    <icon>https://jalaljaberi.github.io/negarity-color/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[Introducing Negarity Color - A Modern PHP Color Library]]></title>
+        <id>https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color</id>
+        <link href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color"/>
+        <updated>2024-12-19T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[We're excited to announce Negarity Color — a modern, extensible color manipulation library for PHP 8.3+.]]></summary>
+        <content type="html"><![CDATA[<p>We're excited to announce <strong>Negarity Color</strong> — a modern, extensible color manipulation library for PHP 8.3+.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-is-negarity-color">What is Negarity Color?<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#what-is-negarity-color" class="hash-link" aria-label="Direct link to What is Negarity Color?" title="Direct link to What is Negarity Color?" translate="no">​</a></h2>
+<p>Negarity Color is a comprehensive PHP library designed to make working with colors simple, powerful, and flexible. Whether you're building web applications, image processing tools, or design systems, Negarity Color provides everything you need to work with colors effectively.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="key-features">Key Features<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#key-features" class="hash-link" aria-label="Direct link to Key Features" title="Direct link to Key Features" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="-multiple-color-spaces">🎨 Multiple Color Spaces<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#-multiple-color-spaces" class="hash-link" aria-label="Direct link to 🎨 Multiple Color Spaces" title="Direct link to 🎨 Multiple Color Spaces" translate="no">​</a></h3>
+<p>Negarity Color supports <strong>10 color spaces</strong> out of the box:</p>
+<ul>
+<li class=""><strong>RGB/RGBA</strong> - For screen and web applications</li>
+<li class=""><strong>HSL/HSLA</strong> - Intuitive color manipulation</li>
+<li class=""><strong>HSV</strong> - Color pickers and graphics software</li>
+<li class=""><strong>CMYK</strong> - Professional printing</li>
+<li class=""><strong>Lab/LCh</strong> - Perceptually uniform color matching</li>
+<li class=""><strong>XYZ</strong> - Color science and conversions</li>
+<li class=""><strong>YCbCr</strong> - Video and image compression</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="-seamless-conversions">🔄 Seamless Conversions<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#-seamless-conversions" class="hash-link" aria-label="Direct link to 🔄 Seamless Conversions" title="Direct link to 🔄 Seamless Conversions" translate="no">​</a></h3>
+<p>Convert between any color space with a single method call:</p>
+<div class="language-php codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-php codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">use Negarity\Color\Color;</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$color = Color::rgb(255, 100, 50);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$hsl = $color-&gt;toHSL();</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$cmyk = $color-&gt;toCMYK();</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$lab = $color-&gt;toLab();</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="-immutable-by-default">🎯 Immutable by Default<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#-immutable-by-default" class="hash-link" aria-label="Direct link to 🎯 Immutable by Default" title="Direct link to 🎯 Immutable by Default" translate="no">​</a></h3>
+<p>The library uses immutable color objects by default, making your code safer and more predictable:</p>
+<div class="language-php codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-php codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">$color = Color::rgb(255, 100, 50);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$modified = $color-&gt;with(['r' =&gt; 200]);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">echo $color; // Still "rgb(255, 100, 50)" - original unchanged</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">echo $modified; // "rgb(200, 100, 50)" - new instance</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="-flexible-filter-system">🎭 Flexible Filter System<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#-flexible-filter-system" class="hash-link" aria-label="Direct link to 🎭 Flexible Filter System" title="Direct link to 🎭 Flexible Filter System" translate="no">​</a></h3>
+<p>Apply color transformations with a powerful filter system:</p>
+<div class="language-php codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-php codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">use Negarity\Color\Filter\FilterRegistry;</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">use Negarity\Color\Filter\Parameterized\BrightnessFilter;</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">use Negarity\Color\Filter\Unary\InvertFilter;</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">FilterRegistry::register(new BrightnessFilter());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">FilterRegistry::register(new InvertFilter());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$color = Color::rgb(255, 100, 50)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    -&gt;brightness(20)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    -&gt;invert();</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="️-named-colors">🏷️ Named Colors<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#%EF%B8%8F-named-colors" class="hash-link" aria-label="Direct link to 🏷️ Named Colors" title="Direct link to 🏷️ Named Colors" translate="no">​</a></h3>
+<p>Use human-readable color names:</p>
+<div class="language-php codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-php codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">use Negarity\Color\Color;</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">use Negarity\Color\Registry\VGANamedColors;</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">Color::addRegistry(new VGANamedColors());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$red = Color::red();</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$blue = Color::blue();</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$green = Color::green();</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="-fully-extensible">🔧 Fully Extensible<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#-fully-extensible" class="hash-link" aria-label="Direct link to 🔧 Fully Extensible" title="Direct link to 🔧 Fully Extensible" translate="no">​</a></h3>
+<p>Easily extend the library with:</p>
+<ul>
+<li class="">Custom color spaces</li>
+<li class="">Custom color names</li>
+<li class="">Custom filters</li>
+<li class="">Custom extractors</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="quick-start">Quick Start<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#quick-start" class="hash-link" aria-label="Direct link to Quick Start" title="Direct link to Quick Start" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="installation">Installation<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#installation" class="hash-link" aria-label="Direct link to Installation" title="Direct link to Installation" translate="no">​</a></h3>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">composer require jalaljaberi/negarity-color</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="basic-usage">Basic Usage<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#basic-usage" class="hash-link" aria-label="Direct link to Basic Usage" title="Direct link to Basic Usage" translate="no">​</a></h3>
+<div class="language-php codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-php codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">&lt;?php</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">require_once __DIR__ . '/vendor/autoload.php';</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">use Negarity\Color\Color;</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">// Create colors</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$primary = Color::rgb(255, 100, 50);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$secondary = Color::hex('#3498db');</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">// Convert between spaces</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$hsl = $primary-&gt;toHSL();</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$cmyk = $primary-&gt;toCMYK();</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">// Modify colors</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">$lighter = $primary-&gt;with(['r' =&gt; 255, 'g' =&gt; 150, 'b' =&gt; 100]);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">// Get channel values</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">echo $primary-&gt;getR(); // 255</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">echo $primary-&gt;toHex(); // "#FF6432"</span><br></span></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-negarity-color">Why Negarity Color?<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#why-negarity-color" class="hash-link" aria-label="Direct link to Why Negarity Color?" title="Direct link to Why Negarity Color?" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="modern-php">Modern PHP<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#modern-php" class="hash-link" aria-label="Direct link to Modern PHP" title="Direct link to Modern PHP" translate="no">​</a></h3>
+<p>Built for PHP 8.3+ with modern features like:</p>
+<ul>
+<li class="">Strict types</li>
+<li class="">Readonly properties</li>
+<li class="">Enums</li>
+<li class="">Attributes</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="well-architected">Well-Architected<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#well-architected" class="hash-link" aria-label="Direct link to Well-Architected" title="Direct link to Well-Architected" translate="no">​</a></h3>
+<ul>
+<li class="">Clean, intuitive API</li>
+<li class="">PSR-4 autoloading</li>
+<li class="">Comprehensive error handling</li>
+<li class="">Full type safety</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="production-ready">Production Ready<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#production-ready" class="hash-link" aria-label="Direct link to Production Ready" title="Direct link to Production Ready" translate="no">​</a></h3>
+<ul>
+<li class="">Extensively tested</li>
+<li class="">Well-documented</li>
+<li class="">MIT licensed</li>
+<li class="">Actively maintained</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="use-cases">Use Cases<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#use-cases" class="hash-link" aria-label="Direct link to Use Cases" title="Direct link to Use Cases" translate="no">​</a></h2>
+<p>Negarity Color is perfect for:</p>
+<ul>
+<li class=""><strong>Web Development</strong>: Color manipulation for themes, palettes, and UI</li>
+<li class=""><strong>Image Processing</strong>: Color transformations and analysis</li>
+<li class=""><strong>Design Tools</strong>: Color pickers, palette generators, and color harmony</li>
+<li class=""><strong>Print Media</strong>: CMYK conversions for professional printing</li>
+<li class=""><strong>Data Visualization</strong>: Color mapping and gradients</li>
+<li class=""><strong>Accessibility</strong>: Contrast analysis and WCAG compliance</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="whats-next">What's Next?<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#whats-next" class="hash-link" aria-label="Direct link to What's Next?" title="Direct link to What's Next?" translate="no">​</a></h2>
+<p>We're just getting started! Check out our <a class="" href="https://jalaljaberi.github.io/negarity-color/docs/getting-started">documentation</a> to learn more:</p>
+<ul>
+<li class=""><a class="" href="https://jalaljaberi.github.io/negarity-color/docs/basics/creating-colors">Basics</a> - Creating and converting colors</li>
+<li class=""><a class="" href="https://jalaljaberi.github.io/negarity-color/docs/named-colors/introduction">Named Colors</a> - Using predefined colors</li>
+<li class=""><a class="" href="https://jalaljaberi.github.io/negarity-color/docs/filters/introduction">Filters</a> - Applying transformations</li>
+<li class=""><a class="" href="https://jalaljaberi.github.io/negarity-color/docs/extending/color-spaces">Extending</a> - Creating custom functionality</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="get-involved">Get Involved<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#get-involved" class="hash-link" aria-label="Direct link to Get Involved" title="Direct link to Get Involved" translate="no">​</a></h2>
+<p>Negarity Color is open source and we welcome contributions! Whether you want to:</p>
+<ul>
+<li class="">Report bugs</li>
+<li class="">Suggest features</li>
+<li class="">Submit pull requests</li>
+<li class="">Improve documentation</li>
+</ul>
+<p>Your contributions help make Negarity Color better for everyone.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="conclusion">Conclusion<a href="https://jalaljaberi.github.io/negarity-color/blog/introducing-negarity-color#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion" translate="no">​</a></h2>
+<p>Negarity Color brings modern color manipulation to PHP. With support for multiple color spaces, a flexible filter system, and a clean API, it's the perfect choice for any PHP project that needs to work with colors.</p>
+<p>Try it out today and let us know what you think!</p>
+<hr>
+<p><strong>Installation</strong>: <code>composer require jalaljaberi/negarity-color</code><br>
+<strong>Documentation</strong>: <a class="" href="https://jalaljaberi.github.io/negarity-color/docs/getting-started">docs.negarity-color.com</a><br>
+<strong>GitHub</strong>: <a href="https://github.com/jalaljaberi/negarity-color" target="_blank" rel="noopener noreferrer" class="">github.com/jalaljaberi/negarity-color</a></p>]]></content>
+        <author>
+            <name>Jalal Jaberi</name>
+            <uri>https://linkedin.com/in/jalaljaberi</uri>
+        </author>
+        <category label="Announcement" term="Announcement"/>
+        <category label="PHP" term="PHP"/>
+        <category label="Color" term="Color"/>
+        <category label="Library" term="Library"/>
+    </entry>
+</feed>

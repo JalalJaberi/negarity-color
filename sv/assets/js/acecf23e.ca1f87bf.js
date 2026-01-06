@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkdocs=globalThis.webpackChunkdocs||[]).push([[1903],{1912(o){o.exports=JSON.parse('{"blogBasePath":"/negarity-color/sv/blog","blogTitle":"Blog","authorsListPath":"/negarity-color/sv/blog/authors"}')}}]);
