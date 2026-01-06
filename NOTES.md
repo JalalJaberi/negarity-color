@@ -20,3 +20,16 @@
  - Predefined filters: sepia, posterize, threshold, gamma.
 ### Think about moving convertets like toRgb to separate classes or color space classes
 ### Use ColorSpaceRegistry as we did for filters and color names.
+### Support for sRGB and optional color profiles (display-p3) as opt-in.
+### Add more filters (invert, sepia, etc)
+### Add these to analyzers
+- equals() and almostEquals() with epsilon or ΔE tolerance.
+- Perceptual distance: Delta E metrics (ΔE76, ΔE00) if Lab supported.
+- luminance() (relative luminance), isLight() / isDark() (WCAG-friendly threshold).
+- Contrast ratio and contrast checking (WCAG 2.1 thresholds).
+### Add these to generators/extractors
+- complement(), triadic(), analogous() color palette helpers.
+- average() / mean() of multiple colors (weighted).
+### use toInt() / toPackedInt() and fromPackedInt() for fast storage. for performance
+### toCssVariable() helper
+### Add more exceptions to the code and complete exception codes

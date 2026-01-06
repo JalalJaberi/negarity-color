@@ -1,0 +1,19 @@
+announcement:
+  label: Announcement
+  permalink: /announcement
+  description: Library announcements and updates
+
+php:
+  label: PHP
+  permalink: /php
+  description: PHP-related content
+
+color:
+  label: Color
+  permalink: /color
+  description: Color manipulation and theory
+
+library:
+  label: Library
+  permalink: /library
+  description: Library features and updates
