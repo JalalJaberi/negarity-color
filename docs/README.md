@@ -74,8 +74,6 @@ $color = Color::rgb(255, 100, 50)
 
 [Getting started](https://jalaljaberi.github.io/negarity-color/docs/getting-started)
 
-- **Getting started**
-
 ## License
 
 MIT

@@ -85,33 +85,75 @@ final class Color extends AbstractColor
                 $x = $c * (1 - abs(fmod($this->getH() / 60, 2) - 1));
                 $m = ($this->getL() / 100) - $c / 2;
                 $r = $g = $b = 0;
-                if ($this->getH() < 60) {
+                
+                $h = $this->getH() / 60;
+                if ($h < 1) {
                     $r = $c;
                     $g = $x;
-                } elseif ($this->getH() < 120) {
+                    $b = 0;
+                } elseif ($h < 2) {
                     $r = $x;
                     $g = $c;
+                    $b = 0;
+                } elseif ($h < 3) {
+                    $r = 0;
+                    $g = $c;
+                    $b = $x;
+                } elseif ($h < 4) {
+                    $r = 0;
+                    $g = $x;
+                    $b = $c;
+                } elseif ($h < 5) {
+                    $r = $x;
+                    $g = 0;
+                    $b = $c;
+                } else {
+                    $r = $c;
+                    $g = 0;
+                    $b = $x;
                 }
+                
                 $r = ($r + $m) * 255;
                 $g = ($g + $m) * 255;
                 $b = ($b + $m) * 255;
-                return self::rgb((int)$r, (int)$g, (int)$b);
+                return self::rgb((int)round($r), (int)round($g), (int)round($b));
             case HSLA::class:
                 $c = (1 - abs(2 * ($this->getL() / 100) - 1)) * ($this->getS() / 100);
                 $x = $c * (1 - abs(fmod($this->getH() / 60, 2) - 1));
                 $m = ($this->getL() / 100) - $c / 2;
                 $r = $g = $b = 0;
-                if ($this->getH() < 60) {
+                
+                $h = $this->getH() / 60;
+                if ($h < 1) {
                     $r = $c;
                     $g = $x;
-                } elseif ($this->getH() < 120) {
+                    $b = 0;
+                } elseif ($h < 2) {
                     $r = $x;
                     $g = $c;
+                    $b = 0;
+                } elseif ($h < 3) {
+                    $r = 0;
+                    $g = $c;
+                    $b = $x;
+                } elseif ($h < 4) {
+                    $r = 0;
+                    $g = $x;
+                    $b = $c;
+                } elseif ($h < 5) {
+                    $r = $x;
+                    $g = 0;
+                    $b = $c;
+                } else {
+                    $r = $c;
+                    $g = 0;
+                    $b = $x;
                 }
+                
                 $r = ($r + $m) * 255;
                 $g = ($g + $m) * 255;
                 $b = ($b + $m) * 255;
-                return self::rgb((int)$r, (int)$g, (int)$b);
+                return self::rgb((int)round($r), (int)round($g), (int)round($b));
             case HSV::class:
                 $c = ($this->getV() / 100) * ($this->getS() / 100);
                 $x = $c * (1 - abs(fmod($this->getH() / 60, 2) - 1));

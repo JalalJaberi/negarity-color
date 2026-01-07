@@ -75,8 +75,8 @@ Lighter variant: rgb(255, 150, 100)
 Transparent Color: rgba(255, 100, 50, 128)
 Hex with alpha: #FF643280
 HSL Color: hsl(210, 50, 40)
-Converted to RGB: rgb(51, 77, 102)
-Hex: #334D66
+Converted to RGB: rgb(51, 102, 153)
+Hex: #336699
 ```
 
 ## Key Features Demonstrated
