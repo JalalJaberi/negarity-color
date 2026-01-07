@@ -72,8 +72,9 @@ $color = Color::rgb(255, 100, 50)
 
 ## Documentation
 
-- **Getting started**: `docs/docs/getting-started.md`
-- **Docs site**: once GitHub Pages is enabled, it will be available under the repository’s Pages URL.
+[Getting started](https://jalaljaberi.github.io/negarity-color/docs/getting-started)
+
+- **Getting started**
 
 ## License
 
