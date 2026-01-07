@@ -1,0 +1,31 @@
+{
+  "defaultLocale": "en",
+  "locales": [
+    "en",
+    "sv"
+  ],
+  "path": "i18n",
+  "currentLocale": "en",
+  "localeConfigs": {
+    "en": {
+      "label": "English",
+      "direction": "ltr",
+      "htmlLang": "en",
+      "calendar": "gregory",
+      "path": "en",
+      "translate": false,
+      "url": "https://jalaljaberi.github.io",
+      "baseUrl": "/negarity-color/"
+    },
+    "sv": {
+      "label": "Svenska",
+      "direction": "ltr",
+      "htmlLang": "sv",
+      "calendar": "gregory",
+      "path": "sv",
+      "translate": false,
+      "url": "https://jalaljaberi.github.io",
+      "baseUrl": "/negarity-color/sv/"
+    }
+  }
+}

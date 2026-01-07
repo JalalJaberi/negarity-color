@@ -1,0 +1,27 @@
+{
+  "id": "filters/invert",
+  "title": "Invert Filter",
+  "description": "The Invert filter inverts all color channels, creating a negative image effect.",
+  "source": "@site/docs/filters/invert.md",
+  "sourceDirName": "filters",
+  "slug": "/filters/invert",
+  "permalink": "/negarity-color/docs/filters/invert",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "title": "Invert Filter",
+    "sidebar_position": 5
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Mix Filter",
+    "permalink": "/negarity-color/docs/filters/mix"
+  },
+  "next": {
+    "title": "Grayscale Filter",
+    "permalink": "/negarity-color/docs/filters/grayscale"
+  }
+}

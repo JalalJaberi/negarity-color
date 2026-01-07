@@ -1,0 +1,27 @@
+{
+  "id": "filters/threshold",
+  "title": "Threshold Filter",
+  "description": "The Threshold filter converts a color to pure black or white based on a threshold value, creating a binary (two-color) effect.",
+  "source": "@site/docs/filters/threshold.md",
+  "sourceDirName": "filters",
+  "slug": "/filters/threshold",
+  "permalink": "/negarity-color/docs/filters/threshold",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 12,
+  "frontMatter": {
+    "title": "Threshold Filter",
+    "sidebar_position": 12
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Posterize Filter",
+    "permalink": "/negarity-color/docs/filters/posterize"
+  },
+  "next": {
+    "title": "Difference Filter",
+    "permalink": "/negarity-color/docs/filters/difference"
+  }
+}

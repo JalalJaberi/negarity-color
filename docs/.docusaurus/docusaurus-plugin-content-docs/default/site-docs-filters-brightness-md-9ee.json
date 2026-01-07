@@ -1,0 +1,27 @@
+{
+  "id": "filters/brightness",
+  "title": "Brightness Filter",
+  "description": "The Brightness filter adjusts the brightness of a color by adding or subtracting a value from its channels.",
+  "source": "@site/docs/filters/brightness.md",
+  "sourceDirName": "filters",
+  "slug": "/filters/brightness",
+  "permalink": "/negarity-color/docs/filters/brightness",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Brightness Filter",
+    "sidebar_position": 2
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Introduction to Filters",
+    "permalink": "/negarity-color/docs/filters/introduction"
+  },
+  "next": {
+    "title": "Blend Filter",
+    "permalink": "/negarity-color/docs/filters/blend"
+  }
+}

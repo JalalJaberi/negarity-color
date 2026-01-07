@@ -1,0 +1,178 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/negarity-color/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/negarity-color/docs",
+          "mainDocId": "getting-started",
+          "docs": [
+            {
+              "id": "basics/converting-colors",
+              "path": "/negarity-color/docs/basics/converting-colors",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "basics/creating-colors",
+              "path": "/negarity-color/docs/basics/creating-colors",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "basics/getting-channels",
+              "path": "/negarity-color/docs/basics/getting-channels",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "basics/modifying-colors",
+              "path": "/negarity-color/docs/basics/modifying-colors",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "extending/color-names",
+              "path": "/negarity-color/docs/extending/color-names",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "extending/color-spaces",
+              "path": "/negarity-color/docs/extending/color-spaces",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "extending/extractors",
+              "path": "/negarity-color/docs/extending/extractors",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "extending/filters",
+              "path": "/negarity-color/docs/extending/filters",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "extractors-analysis/introduction",
+              "path": "/negarity-color/docs/extractors-analysis/introduction",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/blend",
+              "path": "/negarity-color/docs/filters/blend",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/brightness",
+              "path": "/negarity-color/docs/filters/brightness",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/contrast",
+              "path": "/negarity-color/docs/filters/contrast",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/difference",
+              "path": "/negarity-color/docs/filters/difference",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/gamma",
+              "path": "/negarity-color/docs/filters/gamma",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/grayscale",
+              "path": "/negarity-color/docs/filters/grayscale",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/hue-rotate",
+              "path": "/negarity-color/docs/filters/hue-rotate",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/introduction",
+              "path": "/negarity-color/docs/filters/introduction",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/invert",
+              "path": "/negarity-color/docs/filters/invert",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/mix",
+              "path": "/negarity-color/docs/filters/mix",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/posterize",
+              "path": "/negarity-color/docs/filters/posterize",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/saturation",
+              "path": "/negarity-color/docs/filters/saturation",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "filters/threshold",
+              "path": "/negarity-color/docs/filters/threshold",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "getting-started",
+              "path": "/negarity-color/docs/getting-started",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "intro",
+              "path": "/negarity-color/docs/intro",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "mutability/introduction",
+              "path": "/negarity-color/docs/mutability/introduction",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "named-colors/introduction",
+              "path": "/negarity-color/docs/named-colors/introduction",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "references/color-spaces",
+              "path": "/negarity-color/docs/references/color-spaces",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "references/extractors",
+              "path": "/negarity-color/docs/references/extractors",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "references/filters",
+              "path": "/negarity-color/docs/references/filters",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "references/methods",
+              "path": "/negarity-color/docs/references/methods",
+              "sidebar": "tutorialSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "tutorialSidebar": {
+              "link": {
+                "path": "/negarity-color/docs/getting-started",
+                "label": "getting-started"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

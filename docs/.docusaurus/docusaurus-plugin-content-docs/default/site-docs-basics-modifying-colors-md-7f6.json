@@ -1,0 +1,27 @@
+{
+  "id": "basics/modifying-colors",
+  "title": "Modifying Colors",
+  "description": "Negarity Color provides methods to modify colors by changing channel values. Since the default Color class is immutable, these methods return new color instances rather than modifying the original.",
+  "source": "@site/docs/basics/modifying-colors.md",
+  "sourceDirName": "basics",
+  "slug": "/basics/modifying-colors",
+  "permalink": "/negarity-color/docs/basics/modifying-colors",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "title": "Modifying Colors",
+    "sidebar_position": 4
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Getting Channels",
+    "permalink": "/negarity-color/docs/basics/getting-channels"
+  },
+  "next": {
+    "title": "Introduction to Named Colors",
+    "permalink": "/negarity-color/docs/named-colors/introduction"
+  }
+}

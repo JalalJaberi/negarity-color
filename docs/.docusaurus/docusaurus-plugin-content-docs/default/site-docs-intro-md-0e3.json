@@ -1,0 +1,26 @@
+{
+  "id": "intro",
+  "title": "Introduction",
+  "description": "Welcome to Negarity Color — a modern, extensible color manipulation library for PHP.",
+  "source": "@site/docs/intro.md",
+  "sourceDirName": ".",
+  "slug": "/intro",
+  "permalink": "/negarity-color/docs/intro",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Getting Started",
+    "permalink": "/negarity-color/docs/getting-started"
+  },
+  "next": {
+    "title": "Creating Colors",
+    "permalink": "/negarity-color/docs/basics/creating-colors"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "basics/converting-colors",
+  "title": "Converting Colors",
+  "description": "Negarity Color supports seamless conversion between all supported color spaces. You can convert any color to any other color space using the appropriate conversion method.",
+  "source": "@site/docs/basics/converting-colors.md",
+  "sourceDirName": "basics",
+  "slug": "/basics/converting-colors",
+  "permalink": "/negarity-color/docs/basics/converting-colors",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Converting Colors",
+    "sidebar_position": 2
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Creating Colors",
+    "permalink": "/negarity-color/docs/basics/creating-colors"
+  },
+  "next": {
+    "title": "Getting Channels",
+    "permalink": "/negarity-color/docs/basics/getting-channels"
+  }
+}

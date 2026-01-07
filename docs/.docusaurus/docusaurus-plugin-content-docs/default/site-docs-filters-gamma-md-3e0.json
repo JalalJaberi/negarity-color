@@ -1,0 +1,27 @@
+{
+  "id": "filters/gamma",
+  "title": "Gamma Filter",
+  "description": "The Gamma filter applies gamma correction to adjust the brightness curve of a color, typically used for display calibration.",
+  "source": "@site/docs/filters/gamma.md",
+  "sourceDirName": "filters",
+  "slug": "/filters/gamma",
+  "permalink": "/negarity-color/docs/filters/gamma",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 10,
+  "frontMatter": {
+    "title": "Gamma Filter",
+    "sidebar_position": 10
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Hue Rotate Filter",
+    "permalink": "/negarity-color/docs/filters/hue-rotate"
+  },
+  "next": {
+    "title": "Posterize Filter",
+    "permalink": "/negarity-color/docs/filters/posterize"
+  }
+}

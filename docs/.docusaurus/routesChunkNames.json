@@ -1,0 +1,178 @@
+{
+  "/negarity-color/__docusaurus/debug-150": {
+    "__comp": "__comp---theme-debug-config-23-a-2ff",
+    "__context": {
+      "plugin": "plugin---negarity-color-docusaurus-debugb-38-d63"
+    }
+  },
+  "/negarity-color/__docusaurus/debug/config-367": {
+    "__comp": "__comp---theme-debug-config-23-a-2ff",
+    "__context": {
+      "plugin": "plugin---negarity-color-docusaurus-debugb-38-d63"
+    }
+  },
+  "/negarity-color/__docusaurus/debug/content-0b4": {
+    "__comp": "__comp---theme-debug-contentba-8-ce7",
+    "__context": {
+      "plugin": "plugin---negarity-color-docusaurus-debugb-38-d63"
+    },
+    "__props": "__props---negarity-color-docusaurus-debug-content-668-92d"
+  },
+  "/negarity-color/__docusaurus/debug/globalData-9ee": {
+    "__comp": "__comp---theme-debug-global-dataede-0fa",
+    "__context": {
+      "plugin": "plugin---negarity-color-docusaurus-debugb-38-d63"
+    }
+  },
+  "/negarity-color/__docusaurus/debug/metadata-f5e": {
+    "__comp": "__comp---theme-debug-site-metadata-68-e-3d4",
+    "__context": {
+      "plugin": "plugin---negarity-color-docusaurus-debugb-38-d63"
+    }
+  },
+  "/negarity-color/__docusaurus/debug/registry-c5d": {
+    "__comp": "__comp---theme-debug-registry-679-501",
+    "__context": {
+      "plugin": "plugin---negarity-color-docusaurus-debugb-38-d63"
+    }
+  },
+  "/negarity-color/__docusaurus/debug/routes-084": {
+    "__comp": "__comp---theme-debug-routes-946-699",
+    "__context": {
+      "plugin": "plugin---negarity-color-docusaurus-debugb-38-d63"
+    }
+  },
+  "/negarity-color/docs-b65": {
+    "__comp": "__comp---theme-docs-root-5-e-9-0b6",
+    "__context": {
+      "plugin": "plugin---negarity-color-docsaba-208"
+    }
+  },
+  "/negarity-color/docs-468": {
+    "__comp": "__comp---theme-doc-version-roota-7-b-5de",
+    "__props": "__props---negarity-color-docs-71-c-252"
+  },
+  "/negarity-color/docs-a9e": {
+    "__comp": "__comp---theme-doc-roota-94-67a"
+  },
+  "/negarity-color/docs/basics/converting-colors-69e": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-basics-converting-colors-689-03f"
+  },
+  "/negarity-color/docs/basics/creating-colors-fdd": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-basics-creating-colors-624-a7b"
+  },
+  "/negarity-color/docs/basics/getting-channels-763": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-basics-getting-channels-1-e-9-13d"
+  },
+  "/negarity-color/docs/basics/modifying-colors-b9a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-basics-modifying-colors-7-f-6-772"
+  },
+  "/negarity-color/docs/extending/color-names-e3f": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-extending-color-names-300-5a5"
+  },
+  "/negarity-color/docs/extending/color-spaces-116": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-extending-color-spaces-987-4bc"
+  },
+  "/negarity-color/docs/extending/extractors-675": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-extending-extractors-98-e-dd0"
+  },
+  "/negarity-color/docs/extending/filters-61e": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-extending-filtersd-1-f-826"
+  },
+  "/negarity-color/docs/extractors-analysis/introduction-757": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-extractors-analysis-introductioncf-7-54a"
+  },
+  "/negarity-color/docs/filters/blend-32d": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-blendc-61-0c2"
+  },
+  "/negarity-color/docs/filters/brightness-b78": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-brightness-9-ee-a10"
+  },
+  "/negarity-color/docs/filters/contrast-93d": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-contraste-97-9d4"
+  },
+  "/negarity-color/docs/filters/difference-c3a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-difference-5-b-5-efb"
+  },
+  "/negarity-color/docs/filters/gamma-2cf": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-gamma-3-e-0-271"
+  },
+  "/negarity-color/docs/filters/grayscale-1c8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-grayscale-203-036"
+  },
+  "/negarity-color/docs/filters/hue-rotate-5b4": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-hue-rotate-204-195"
+  },
+  "/negarity-color/docs/filters/introduction-20f": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-introductionbe-8-57c"
+  },
+  "/negarity-color/docs/filters/invert-f04": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-invert-4-a-4-77e"
+  },
+  "/negarity-color/docs/filters/mix-525": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-mixa-4-f-5a5"
+  },
+  "/negarity-color/docs/filters/posterize-c93": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-posterize-383-667"
+  },
+  "/negarity-color/docs/filters/saturation-ed0": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-saturationba-3-037"
+  },
+  "/negarity-color/docs/filters/threshold-383": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-filters-thresholda-95-756"
+  },
+  "/negarity-color/docs/getting-started-247": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-getting-startedd-58-b84"
+  },
+  "/negarity-color/docs/intro-cab": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-intro-0-e-3-bf8"
+  },
+  "/negarity-color/docs/mutability/introduction-172": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-mutability-introduction-68-f-bd9"
+  },
+  "/negarity-color/docs/named-colors/introduction-87c": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-named-colors-introduction-462-700"
+  },
+  "/negarity-color/docs/references/color-spaces-bac": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-references-color-spaces-316-50b"
+  },
+  "/negarity-color/docs/references/extractors-702": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-references-extractors-3-a-8-667"
+  },
+  "/negarity-color/docs/references/filters-dca": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-references-filtersef-4-f6d"
+  },
+  "/negarity-color/docs/references/methods-167": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---negarity-color-docs-references-methods-950-734"
+  }
+}

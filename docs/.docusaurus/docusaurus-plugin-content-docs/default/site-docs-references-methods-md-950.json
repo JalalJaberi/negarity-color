@@ -1,0 +1,27 @@
+{
+  "id": "references/methods",
+  "title": "Methods Reference",
+  "description": "Complete reference for all methods available on Color and MutableColor classes.",
+  "source": "@site/docs/references/methods.md",
+  "sourceDirName": "references",
+  "slug": "/references/methods",
+  "permalink": "/negarity-color/docs/references/methods",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Methods Reference",
+    "sidebar_position": 2
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Color Spaces Reference",
+    "permalink": "/negarity-color/docs/references/color-spaces"
+  },
+  "next": {
+    "title": "Filters Reference",
+    "permalink": "/negarity-color/docs/references/filters"
+  }
+}

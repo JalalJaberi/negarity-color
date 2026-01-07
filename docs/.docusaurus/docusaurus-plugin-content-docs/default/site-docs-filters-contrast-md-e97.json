@@ -1,0 +1,27 @@
+{
+  "id": "filters/contrast",
+  "title": "Contrast Filter",
+  "description": "The Contrast filter adjusts the contrast of a color by expanding or compressing the difference between light and dark values.",
+  "source": "@site/docs/filters/contrast.md",
+  "sourceDirName": "filters",
+  "slug": "/filters/contrast",
+  "permalink": "/negarity-color/docs/filters/contrast",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "title": "Contrast Filter",
+    "sidebar_position": 7
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Grayscale Filter",
+    "permalink": "/negarity-color/docs/filters/grayscale"
+  },
+  "next": {
+    "title": "Saturation Filter",
+    "permalink": "/negarity-color/docs/filters/saturation"
+  }
+}

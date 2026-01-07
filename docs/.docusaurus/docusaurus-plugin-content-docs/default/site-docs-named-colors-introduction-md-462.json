@@ -1,0 +1,27 @@
+{
+  "id": "named-colors/introduction",
+  "title": "Introduction to Named Colors",
+  "description": "Named colors allow you to create colors using human-readable names like \"red\", \"blue\", or \"navy\" instead of numeric values. Negarity Color supports named colors through a flexible registry system.",
+  "source": "@site/docs/named-colors/introduction.md",
+  "sourceDirName": "named-colors",
+  "slug": "/named-colors/introduction",
+  "permalink": "/negarity-color/docs/named-colors/introduction",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Introduction to Named Colors",
+    "sidebar_position": 1
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Modifying Colors",
+    "permalink": "/negarity-color/docs/basics/modifying-colors"
+  },
+  "next": {
+    "title": "Immutable vs Mutable Colors",
+    "permalink": "/negarity-color/docs/mutability/introduction"
+  }
+}

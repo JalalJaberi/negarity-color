@@ -1,0 +1,27 @@
+{
+  "id": "filters/saturation",
+  "title": "Saturation Filter",
+  "description": "The Saturation filter adjusts the color saturation, making colors more or less vivid.",
+  "source": "@site/docs/filters/saturation.md",
+  "sourceDirName": "filters",
+  "slug": "/filters/saturation",
+  "permalink": "/negarity-color/docs/filters/saturation",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 8,
+  "frontMatter": {
+    "title": "Saturation Filter",
+    "sidebar_position": 8
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Contrast Filter",
+    "permalink": "/negarity-color/docs/filters/contrast"
+  },
+  "next": {
+    "title": "Hue Rotate Filter",
+    "permalink": "/negarity-color/docs/filters/hue-rotate"
+  }
+}

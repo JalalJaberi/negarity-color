@@ -1,0 +1,27 @@
+{
+  "id": "filters/hue-rotate",
+  "title": "Hue Rotate Filter",
+  "description": "The Hue Rotate filter shifts the hue of a color around the color wheel by a specified number of degrees.",
+  "source": "@site/docs/filters/hue-rotate.md",
+  "sourceDirName": "filters",
+  "slug": "/filters/hue-rotate",
+  "permalink": "/negarity-color/docs/filters/hue-rotate",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 9,
+  "frontMatter": {
+    "title": "Hue Rotate Filter",
+    "sidebar_position": 9
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Saturation Filter",
+    "permalink": "/negarity-color/docs/filters/saturation"
+  },
+  "next": {
+    "title": "Gamma Filter",
+    "permalink": "/negarity-color/docs/filters/gamma"
+  }
+}

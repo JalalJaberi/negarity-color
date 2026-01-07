@@ -1,0 +1,63 @@
+{
+  "permalink": "/negarity-color/blog/introducing-negarity-color",
+  "source": "@site/blog/2024-12-19-introducing-negarity-color.md",
+  "title": "Introducing Negarity Color - A Modern PHP Color Library",
+  "description": "We're excited to announce Negarity Color — a modern, extensible color manipulation library for PHP 8.3+.",
+  "date": "2024-12-19T00:00:00.000Z",
+  "tags": [
+    {
+      "inline": false,
+      "label": "Announcement",
+      "permalink": "/negarity-color/blog/tags/announcement",
+      "description": "Library announcements and updates"
+    },
+    {
+      "inline": false,
+      "label": "PHP",
+      "permalink": "/negarity-color/blog/tags/php",
+      "description": "PHP-related content"
+    },
+    {
+      "inline": false,
+      "label": "Color",
+      "permalink": "/negarity-color/blog/tags/color",
+      "description": "Color manipulation and theory"
+    },
+    {
+      "inline": false,
+      "label": "Library",
+      "permalink": "/negarity-color/blog/tags/library",
+      "description": "Library features and updates"
+    }
+  ],
+  "readingTime": 2.95,
+  "hasTruncateMarker": false,
+  "authors": [
+    {
+      "name": "Jalal Jaberi",
+      "title": "Developer",
+      "url": "https://linkedin.com/in/jalaljaberi",
+      "page": null,
+      "socials": {
+        "x": "https://x.com/JalalJaberi",
+        "linkedin": "https://www.linkedin.com/in/jalal-jaberi-8819795a/",
+        "github": "https://github.com/jalaljaberi"
+      },
+      "key": "jalaljaberi"
+    }
+  ],
+  "frontMatter": {
+    "slug": "introducing-negarity-color",
+    "title": "Introducing Negarity Color - A Modern PHP Color Library",
+    "authors": [
+      "jalaljaberi"
+    ],
+    "tags": [
+      "announcement",
+      "php",
+      "color",
+      "library"
+    ]
+  },
+  "unlisted": false
+}
