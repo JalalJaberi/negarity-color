@@ -291,10 +291,21 @@ final class Color extends AbstractColor
                 $y = $this->getY();
                 $cb = $this->getCb();
                 $cr = $this->getCr();
-                $r = $y + 1.402 * ($cr - 128);
-                $g = $y - 0.344136 * ($cb - 128) - 0.714136 * ($cr - 128);
-                $b = $y + 1.772 * ($cb - 128);
-                return self::rgb((int)max(0, min(255, $r)), (int)max(0, min(255, $g)), (int)max(0, min(255, $b)));
+
+                // Scale Y to 0-255
+                $yScaled = $y * 255 / 100;
+
+                // Convert to RGB using standard formula for centered Cb/Cr
+                $r = $yScaled + 1.402 * $cr;
+                $g = $yScaled - 0.344136 * $cb - 0.714136 * $cr;
+                $b = $yScaled + 1.772 * $cb;
+
+                // Clamp RGB values to 0-255 and round
+                $r = (int) round(max(0, min(255, $r)));
+                $g = (int) round(max(0, min(255, $g)));
+                $b = (int) round(max(0, min(255, $b)));
+
+                return self::rgb($r, $g, $b);
             default:
                 throw new \RuntimeException('Conversion to RGB not implemented for this color space.');
         }
@@ -557,19 +568,29 @@ final class Color extends AbstractColor
     #[\Override]
     public function toYCbCr(): static
     {
-        $rgb = $this->toRGB();
+        // Get RGB values and scale to 0-255
         $r = $rgb->getR();
         $g = $rgb->getG();
         $b = $rgb->getB();
 
-        $y  = (int)round(0.299 * $r + 0.587 * $g + 0.114 * $b);
-        $cb = (int)round(128 - 0.168736 * $r - 0.331264 * $g + 0.5 * $b);
-        $cr = (int)round(128 + 0.5 * $r - 0.460525 * $g - 0.081475 * $b);
+        // Compute Y, Cb, Cr using standard linear formula
+        // Using 8-bit RGB (0-255)
+        $y  = 0.299 * $r + 0.587 * $g + 0.114 * $b;
+        $cb = -0.168736 * $r - 0.331264 * $g + 0.5 * $b;
+        $cr = 0.5 * $r - 0.418688 * $g - 0.081312 * $b;
 
-        return self::ycbcr(
-            max(0, min(255, $y)),
-            max(0, min(255, $cb)),
-            max(0, min(255, $cr))
-        );
+        // Adjust ranges to your internal YCbCr:
+        // Y: 0-100, Cb/Cr: -128 → 127
+        $y  = $y * 100 / 255;   // scale Y to 0-100
+        // Cb/Cr are already centered at 0 in your model, no +128 offset
+        $cb = $cb;
+        $cr = $cr;
+
+        // Clamp values to valid ranges
+        $y  = max(0, min(100, $y));
+        $cb = max(-128, min(127, $cb));
+        $cr = max(-128, min(127, $cr));
+
+        return self::ycbcr(round($y), round($cb), round($cr));
     }
 }
