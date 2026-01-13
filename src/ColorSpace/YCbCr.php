@@ -36,7 +36,7 @@ final class YCbCr extends AbstractColorSpace
     {
         match ($channel) {
             'y' => static::assertRange((float)$value, 0.0, 100.0, $channel),
-            'cb', 'cr' => static::assertRange((float)$value, -128.0, 127.0, $channel),
+            'cb', 'cr' => static::assertRange((int)$value, -128, 127, $channel),
             default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space 'ycbcr'."),
         };
     }

@@ -56,9 +56,11 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         foreach ($colorSpaceChannels as $name) {
             if (!isset($values[$name])) {
                 $this->values[$name] = $colorSpace::getChannelDefaultValue($name);
-            } else if (gettype($values[$name]) !== 'integer' && gettype($values[$name]) !== 'float') {
-                throw new \InvalidArgumentException("Channel '{$name}' must be of type int or float.");
+            } else if (gettype($values[$name]) !== 'integer' && gettype($values[$name]) !== 'double') {
+                throw new \InvalidArgumentException("Channel '{$name}' must be of type int or double. It's type is '".gettype($values[$name])."'.");
             } else {
+                // validateValue throws an exception if validation fails
+                $colorSpace::validateValue($name, $values[$name]);
                 $this->values[$name] = $values[$name];
             }
         }
