@@ -78,7 +78,7 @@ $color = Color::xyz(20, 30, 40);
 Creates a color in YCbCr color space.
 
 ```php
-$color = Color::ycbcr(128, 100, 150);
+$color = Color::ycbcr(78, 100, -100);
 ```
 
 #### `hex(string $value, string $colorSpace = RGB::class): static`

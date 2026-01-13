@@ -113,11 +113,11 @@ echo $xyz->getZ(); // 40
 ### YCbCr Channels
 
 ```php
-$ycbcr = Color::ycbcr(128, 100, 150);
+$ycbcr = Color::ycbcr(78, 100, -100);
 
-echo $ycbcr->getY(); // 128
+echo $ycbcr->getY(); // 78
 echo $ycbcr->getCb(); // 100
-echo $ycbcr->getCr(); // 150
+echo $ycbcr->getCr(); // -100
 ```
 
 ## Getting All Channels

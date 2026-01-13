@@ -127,7 +127,7 @@ XYZ is a device-independent color space used as an intermediate in many color co
 **Use Case**: Video encoding, digital photography, JPEG compression
 
 ```php
-$color = Color::ycbcr(128, 100, 150);
+$color = Color::ycbcr(78, 100, -100);
 ```
 
 YCbCr separates luminance (Y) from chrominance (Cb, Cr):

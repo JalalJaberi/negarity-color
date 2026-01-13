@@ -37,3 +37,5 @@
 ### There are color models for XYZ color space (LMS, xyY, YUV). We can also consider them.
 ### Can we create estimation for colors which are in one color space nut not in the other one?
 ### We can also consider creating Positive XYZ color space
+### RGB has a model ACEScg / ACES2065-1
+### consider CIELAB and CIELUV color spaces

@@ -99,7 +99,7 @@ $xyz = Color::xyz(20, 30, 40);
 Create colors in the YCbCr color space (used in video and digital photography):
 
 ```php
-$ycbcr = Color::ycbcr(128, 100, 150);
+$ycbcr = Color::ycbcr(78, 100, -100);
 ```
 
 ## Creating from Hex Strings
