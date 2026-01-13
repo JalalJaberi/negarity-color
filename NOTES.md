@@ -33,3 +33,7 @@
 ### use toInt() / toPackedInt() and fromPackedInt() for fast storage. for performance
 ### toCssVariable() helper
 ### Add more exceptions to the code and complete exception codes
+### Move converters to Color spaces classes, so each color space knows how to convert to/from another color space. Like this, it will be easier to add custom color spaces and convert to/from it.
+### There are color models for XYZ color space (LMS, xyY, YUV). We can also consider them.
+### Can we create estimation for colors which are in one color space nut not in the other one?
+### We can also consider creating Positive XYZ color space

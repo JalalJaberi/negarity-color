@@ -198,9 +198,9 @@ final class Color extends AbstractColor
                 $y = $y / 100;
                 $z = $z / 100;
 
-                $r = $x * 3.2406 + $y * -1.5372 + $z * -0.4986;
-                $g = $x * -0.9689 + $y * 1.8758 + $z * 0.0415;
-                $b = $x * 0.0557 + $y * -0.2040 + $z * 1.0570;
+                $r = $x * 3.2404542 + $y * -1.5371385 + $z * -0.4985314;
+                $g = $x * -0.9692660 + $y * 1.8760108 + $z * 0.0415560;
+                $b = $x * 0.0556434 + $y * -0.2040259 + $z * 1.0572252;
 
                 // Apply gamma correction
                 $rgb = [$r, $g, $b];
@@ -240,9 +240,9 @@ final class Color extends AbstractColor
                 $x = $x / 100;
                 $y = $y / 100;
                 $z = $z / 100;
-                $r = $x * 3.2406 + $y * -1.5372 + $z * -0.4986;
-                $g = $x * -0.9689 + $y * 1.8758 + $z * 0.0415;
-                $b = $x * 0.0557 + $y * -0.2040 + $z * 1.0570;
+                $r = $x * 3.2404542 + $y * -1.5371385 + $z * -0.4985314;
+                $g = $x * -0.9692660 + $y * 1.8760108 + $z * 0.0415560;
+                $b = $x * 0.0556434 + $y * -0.2040259 + $z * 1.0572252;
 
                 // Apply gamma correction
                 $rgb = [$r, $g, $b];
@@ -259,18 +259,19 @@ final class Color extends AbstractColor
 
                 return self::rgb($rgb[0], $rgb[1], $rgb[2]);
             case XYZ::class:
-                $x = $this->getX();
-                $y = $this->getY();
-                $z = $this->getZ();
-                // implement it even if it's neeeded a intermediate convrersion to RGB
-                $x = $x / 100;
-                $y = $y / 100;
-                $z = $z / 100;
+                $x = $this->getX() / 100;
+                $y = $this->getY() / 100;
+                $z = $this->getZ() / 100;
 
-                // sRGB D65 conversion matrix
-                $r = $x * 3.2406 + $y * -1.5372 + $z * -0.4986;
-                $g = $x * -0.9689 + $y * 1.8758 + $z * 0.0415;
-                $b = $x * 0.0557 + $y * -0.2040 + $z * 1.0570;
+                // sRGB D65 conversion matrix (more precise values)
+                $matrix = [
+                    [3.2404542, -1.5371385, -0.4985314],
+                    [-0.9692660, 1.8760108, 0.0415560],
+                    [0.0556434, -0.2040259, 1.0572252]
+                ];
+                $r = $x * $matrix[0][0] + $y * $matrix[0][1] + $z * $matrix[0][2];
+                $g = $x * $matrix[1][0] + $y * $matrix[1][1] + $z * $matrix[1][2];
+                $b = $x * $matrix[2][0] + $y * $matrix[2][1] + $z * $matrix[2][2];
 
                 // Apply gamma correction
                 $rgb = [$r, $g, $b];
@@ -474,10 +475,10 @@ final class Color extends AbstractColor
         $g = ($g > 0.04045) ? pow(($g + 0.055) / 1.055, 2.4) : $g / 12.92;
         $b = ($b > 0.04045) ? pow(($b + 0.055) / 1.055, 2.4) : $b / 12.92;
 
-        // Convert to XYZ
-        $x = $r * 0.4124 + $g * 0.3576 + $b * 0.1805;
-        $y = $r * 0.2126 + $g * 0.7152 + $b * 0.0722;
-        $z = $r * 0.0193 + $g * 0.1192 + $b * 0.9505;
+        // Convert to XYZ (sRGB D65, more precise values)
+        $x = $r * 0.4124564 + $g * 0.3575761 + $b * 0.1804375;
+        $y = $r * 0.2126729 + $g * 0.7151522 + $b * 0.0721750;
+        $z = $r * 0.0193339 + $g * 0.1191920 + $b * 0.9503041;
 
         // Normalize for D65 white point
         $x /= 0.95047;
@@ -535,10 +536,15 @@ final class Color extends AbstractColor
         $g = ($g > 0.04045) ? pow(($g + 0.055) / 1.055, 2.4) : $g / 12.92;
         $b = ($b > 0.04045) ? pow(($b + 0.055) / 1.055, 2.4) : $b / 12.92;
 
-        // Convert to XYZ
-        $x = $r * 0.4124 + $g * 0.3576 + $b * 0.1805;
-        $y = $r * 0.2126 + $g * 0.7152 + $b * 0.0722;
-        $z = $r * 0.0193 + $g * 0.1192 + $b * 0.9505;
+        // Convert to XYZ (sRGB D65, more precise values)
+        $matrix = [
+            [0.4124564, 0.3575761, 0.1804375],
+            [0.2126729, 0.7151522, 0.0721750],
+            [0.0193339, 0.1191920, 0.9503041]
+        ];
+        $x = $r * $matrix[0][0] + $g * $matrix[0][1] + $b * $matrix[0][2];
+        $y = $r * $matrix[1][0] + $g * $matrix[1][1] + $b * $matrix[1][2];
+        $z = $r * $matrix[2][0] + $g * $matrix[2][1] + $b * $matrix[2][2];
 
         // Scale to the range [0, 100]
         return self::xyz(
