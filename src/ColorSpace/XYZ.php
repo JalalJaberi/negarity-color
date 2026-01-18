@@ -34,9 +34,8 @@ final class XYZ extends AbstractColorSpace
 
     public static function validateValue(string $channel, int|float $value): void
     {
-        match ($channel) {
-            'x', 'y', 'z' => static::assertRange((float)$value, 0.0, 100.0, $channel),
-            default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space 'xyz'."),
-        };
+        if (!is_numeric($value)) {
+            throw new InvalidColorValueException("Channel '{$channel}' must be numeric.");
+        }
     }
 }

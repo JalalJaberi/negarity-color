@@ -280,31 +280,41 @@ final class Color extends AbstractColor
                 $x = $this->getX() / 100;
                 $y = $this->getY() / 100;
                 $z = $this->getZ() / 100;
-
-                // sRGB D65 conversion matrix (more precise values)
+            
+                // sRGB D65 conversion matrix (linear)
                 $matrix = [
                     [3.2404542, -1.5371385, -0.4985314],
                     [-0.9692660, 1.8760108, 0.0415560],
                     [0.0556434, -0.2040259, 1.0572252]
                 ];
+            
                 $r = $x * $matrix[0][0] + $y * $matrix[0][1] + $z * $matrix[0][2];
                 $g = $x * $matrix[1][0] + $y * $matrix[1][1] + $z * $matrix[1][2];
                 $b = $x * $matrix[2][0] + $y * $matrix[2][1] + $z * $matrix[2][2];
-
+            
                 // Apply gamma correction
                 $rgb = [$r, $g, $b];
                 foreach ($rgb as &$val) {
+                    // Standard sRGB gamma
                     if ($val <= 0.0031308) {
                         $val = 12.92 * $val;
                     } else {
                         $val = 1.055 * pow($val, 1 / 2.4) - 0.055;
                     }
-                    $val = max(0, min(1, $val)); // Clamp between 0 and 1
-                    $val = (int)round($val * 255);
+            
+                    // Only clamp if displaying
+                    if ($clampForDisplay) {
+                        $val = max(0, min(1, $val));
+                    }
+                    $val = $val * 255;
                 }
                 unset($val);
-
-                return self::rgb($rgb[0], $rgb[1], $rgb[2]);
+            
+                return self::rgb(
+                    (int) round($rgb[0]),
+                    (int) round($rgb[1]),
+                    (int) round($rgb[2])
+                );
             case YCbCr::class:
                 $y = $this->getY();
                 $cb = $this->getCb();
@@ -565,26 +575,27 @@ final class Color extends AbstractColor
         $g = $rgb->getG() / 255;
         $b = $rgb->getB() / 255;
 
-        // Apply inverse gamma correction
+        // Inverse gamma (linearization)
         $r = ($r > 0.04045) ? pow(($r + 0.055) / 1.055, 2.4) : $r / 12.92;
         $g = ($g > 0.04045) ? pow(($g + 0.055) / 1.055, 2.4) : $g / 12.92;
         $b = ($b > 0.04045) ? pow(($b + 0.055) / 1.055, 2.4) : $b / 12.92;
 
-        // Convert to XYZ (sRGB D65, more precise values)
+        // Linear RGB → XYZ
         $matrix = [
             [0.4124564, 0.3575761, 0.1804375],
             [0.2126729, 0.7151522, 0.0721750],
             [0.0193339, 0.1191920, 0.9503041]
         ];
+
         $x = $r * $matrix[0][0] + $g * $matrix[0][1] + $b * $matrix[0][2];
         $y = $r * $matrix[1][0] + $g * $matrix[1][1] + $b * $matrix[1][2];
         $z = $r * $matrix[2][0] + $g * $matrix[2][1] + $b * $matrix[2][2];
 
-        // Scale to the range [0, 100]
+        // Scale optionally to 0–100 (percentage)
         return self::xyz(
-            (int)round($x * 100, 4),
-            (int)round($y * 100, 4),
-            (int)round($z * 100, 4)
+            round($x * 100, 4),
+            round($y * 100, 4),
+            round($z * 100, 4)
         );
     }
 
