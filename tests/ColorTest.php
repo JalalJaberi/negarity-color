@@ -6,6 +6,7 @@ namespace Negarity\Color\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Negarity\Color\Color;
+use Negarity\Color\Exception\InvalidColorValueException;
 use Negarity\Color\ColorSpace\RGB;
 use Negarity\Color\ColorSpace\RGBA;
 use Negarity\Color\ColorSpace\CMYK;
@@ -23,160 +24,318 @@ final class ColorTest extends TestCase
 
     public function testCreateRgbColor(): void
     {
-        $color = Color::rgb(255, 100, 50);
+        $r = random_int(0, 255);
+        $g = random_int(0, 255);
+        $b = random_int(0, 255);
+        $color = Color::rgb($r, $g, $b);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(RGB::getName(), $color->getColorSpaceName());
-        $this->assertEquals(255, $color->getR());
-        $this->assertEquals(100, $color->getG());
-        $this->assertEquals(50, $color->getB());
+        $this->assertEquals($r, $color->getR());
+        $this->assertEquals($g, $color->getG());
+        $this->assertEquals($b, $color->getB());
     }
 
     public function testCreateRgbaColor(): void
     {
-        $color = Color::rgba(255, 100, 50, 128);
+        $r = random_int(0, 255);
+        $g = random_int(0, 255);
+        $b = random_int(0, 255);
+        $a = random_int(0, 255);
+        $color = Color::rgba($r, $g, $b, $a);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(RGBA::getName(), $color->getColorSpaceName());
-        $this->assertEquals(255, $color->getR());
-        $this->assertEquals(100, $color->getG());
-        $this->assertEquals(50, $color->getB());
-        $this->assertEquals(128, $color->getA());
+        $this->assertEquals($r, $color->getR());
+        $this->assertEquals($g, $color->getG());
+        $this->assertEquals($b, $color->getB());
+        $this->assertEquals($a, $color->getA());
     }
 
     public function testCreateCmykColor(): void
     {
-        $color = Color::cmyk(100, 50, 0, 25);
+        $c = random_int(0, 100);
+        $m = random_int(0, 100);
+        $y = random_int(0, 100);
+        $k = random_int(0, 100);
+        $color = Color::cmyk($c, $m, $y, $k);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(CMYK::getName(), $color->getColorSpaceName());
-        $this->assertEquals(100, $color->getC());
-        $this->assertEquals(50, $color->getM());
-        $this->assertEquals(0, $color->getY());
-        $this->assertEquals(25, $color->getK());
+        $this->assertEquals($c, $color->getC());
+        $this->assertEquals($m, $color->getM());
+        $this->assertEquals($y, $color->getY());
+        $this->assertEquals($k, $color->getK());
     }
 
     public function testCreateHslColor(): void
     {
-        $color = Color::hsl(210, 50, 40);
+        $h = random_int(0, 360);
+        $s = random_int(0, 100);
+        $l = random_int(0, 100);
+        $color = Color::hsl($h, $s, $l);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(HSL::getName(), $color->getColorSpaceName());
-        $this->assertEquals(210, $color->getH());
-        $this->assertEquals(50, $color->getS());
-        $this->assertEquals(40, $color->getL());
+        $this->assertEquals($h, $color->getH());
+        $this->assertEquals($s, $color->getS());
+        $this->assertEquals($l, $color->getL());
     }
 
     public function testCreateHslaColor(): void
     {
-        $color = Color::hsla(210, 50, 40, 128);
+        $h = random_int(0, 360);
+        $s = random_int(0, 100);
+        $l = random_int(0, 100);
+        $a = random_int(0, 255);
+        $color = Color::hsla($h, $s, $l, $a);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(HSLA::getName(), $color->getColorSpaceName());
-        $this->assertEquals(210, $color->getH());
-        $this->assertEquals(50, $color->getS());
-        $this->assertEquals(40, $color->getL());
-        $this->assertEquals(128, $color->getA());
+        $this->assertEquals($h, $color->getH());
+        $this->assertEquals($s, $color->getS());
+        $this->assertEquals($l, $color->getL());
+        $this->assertEquals($a, $color->getA());
     }
 
     public function testCreateHsvColor(): void
     {
-        $color = Color::hsv(210, 50, 60);
+        $h = random_int(0, 360);
+        $s = random_int(0, 100);
+        $v = random_int(0, 100);
+        $color = Color::hsv($h, $s, $v);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(HSV::getName(), $color->getColorSpaceName());
-        $this->assertEquals(210, $color->getH());
-        $this->assertEquals(50, $color->getS());
-        $this->assertEquals(60, $color->getV());
+        $this->assertEquals($h, $color->getH());
+        $this->assertEquals($s, $color->getS());
+        $this->assertEquals($v, $color->getV());
     }
 
     public function testCreateLabColor(): void
     {
-        $color = Color::lab(75, 20, -30);
+        $l = random_int(0, 100);
+        $a = random_int(-128, 127);
+        $b = random_int(-128, 127);
+        $color = Color::lab($l, $a, $b);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(Lab::getName(), $color->getColorSpaceName());
-        $this->assertEquals(75, $color->getL());
-        $this->assertEquals(20, $color->getA());
-        $this->assertEquals(-30, $color->getB());
+        $this->assertEquals($l, $color->getL());
+        $this->assertEquals($a, $color->getA());
+        $this->assertEquals($b, $color->getB());
     }
 
     public function testCreateLchColor(): void
     {
-        $color = Color::lch(75, 36, 210);
+        $l = random_int(0, 100);
+        $c = random_int(0, 100);
+        $h = random_int(0, 360);
+        $color = Color::lch($l, $c, $h);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(LCh::getName(), $color->getColorSpaceName());
-        $this->assertEquals(75, $color->getL());
-        $this->assertEquals(36, $color->getC());
-        $this->assertEquals(210, $color->getH());
+        $this->assertEquals($l, $color->getL());
+        $this->assertEquals($c, $color->getC());
+        $this->assertEquals($h, $color->getH());
     }
 
     public function testCreateXyzColor(): void
     {
-        $color = Color::xyz(25, 30, 35);
+        $x = random_int(0, 100);
+        $y = random_int(0, 100);
+        $z = random_int(0, 100);
+        $color = Color::xyz($x, $y, $z);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(XYZ::getName(), $color->getColorSpaceName());
-        $this->assertEquals(25, $color->getX());
-        $this->assertEquals(30, $color->getY());
-        $this->assertEquals(35, $color->getZ());
+        $this->assertEquals($x, $color->getX());
+        $this->assertEquals($y, $color->getY());
+        $this->assertEquals($z, $color->getZ());
     }
 
     public function testCreateYcbcrColor(): void
     {
-        $color = Color::ycbcr(78, 0, -100);
+        $y = random_int(0, 100);
+        $cb = random_int(-128, 127);
+        $cr = random_int(-128, 127);
+        $color = Color::ycbcr($y, $cb, $cr);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(YCbCr::getName(), $color->getColorSpaceName());
-        $this->assertEquals(78, $color->getY());
-        $this->assertEquals(0, $color->getCb());
-        $this->assertEquals(-100, $color->getCr());
+        $this->assertEquals($y, $color->getY());
+        $this->assertEquals($cb, $color->getCb());
+        $this->assertEquals($cr, $color->getCr());
     }
 
     public function testCreateColorFromHex6Digit(): void
     {
-        $color = Color::hex('#FF6432');
+        $r = random_int(0, 255);
+        $g = random_int(0, 255);
+        $b = random_int(0, 255);
+        $hex = sprintf('#%02X%02X%02X', $r, $g, $b);
+        
+        $color = Color::hex($hex);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(RGB::getName(), $color->getColorSpaceName());
-        $this->assertEquals(255, $color->getR());
-        $this->assertEquals(100, $color->getG());
-        $this->assertEquals(50, $color->getB());
+        $this->assertEquals($r, $color->getR());
+        $this->assertEquals($g, $color->getG());
+        $this->assertEquals($b, $color->getB());
     }
 
     public function testCreateColorFromHexWithoutHash(): void
     {
-        $color = Color::hex('3498db');
+        $r = random_int(0, 255);
+        $g = random_int(0, 255);
+        $b = random_int(0, 255);
+        $hex = sprintf('%02X%02X%02X', $r, $g, $b);
+        
+        $color = Color::hex($hex);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(RGB::getName(), $color->getColorSpaceName());
-        $this->assertEquals(52, $color->getR());
-        $this->assertEquals(152, $color->getG());
-        $this->assertEquals(219, $color->getB());
+        $this->assertEquals($r, $color->getR());
+        $this->assertEquals($g, $color->getG());
+        $this->assertEquals($b, $color->getB());
     }
 
     public function testCreateColorFromHex8Digit(): void
     {
-        $color = Color::hex('#FF643280', RGBA::class);
+        $r = random_int(0, 255);
+        $g = random_int(0, 255);
+        $b = random_int(0, 255);
+        $a = random_int(0, 255);
+        $hex = sprintf('#%02X%02X%02X%02X', $r, $g, $b, $a);
+        
+        $color = Color::hex($hex, RGBA::class);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(RGBA::getName(), $color->getColorSpaceName());
-        $this->assertEquals(255, $color->getR());
-        $this->assertEquals(100, $color->getG());
-        $this->assertEquals(50, $color->getB());
-        $this->assertEquals(128, $color->getA());
+        $this->assertEquals($r, $color->getR());
+        $this->assertEquals($g, $color->getG());
+        $this->assertEquals($b, $color->getB());
+        $this->assertEquals($a, $color->getA());
     }
 
     public function testCreateColorFromHex3Digit(): void
     {
-        $color = Color::hex('#F64');
+        // Generate random hex values that will work with 3-digit format
+        // Each digit is repeated (e.g., #F64 becomes #FF6644)
+        $rHex = dechex(random_int(0, 15));
+        $gHex = dechex(random_int(0, 15));
+        $bHex = dechex(random_int(0, 15));
+        $hex = sprintf('#%s%s%s', $rHex, $gHex, $bHex);
+        
+        $color = Color::hex($hex);
         
         $this->assertInstanceOf(Color::class, $color);
         $this->assertEquals(RGB::getName(), $color->getColorSpaceName());
-        $this->assertEquals(255, $color->getR());
-        $this->assertEquals(102, $color->getG());
-        $this->assertEquals(68, $color->getB());
+        // Verify the values match the expanded hex (e.g., #F64 -> FF6644)
+        $expectedR = hexdec($rHex . $rHex);
+        $expectedG = hexdec($gHex . $gHex);
+        $expectedB = hexdec($bHex . $bHex);
+        $this->assertEquals($expectedR, $color->getR());
+        $this->assertEquals($expectedG, $color->getG());
+        $this->assertEquals($expectedB, $color->getB());
+    }
+
+    // ========== Invalid Color Creation Tests ==========
+
+    public function testCreateRgbColorWithInvalidRChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::rgb(300, 100, 50); // R > 255
+    }
+
+    public function testCreateRgbColorWithInvalidGChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::rgb(255, -10, 50); // G < 0
+    }
+
+    public function testCreateRgbColorWithInvalidBChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::rgb(255, 100, 500); // B > 255
+    }
+
+    public function testCreateRgbaColorWithInvalidAlpha(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::rgba(255, 100, 50, 300); // Alpha > 255
+    }
+
+    public function testCreateCmykColorWithInvalidCChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::cmyk(150, 50, 0, 25); // C > 100
+    }
+
+    public function testCreateCmykColorWithInvalidMChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::cmyk(100, -10, 0, 25); // M < 0
+    }
+
+    public function testCreateHslColorWithInvalidHChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::hsl(400, 50, 40); // H > 360
+    }
+
+    public function testCreateHslColorWithInvalidSChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::hsl(210, 150, 40); // S > 100
+    }
+
+    public function testCreateHslColorWithInvalidLChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::hsl(210, 50, -10); // L < 0
+    }
+
+    public function testCreateHsvColorWithInvalidVChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::hsv(210, 50, 200); // V > 100
+    }
+
+    public function testCreateLabColorWithInvalidLChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::lab(150, 20, -30); // L > 100
+    }
+
+    public function testCreateLabColorWithNegativeLChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::lab(-10, 20, -30); // L < 0
+    }
+
+    public function testCreateLchColorWithInvalidHChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::lch(75, 36, 500); // H > 360
+    }
+
+    public function testCreateYcbcrColorWithInvalidYChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::ycbcr(150, 0, -100); // Y > 100
+    }
+
+    public function testCreateYcbcrColorWithInvalidCbChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::ycbcr(78, 200, -100); // Cb > 127
+    }
+
+    public function testCreateYcbcrColorWithInvalidCrChannel(): void
+    {
+        $this->expectException(InvalidColorValueException::class);
+        Color::ycbcr(78, 0, -200); // Cr < -128
     }
 
     // ========== Color Conversion Tests ==========
