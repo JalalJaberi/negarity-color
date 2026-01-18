@@ -192,7 +192,7 @@ final class Color extends AbstractColor
     {
         $rgb = $this->toRGB();
         $lab = $this->convertRgbToLab($rgb->getR(), $rgb->getG(), $rgb->getB());
-        return self::lab($lab['l'], $lab['a'], $lab['b']);
+        return self::lab((int)round($lab['l']), (int)round($lab['a']), (int)round($lab['b']));
     }
 
     #[\Override]
@@ -200,7 +200,7 @@ final class Color extends AbstractColor
     {
         $rgb = $this->toRGB();
         $lch = $this->convertRgbToLch($rgb->getR(), $rgb->getG(), $rgb->getB());
-        return self::lch($lch['l'], $lch['c'], $lch['h']);
+        return self::lch((int)round($lch['l']), (int)round($lch['c']), (int)round($lch['h']));
     }
 
     #[\Override]
@@ -208,7 +208,7 @@ final class Color extends AbstractColor
     {
         $rgb = $this->toRGB();
         $xyz = $this->convertRgbToXyz($rgb->getR(), $rgb->getG(), $rgb->getB());
-        return self::xyz($xyz['x'], $xyz['y'], $xyz['z']);
+        return self::xyz((int)round($xyz['x']), (int)round($xyz['y']), (int)round($xyz['z']));
     }
 
     #[\Override]

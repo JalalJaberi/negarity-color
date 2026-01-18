@@ -3,7 +3,6 @@
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         verbose="true"
          cacheDirectory=".phpunit.cache">
 
     <testsuites>
@@ -12,15 +11,11 @@
         </testsuite>
     </testsuites>
 
-    <coverage>
+    <source>
         <include>
             <directory suffix=".php">src</directory>
         </include>
-        <report>
-            <text outputFile="php://stdout" showUncoveredFiles="false"/>
-            <html outputDirectory="build/coverage-html"/>
-        </report>
-    </coverage>
+    </source>
 
     <logging>
         <junit outputFile="build/junit.xml"/>
