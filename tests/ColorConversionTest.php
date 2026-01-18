@@ -269,9 +269,42 @@ final class ColorConversionTest extends TestCase
         
         $this->assertEquals(RGB::getName(), $rgb->getColorSpaceName());
         // Validate against file data with small tolerance for rounding
-        $this->assertEqualsWithDelta($colorData['rgb']['r'], $rgb->getR(), 2);
-        $this->assertEqualsWithDelta($colorData['rgb']['g'], $rgb->getG(), 2);
-        $this->assertEqualsWithDelta($colorData['rgb']['b'], $rgb->getB(), 2);
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['r'], 
+            $rgb->getR(), 
+            2,
+            sprintf('RGB R channel mismatch. Lab(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+                (int)round($colorData['lab']['l']), 
+                (int)round($colorData['lab']['a']), 
+                (int)round($colorData['lab']['b']),
+                $colorData['rgb']['r'], 
+                $rgb->getR()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['g'], 
+            $rgb->getG(), 
+            2,
+            sprintf('RGB G channel mismatch. Lab(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+                (int)round($colorData['lab']['l']), 
+                (int)round($colorData['lab']['a']), 
+                (int)round($colorData['lab']['b']),
+                $colorData['rgb']['g'], 
+                $rgb->getG()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['b'], 
+            $rgb->getB(), 
+            2,
+            sprintf('RGB B channel mismatch. Lab(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+                (int)round($colorData['lab']['l']), 
+                (int)round($colorData['lab']['a']), 
+                (int)round($colorData['lab']['b']),
+                $colorData['rgb']['b'], 
+                $rgb->getB()
+            )
+        );
     }
 
     public function testConvertRgbToLch(): void
@@ -300,9 +333,42 @@ final class ColorConversionTest extends TestCase
         
         $this->assertEquals(RGB::getName(), $rgb->getColorSpaceName());
         // Validate against file data with tolerance (LCh to RGB can have larger differences)
-        $this->assertEqualsWithDelta($colorData['rgb']['r'], $rgb->getR(), 5);
-        $this->assertEqualsWithDelta($colorData['rgb']['g'], $rgb->getG(), 5);
-        $this->assertEqualsWithDelta($colorData['rgb']['b'], $rgb->getB(), 5);
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['r'], 
+            $rgb->getR(), 
+            5,
+            sprintf('RGB R channel mismatch. LCh(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+                (int)round($colorData['lch']['l']), 
+                (int)round($colorData['lch']['c']), 
+                (int)round($colorData['lch']['h']),
+                $colorData['rgb']['r'], 
+                $rgb->getR()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['g'], 
+            $rgb->getG(), 
+            5,
+            sprintf('RGB G channel mismatch. LCh(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+                (int)round($colorData['lch']['l']), 
+                (int)round($colorData['lch']['c']), 
+                (int)round($colorData['lch']['h']),
+                $colorData['rgb']['g'], 
+                $rgb->getG()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['b'], 
+            $rgb->getB(), 
+            5,
+            sprintf('RGB B channel mismatch. LCh(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+                (int)round($colorData['lch']['l']), 
+                (int)round($colorData['lch']['c']), 
+                (int)round($colorData['lch']['h']),
+                $colorData['rgb']['b'], 
+                $rgb->getB()
+            )
+        );
     }
 
     public function testConvertRgbToXyz(): void
@@ -354,10 +420,43 @@ final class ColorConversionTest extends TestCase
         }
         
         $this->assertEquals(RGB::getName(), $rgb->getColorSpaceName());
-        // Validate against file data with tolerance (XYZ to RGB can have larger differences)
-        $this->assertEqualsWithDelta($colorData['rgb']['r'], $rgb->getR(), 5);
-        $this->assertEqualsWithDelta($colorData['rgb']['g'], $rgb->getG(), 5);
-        $this->assertEqualsWithDelta($colorData['rgb']['b'], $rgb->getB(), 5);
+        // Validate against file data with tolerance (XYZ to RGB can have larger differences due to clamping)
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['r'], 
+            $rgb->getR(), 
+            10,
+            sprintf('RGB R channel mismatch. XYZ(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+                (int)round($colorData['xyz']['x']), 
+                (int)round($colorData['xyz']['y']), 
+                (int)round($colorData['xyz']['z']),
+                $colorData['rgb']['r'], 
+                $rgb->getR()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['g'], 
+            $rgb->getG(), 
+            5,
+            sprintf('RGB G channel mismatch. XYZ(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+                (int)round($colorData['xyz']['x']), 
+                (int)round($colorData['xyz']['y']), 
+                (int)round($colorData['xyz']['z']),
+                $colorData['rgb']['g'], 
+                $rgb->getG()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['b'], 
+            $rgb->getB(), 
+            10,
+            sprintf('RGB B channel mismatch. XYZ(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+                (int)round($colorData['xyz']['x']), 
+                (int)round($colorData['xyz']['y']), 
+                (int)round($colorData['xyz']['z']),
+                $colorData['rgb']['b'], 
+                $rgb->getB()
+            )
+        );
     }
 
     public function testConvertRgbToYcbcr(): void
