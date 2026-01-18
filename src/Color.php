@@ -82,40 +82,40 @@ final class Color extends AbstractColor
                 return self::rgb((int)$r, (int)$g, (int)$b);
             case HSL::class:
                 $c = (1 - abs(2 * ($this->getL() / 100) - 1)) * ($this->getS() / 100);
-                $x = $c * (1 - abs(fmod($this->getH() / 60, 2) - 1));
+                $h = fmod($this->getH(), 360) / 60;
+                $x = $c * (1 - abs(fmod($h, 2) - 1));
                 $m = ($this->getL() / 100) - $c / 2;
+
                 $r = $g = $b = 0;
-                
-                $h = $this->getH() / 60;
+
                 if ($h < 1) {
                     $r = $c;
                     $g = $x;
-                    $b = 0;
                 } elseif ($h < 2) {
                     $r = $x;
                     $g = $c;
-                    $b = 0;
                 } elseif ($h < 3) {
-                    $r = 0;
                     $g = $c;
                     $b = $x;
                 } elseif ($h < 4) {
-                    $r = 0;
                     $g = $x;
                     $b = $c;
                 } elseif ($h < 5) {
                     $r = $x;
-                    $g = 0;
                     $b = $c;
                 } else {
                     $r = $c;
-                    $g = 0;
                     $b = $x;
                 }
-                
+
                 $r = ($r + $m) * 255;
                 $g = ($g + $m) * 255;
                 $b = ($b + $m) * 255;
+
+                $r = max(0, min(255, $r));
+                $g = max(0, min(255, $g));
+                $b = max(0, min(255, $b));
+
                 return self::rgb((int)round($r), (int)round($g), (int)round($b));
             case HSLA::class:
                 $c = (1 - abs(2 * ($this->getL() / 100) - 1)) * ($this->getS() / 100);
@@ -365,34 +365,39 @@ final class Color extends AbstractColor
         $r = $rgb->getR() / 255;
         $g = $rgb->getG() / 255;
         $b = $rgb->getB() / 255;
-
+        
         $max = max($r, $g, $b);
         $min = min($r, $g, $b);
-        $h = $s = $l = ($max + $min) / 2;
-
-        if ($max == $min) {
-            $h = $s = 0; // achromatic
-        } else {
-            $d = $max - $min;
-            $s = ($l > 0.5) ? $d / (2 - $max - $min) : $d / ($max + $min);
-            switch ($max) {
-                case $r:
-                    $h = ($g - $b) / $d + (($g < $b) ? 6 : 0);
-                    break;
-                case $g:
-                    $h = ($b - $r) / $d + 2;
-                    break;
-                case $b:
-                    $h = ($r - $g) / $d + 4;
-                    break;
+        $l = ($max + $min) / 2;
+        
+        $h = 0;
+        $s = 0;
+        $d = $max - $min;
+        
+        if ($d != 0.0) {
+            $s = ($l > 0.5)
+                ? $d / (2 - $max - $min)
+                : $d / ($max + $min);
+        
+            if ($max === $r) {
+                $h = ($g - $b) / $d + ($g < $b ? 6 : 0);
+            } elseif ($max === $g) {
+                $h = ($b - $r) / $d + 2;
+            } else {
+                $h = ($r - $g) / $d + 4;
             }
+        
             $h /= 6;
         }
-
+        
+        $h = fmod($h * 360, 360);
+        $s = max(0, min(100, $s * 100));
+        $l = max(0, min(100, $l * 100));
+        
         return self::hsl(
-            (int)round($h * 360),
-            (int)round($s * 100),
-            (int)round($l * 100)
+            (int) round($h),
+            (int) round($s),
+            (int) round($l)
         );
     }
 
