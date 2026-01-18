@@ -22,19 +22,28 @@ final class ColorConversionTest extends TestCase
     /**
      * Read a random color record from the color names file.
      * 
-     * @return array{rgb: array{r: int, g: int, b: int}, hsl: array{h: int, s: int, l: int}, hsv: array{h: int, s: int, v: int}, cmyk: array{c: int, m: int, y: int, k: int}, lab: array{l: float, a: float, b: float}, lch: array{l: float, c: float, h: float}, xyz: array{x: float, y: float, z: float}}
+     * @return array{line_number: int, line_content: string, rgb: array{r: int, g: int, b: int}, hsl: array{h: int, s: int, l: int}, hsv: array{h: int, s: int, v: int}, cmyk: array{c: int, m: int, y: int, k: int}, lab: array{l: float, a: float, b: float}, lch: array{l: float, c: float, h: float}, xyz: array{x: float, y: float, z: float}}
      */
     private function getRandomColorFromFile(): array
     {
         // Read all lines
         $lines = file(self::COLOR_NAMES_FILE, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         
-        // Filter out header lines (those starting with #)
-        $dataLines = array_filter($lines, fn($line) => !str_starts_with(trim($line), '#') && preg_match('/^\d+\s+\w+/', $line));
-        $dataLines = array_values($dataLines);
+        // Build array with line numbers for data lines
+        $dataLinesWithNumbers = [];
+        foreach ($lines as $lineNum => $line) {
+            if (!str_starts_with(trim($line), '#') && preg_match('/^\d+\s+\w+/', $line)) {
+                $dataLinesWithNumbers[] = [
+                    'line_number' => $lineNum + 1, // File line numbers start at 1
+                    'content' => $line
+                ];
+            }
+        }
         
         // Pick a random line
-        $randomLine = $dataLines[array_rand($dataLines)];
+        $randomEntry = $dataLinesWithNumbers[array_rand($dataLinesWithNumbers)];
+        $randomLine = $randomEntry['content'];
+        $lineNumber = $randomEntry['line_number'];
         
         // Parse the line
         // Format: idx name rgb R G B hex HEX hsv H S V xyz X Y Z lab L A B lch L C H cmyk C M Y K ...
@@ -56,6 +65,8 @@ final class ColorConversionTest extends TestCase
         $hsl = $this->calculateHslFromRgb($r, $g, $b);
         
         return [
+            'line_number' => $lineNumber,
+            'line_content' => $randomLine,
             'rgb' => [
                 'r' => $r,
                 'g' => $g,
@@ -193,9 +204,39 @@ final class ColorConversionTest extends TestCase
         
         $this->assertEquals(HSL::getName(), $hsl->getColorSpaceName());
         // Validate against calculated HSL from file RGB (with tolerance)
-        $this->assertEqualsWithDelta($colorData['hsl']['h'], $hsl->getH(), 2);
-        $this->assertEqualsWithDelta($colorData['hsl']['s'], $hsl->getS(), 2);
-        $this->assertEqualsWithDelta($colorData['hsl']['l'], $hsl->getL(), 2);
+        $this->assertEqualsWithDelta(
+            $colorData['hsl']['h'], 
+            $hsl->getH(), 
+            2,
+            sprintf('HSL H channel mismatch at line %d. RGB(%d, %d, %d) -> Expected H=%d, Got H=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsl']['h'], 
+                $hsl->getH()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['hsl']['s'], 
+            $hsl->getS(), 
+            2,
+            sprintf('HSL S channel mismatch at line %d. RGB(%d, %d, %d) -> Expected S=%d, Got S=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsl']['s'], 
+                $hsl->getS()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['hsl']['l'], 
+            $hsl->getL(), 
+            2,
+            sprintf('HSL L channel mismatch at line %d. RGB(%d, %d, %d) -> Expected L=%d, Got L=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsl']['l'], 
+                $hsl->getL()
+            )
+        );
     }
 
     public function testConvertHslToRgb(): void
@@ -206,9 +247,39 @@ final class ColorConversionTest extends TestCase
         
         $this->assertEquals(RGB::getName(), $rgb->getColorSpaceName());
         // Validate against file data with small tolerance for rounding
-        $this->assertEqualsWithDelta($colorData['rgb']['r'], $rgb->getR(), 2);
-        $this->assertEqualsWithDelta($colorData['rgb']['g'], $rgb->getG(), 2);
-        $this->assertEqualsWithDelta($colorData['rgb']['b'], $rgb->getB(), 2);
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['r'], 
+            $rgb->getR(), 
+            2,
+            sprintf('RGB R channel mismatch at line %d. HSL(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+                $colorData['line_number'],
+                $colorData['hsl']['h'], $colorData['hsl']['s'], $colorData['hsl']['l'],
+                $colorData['rgb']['r'], 
+                $rgb->getR()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['g'], 
+            $rgb->getG(), 
+            2,
+            sprintf('RGB G channel mismatch at line %d. HSL(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+                $colorData['line_number'],
+                $colorData['hsl']['h'], $colorData['hsl']['s'], $colorData['hsl']['l'],
+                $colorData['rgb']['g'], 
+                $rgb->getG()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['b'], 
+            $rgb->getB(), 
+            2,
+            sprintf('RGB B channel mismatch at line %d. HSL(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+                $colorData['line_number'],
+                $colorData['hsl']['h'], $colorData['hsl']['s'], $colorData['hsl']['l'],
+                $colorData['rgb']['b'], 
+                $rgb->getB()
+            )
+        );
     }
 
     public function testConvertRgbToHsv(): void
@@ -225,10 +296,40 @@ final class ColorConversionTest extends TestCase
         if ($expectedH == 0 && ($actualH > 350 || $actualH < 10)) {
             $this->assertTrue(true); // Accept 0/360 wraparound
         } else {
-            $this->assertEqualsWithDelta($expectedH, $actualH, 5);
+            $this->assertEqualsWithDelta(
+                $expectedH, 
+                $actualH, 
+                5,
+                sprintf('HSV H channel mismatch at line %d. RGB(%d, %d, %d) -> Expected H=%d, Got H=%d', 
+                    $colorData['line_number'],
+                    $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                    $expectedH, 
+                    $actualH
+                )
+            );
         }
-        $this->assertEqualsWithDelta($colorData['hsv']['s'], $hsv->getS(), 5);
-        $this->assertEqualsWithDelta($colorData['hsv']['v'], $hsv->getV(), 5);
+        $this->assertEqualsWithDelta(
+            $colorData['hsv']['s'], 
+            $hsv->getS(), 
+            5,
+            sprintf('HSV S channel mismatch at line %d. RGB(%d, %d, %d) -> Expected S=%d, Got S=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsv']['s'], 
+                $hsv->getS()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['hsv']['v'], 
+            $hsv->getV(), 
+            5,
+            sprintf('HSV V channel mismatch at line %d. RGB(%d, %d, %d) -> Expected V=%d, Got V=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsv']['v'], 
+                $hsv->getV()
+            )
+        );
     }
 
     public function testConvertHsvToRgb(): void
@@ -239,9 +340,39 @@ final class ColorConversionTest extends TestCase
         
         $this->assertEquals(RGB::getName(), $rgb->getColorSpaceName());
         // Validate against file data with small tolerance for rounding
-        $this->assertEqualsWithDelta($colorData['rgb']['r'], $rgb->getR(), 2);
-        $this->assertEqualsWithDelta($colorData['rgb']['g'], $rgb->getG(), 2);
-        $this->assertEqualsWithDelta($colorData['rgb']['b'], $rgb->getB(), 2);
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['r'], 
+            $rgb->getR(), 
+            2,
+            sprintf('RGB R channel mismatch at line %d. HSV(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+                $colorData['line_number'],
+                $colorData['hsv']['h'], $colorData['hsv']['s'], $colorData['hsv']['v'],
+                $colorData['rgb']['r'], 
+                $rgb->getR()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['g'], 
+            $rgb->getG(), 
+            2,
+            sprintf('RGB G channel mismatch at line %d. HSV(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+                $colorData['line_number'],
+                $colorData['hsv']['h'], $colorData['hsv']['s'], $colorData['hsv']['v'],
+                $colorData['rgb']['g'], 
+                $rgb->getG()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['rgb']['b'], 
+            $rgb->getB(), 
+            2,
+            sprintf('RGB B channel mismatch at line %d. HSV(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+                $colorData['line_number'],
+                $colorData['hsv']['h'], $colorData['hsv']['s'], $colorData['hsv']['v'],
+                $colorData['rgb']['b'], 
+                $rgb->getB()
+            )
+        );
     }
 
     public function testConvertRgbToLab(): void
@@ -256,9 +387,39 @@ final class ColorConversionTest extends TestCase
         $this->assertIsInt($lab->getA());
         $this->assertIsInt($lab->getB());
         // Validate against file data with tolerance (Lab values are rounded)
-        $this->assertEqualsWithDelta($colorData['lab']['l'], $lab->getL(), 2);
-        $this->assertEqualsWithDelta($colorData['lab']['a'], $lab->getA(), 2);
-        $this->assertEqualsWithDelta($colorData['lab']['b'], $lab->getB(), 2);
+        $this->assertEqualsWithDelta(
+            $colorData['lab']['l'], 
+            $lab->getL(), 
+            2,
+            sprintf('Lab L channel mismatch at line %d. RGB(%d, %d, %d) -> Expected L=%.1f, Got L=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['lab']['l'], 
+                $lab->getL()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['lab']['a'], 
+            $lab->getA(), 
+            2,
+            sprintf('Lab A channel mismatch at line %d. RGB(%d, %d, %d) -> Expected A=%.1f, Got A=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['lab']['a'], 
+                $lab->getA()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['lab']['b'], 
+            $lab->getB(), 
+            2,
+            sprintf('Lab B channel mismatch at line %d. RGB(%d, %d, %d) -> Expected B=%.1f, Got B=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['lab']['b'], 
+                $lab->getB()
+            )
+        );
     }
 
     public function testConvertLabToRgb(): void
@@ -273,7 +434,8 @@ final class ColorConversionTest extends TestCase
             $colorData['rgb']['r'], 
             $rgb->getR(), 
             2,
-            sprintf('RGB R channel mismatch. Lab(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+            sprintf('RGB R channel mismatch at line %d. Lab(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+                $colorData['line_number'],
                 (int)round($colorData['lab']['l']), 
                 (int)round($colorData['lab']['a']), 
                 (int)round($colorData['lab']['b']),
@@ -285,7 +447,8 @@ final class ColorConversionTest extends TestCase
             $colorData['rgb']['g'], 
             $rgb->getG(), 
             2,
-            sprintf('RGB G channel mismatch. Lab(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+            sprintf('RGB G channel mismatch at line %d. Lab(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+                $colorData['line_number'],
                 (int)round($colorData['lab']['l']), 
                 (int)round($colorData['lab']['a']), 
                 (int)round($colorData['lab']['b']),
@@ -297,7 +460,8 @@ final class ColorConversionTest extends TestCase
             $colorData['rgb']['b'], 
             $rgb->getB(), 
             2,
-            sprintf('RGB B channel mismatch. Lab(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+            sprintf('RGB B channel mismatch at line %d. Lab(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+                $colorData['line_number'],
                 (int)round($colorData['lab']['l']), 
                 (int)round($colorData['lab']['a']), 
                 (int)round($colorData['lab']['b']),
@@ -320,9 +484,39 @@ final class ColorConversionTest extends TestCase
         $this->assertGreaterThanOrEqual(0, $lch->getH());
         $this->assertLessThanOrEqual(360, $lch->getH());
         // Validate against file data with tolerance (LCh values are rounded)
-        $this->assertEqualsWithDelta($colorData['lch']['l'], $lch->getL(), 2);
-        $this->assertEqualsWithDelta($colorData['lch']['c'], $lch->getC(), 2);
-        $this->assertEqualsWithDelta($colorData['lch']['h'], $lch->getH(), 2);
+        $this->assertEqualsWithDelta(
+            $colorData['lch']['l'], 
+            $lch->getL(), 
+            2,
+            sprintf('LCh L channel mismatch at line %d. RGB(%d, %d, %d) -> Expected L=%.1f, Got L=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['lch']['l'], 
+                $lch->getL()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['lch']['c'], 
+            $lch->getC(), 
+            2,
+            sprintf('LCh C channel mismatch at line %d. RGB(%d, %d, %d) -> Expected C=%.1f, Got C=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['lch']['c'], 
+                $lch->getC()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['lch']['h'], 
+            $lch->getH(), 
+            2,
+            sprintf('LCh H channel mismatch at line %d. RGB(%d, %d, %d) -> Expected H=%.1f, Got H=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['lch']['h'], 
+                $lch->getH()
+            )
+        );
     }
 
     public function testConvertLchToRgb(): void
@@ -337,7 +531,8 @@ final class ColorConversionTest extends TestCase
             $colorData['rgb']['r'], 
             $rgb->getR(), 
             5,
-            sprintf('RGB R channel mismatch. LCh(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+            sprintf('RGB R channel mismatch at line %d. LCh(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+                $colorData['line_number'],
                 (int)round($colorData['lch']['l']), 
                 (int)round($colorData['lch']['c']), 
                 (int)round($colorData['lch']['h']),
@@ -349,7 +544,8 @@ final class ColorConversionTest extends TestCase
             $colorData['rgb']['g'], 
             $rgb->getG(), 
             5,
-            sprintf('RGB G channel mismatch. LCh(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+            sprintf('RGB G channel mismatch at line %d. LCh(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+                $colorData['line_number'],
                 (int)round($colorData['lch']['l']), 
                 (int)round($colorData['lch']['c']), 
                 (int)round($colorData['lch']['h']),
@@ -361,7 +557,8 @@ final class ColorConversionTest extends TestCase
             $colorData['rgb']['b'], 
             $rgb->getB(), 
             5,
-            sprintf('RGB B channel mismatch. LCh(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+            sprintf('RGB B channel mismatch at line %d. LCh(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+                $colorData['line_number'],
                 (int)round($colorData['lch']['l']), 
                 (int)round($colorData['lch']['c']), 
                 (int)round($colorData['lch']['h']),
@@ -383,9 +580,39 @@ final class ColorConversionTest extends TestCase
         $this->assertIsInt($xyz->getY());
         $this->assertIsInt($xyz->getZ());
         // Validate against file data with tolerance (XYZ values are rounded)
-        $this->assertEqualsWithDelta($colorData['xyz']['x'], $xyz->getX(), 2);
-        $this->assertEqualsWithDelta($colorData['xyz']['y'], $xyz->getY(), 2);
-        $this->assertEqualsWithDelta($colorData['xyz']['z'], $xyz->getZ(), 2);
+        $this->assertEqualsWithDelta(
+            $colorData['xyz']['x'], 
+            $xyz->getX(), 
+            2,
+            sprintf('XYZ X channel mismatch at line %d. RGB(%d, %d, %d) -> Expected X=%.1f, Got X=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['xyz']['x'], 
+                $xyz->getX()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['xyz']['y'], 
+            $xyz->getY(), 
+            2,
+            sprintf('XYZ Y channel mismatch at line %d. RGB(%d, %d, %d) -> Expected Y=%.1f, Got Y=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['xyz']['y'], 
+                $xyz->getY()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $colorData['xyz']['z'], 
+            $xyz->getZ(), 
+            2,
+            sprintf('XYZ Z channel mismatch at line %d. RGB(%d, %d, %d) -> Expected Z=%.1f, Got Z=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['xyz']['z'], 
+                $xyz->getZ()
+            )
+        );
     }
 
     public function testConvertXyzToRgb(): void
@@ -425,7 +652,8 @@ final class ColorConversionTest extends TestCase
             $colorData['rgb']['r'], 
             $rgb->getR(), 
             10,
-            sprintf('RGB R channel mismatch. XYZ(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+            sprintf('RGB R channel mismatch at line %d. XYZ(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+                $colorData['line_number'],
                 (int)round($colorData['xyz']['x']), 
                 (int)round($colorData['xyz']['y']), 
                 (int)round($colorData['xyz']['z']),
@@ -437,7 +665,8 @@ final class ColorConversionTest extends TestCase
             $colorData['rgb']['g'], 
             $rgb->getG(), 
             5,
-            sprintf('RGB G channel mismatch. XYZ(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+            sprintf('RGB G channel mismatch at line %d. XYZ(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+                $colorData['line_number'],
                 (int)round($colorData['xyz']['x']), 
                 (int)round($colorData['xyz']['y']), 
                 (int)round($colorData['xyz']['z']),
@@ -449,7 +678,8 @@ final class ColorConversionTest extends TestCase
             $colorData['rgb']['b'], 
             $rgb->getB(), 
             10,
-            sprintf('RGB B channel mismatch. XYZ(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+            sprintf('RGB B channel mismatch at line %d. XYZ(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+                $colorData['line_number'],
                 (int)round($colorData['xyz']['x']), 
                 (int)round($colorData['xyz']['y']), 
                 (int)round($colorData['xyz']['z']),
@@ -503,9 +733,42 @@ final class ColorConversionTest extends TestCase
         $backToRgb = $cmyk->toRGB();
         
         // Allow for rounding differences (CMYK conversions can accumulate small errors)
-        $this->assertEqualsWithDelta($original->getR(), $backToRgb->getR(), 3);
-        $this->assertEqualsWithDelta($original->getG(), $backToRgb->getG(), 3);
-        $this->assertEqualsWithDelta($original->getB(), $backToRgb->getB(), 3);
+        $this->assertEqualsWithDelta(
+            $original->getR(), 
+            $backToRgb->getR(), 
+            3,
+            sprintf('Round-trip RGB R mismatch at line %d. RGB(%d,%d,%d)->CMYK(%d,%d,%d,%d)->RGB: Expected R=%d, Got R=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['cmyk']['c'], $colorData['cmyk']['m'], $colorData['cmyk']['y'], $colorData['cmyk']['k'],
+                $original->getR(), 
+                $backToRgb->getR()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $original->getG(), 
+            $backToRgb->getG(), 
+            3,
+            sprintf('Round-trip RGB G mismatch at line %d. RGB(%d,%d,%d)->CMYK(%d,%d,%d,%d)->RGB: Expected G=%d, Got G=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['cmyk']['c'], $colorData['cmyk']['m'], $colorData['cmyk']['y'], $colorData['cmyk']['k'],
+                $original->getG(), 
+                $backToRgb->getG()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $original->getB(), 
+            $backToRgb->getB(), 
+            3,
+            sprintf('Round-trip RGB B mismatch at line %d. RGB(%d,%d,%d)->CMYK(%d,%d,%d,%d)->RGB: Expected B=%d, Got B=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['cmyk']['c'], $colorData['cmyk']['m'], $colorData['cmyk']['y'], $colorData['cmyk']['k'],
+                $original->getB(), 
+                $backToRgb->getB()
+            )
+        );
     }
 
     public function testRoundTripRgbToHslAndBack(): void
@@ -516,9 +779,42 @@ final class ColorConversionTest extends TestCase
         $backToRgb = $hsl->toRGB();
         
         // Allow for small rounding differences (HSL conversions can have larger rounding errors)
-        $this->assertEqualsWithDelta($original->getR(), $backToRgb->getR(), 2);
-        $this->assertEqualsWithDelta($original->getG(), $backToRgb->getG(), 2);
-        $this->assertEqualsWithDelta($original->getB(), $backToRgb->getB(), 2);
+        $this->assertEqualsWithDelta(
+            $original->getR(), 
+            $backToRgb->getR(), 
+            2,
+            sprintf('Round-trip RGB R mismatch at line %d. RGB(%d,%d,%d)->HSL(%d,%d,%d)->RGB: Expected R=%d, Got R=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsl']['h'], $colorData['hsl']['s'], $colorData['hsl']['l'],
+                $original->getR(), 
+                $backToRgb->getR()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $original->getG(), 
+            $backToRgb->getG(), 
+            2,
+            sprintf('Round-trip RGB G mismatch at line %d. RGB(%d,%d,%d)->HSL(%d,%d,%d)->RGB: Expected G=%d, Got G=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsl']['h'], $colorData['hsl']['s'], $colorData['hsl']['l'],
+                $original->getG(), 
+                $backToRgb->getG()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $original->getB(), 
+            $backToRgb->getB(), 
+            2,
+            sprintf('Round-trip RGB B mismatch at line %d. RGB(%d,%d,%d)->HSL(%d,%d,%d)->RGB: Expected B=%d, Got B=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsl']['h'], $colorData['hsl']['s'], $colorData['hsl']['l'],
+                $original->getB(), 
+                $backToRgb->getB()
+            )
+        );
     }
 
     public function testRoundTripRgbToHsvAndBack(): void
@@ -529,9 +825,42 @@ final class ColorConversionTest extends TestCase
         $backToRgb = $hsv->toRGB();
         
         // Allow for small rounding differences (HSV conversions can have larger rounding errors)
-        $this->assertEqualsWithDelta($original->getR(), $backToRgb->getR(), 2);
-        $this->assertEqualsWithDelta($original->getG(), $backToRgb->getG(), 2);
-        $this->assertEqualsWithDelta($original->getB(), $backToRgb->getB(), 2);
+        $this->assertEqualsWithDelta(
+            $original->getR(), 
+            $backToRgb->getR(), 
+            2,
+            sprintf('Round-trip RGB R mismatch at line %d. RGB(%d,%d,%d)->HSV(%d,%d,%d)->RGB: Expected R=%d, Got R=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsv']['h'], $colorData['hsv']['s'], $colorData['hsv']['v'],
+                $original->getR(), 
+                $backToRgb->getR()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $original->getG(), 
+            $backToRgb->getG(), 
+            2,
+            sprintf('Round-trip RGB G mismatch at line %d. RGB(%d,%d,%d)->HSV(%d,%d,%d)->RGB: Expected G=%d, Got G=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsv']['h'], $colorData['hsv']['s'], $colorData['hsv']['v'],
+                $original->getG(), 
+                $backToRgb->getG()
+            )
+        );
+        $this->assertEqualsWithDelta(
+            $original->getB(), 
+            $backToRgb->getB(), 
+            2,
+            sprintf('Round-trip RGB B mismatch at line %d. RGB(%d,%d,%d)->HSV(%d,%d,%d)->RGB: Expected B=%d, Got B=%d', 
+                $colorData['line_number'],
+                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $colorData['hsv']['h'], $colorData['hsv']['s'], $colorData['hsv']['v'],
+                $original->getB(), 
+                $backToRgb->getB()
+            )
+        );
     }
 
     // ========== ToHex Tests ==========
