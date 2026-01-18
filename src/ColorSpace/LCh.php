@@ -41,7 +41,7 @@ final class LCh extends AbstractColorSpace
     {
         match ($channel) {
             'l' => static::assertRange((int)$value, 0, 100, $channel),
-            'c' => static::assertRange((int)$value, 0, 127, $channel),
+            'c' => is_numeric($value) ? null : throw new InvalidColorValueException("Channel '{$channel}' must be numeric."),
             'h' => static::assertRange((int)$value, 0, 360, $channel),
             default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space '{static::getName()}'."),
         };

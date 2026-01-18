@@ -253,44 +253,40 @@ final class Color extends AbstractColor
                 $l = $this->getL();
                 $c = $this->getC();
                 $h = deg2rad($this->getH());
+            
+                // LCh -> Lab
                 $a = cos($h) * $c;
                 $b = sin($h) * $c;
-
-                // Now convert Lab to XYZ
-                $refX = 95.047;
-                $refY = 100.000;
-                $refZ = 108.883;
+            
+                // Lab -> XYZ
+                $refX = 95.047; $refY = 100.000; $refZ = 108.883;
                 $y = ($l + 16) / 116;
                 $x = $a / 500 + $y;
                 $z = $y - $b / 200;
-                $x3 = pow($x, 3);
-                $z3 = pow($z, 3);
+            
+                $x3 = pow($x, 3); $y3 = pow($y, 3); $z3 = pow($z, 3);
                 $x = $refX * (($x3 > 0.008856) ? $x3 : (($x - 16/116) / 7.787));
-                $y = $refY * ((pow($y, 3) > 0.008856) ? pow($y, 3) : (($y - 16/116) / 7.787));
+                $y = $refY * (($y3 > 0.008856) ? $y3 : (($y - 16/116) / 7.787));
                 $z = $refZ * (($z3 > 0.008856) ? $z3 : (($z - 16/116) / 7.787));
-
-                // Now convert XYZ to RGB (sRGB D65)
-                $x = $x / 100;
-                $y = $y / 100;
-                $z = $z / 100;
+            
+                // XYZ -> linear RGB
+                $x /= 100; $y /= 100; $z /= 100;
                 $r = $x * 3.2404542 + $y * -1.5371385 + $z * -0.4985314;
                 $g = $x * -0.9692660 + $y * 1.8760108 + $z * 0.0415560;
                 $b = $x * 0.0556434 + $y * -0.2040259 + $z * 1.0572252;
-
-                // Apply gamma correction
+            
+                // Gamma correction and optional clamping
                 $rgb = [$r, $g, $b];
                 foreach ($rgb as &$val) {
-                    if ($val <= 0.0031308) {
-                        $val = 12.92 * $val;
-                    } else {
-                        $val = 1.055 * pow($val, 1 / 2.4) - 0.055;
+                    $val = ($val <= 0.0031308) ? 12.92 * $val : 1.055 * pow($val, 1/2.4) - 0.055;
+                    if ($clampForDisplay) {
+                        $val = max(0, min(1, $val));
                     }
-                    $val = max(0, min(1, $val)); // Clamp between 0 and 1
-                    $val = (int)round($val * 255);
+                    $val *= 255;
                 }
                 unset($val);
-
-                return self::rgb($rgb[0], $rgb[1], $rgb[2]);
+            
+                return self::rgb(round($rgb[0]), round($rgb[1]), round($rgb[2]));
             case XYZ::class:
                 $x = $this->getX() / 100;
                 $y = $this->getY() / 100;
@@ -564,19 +560,14 @@ final class Color extends AbstractColor
         $l = $lab->getL();
         $a = $lab->getA();
         $b = $lab->getB();
-
+        
         $c = sqrt($a * $a + $b * $b);
-        $h = atan2($b, $a);
-        $h = rad2deg($h);
+        $h = rad2deg(atan2($b, $a));
         if ($h < 0) {
             $h += 360;
         }
-
-        return self::lch(
-            max(0, min ((int)round($l), 100)),
-            max(0, min ((int)round($c), 100)),
-            (int)round($h)
-        );
+        
+        return self::lch($l, $c, $h);
     }
 
     #[\Override]
