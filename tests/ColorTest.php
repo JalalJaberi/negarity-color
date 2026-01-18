@@ -245,97 +245,148 @@ final class ColorTest extends TestCase
     public function testCreateRgbColorWithInvalidRChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::rgb(300, 100, 50); // R > 255
+        $invalidR = random_int(256, 500);
+        $g = random_int(0, 255);
+        $b = random_int(0, 255);
+        Color::rgb($invalidR, $g, $b); // R > 255
     }
 
     public function testCreateRgbColorWithInvalidGChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::rgb(255, -10, 50); // G < 0
+        $r = random_int(0, 255);
+        $invalidG = random_int(-100, -1);
+        $b = random_int(0, 255);
+        Color::rgb($r, $invalidG, $b); // G < 0
     }
 
     public function testCreateRgbColorWithInvalidBChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::rgb(255, 100, 500); // B > 255
+        $r = random_int(0, 255);
+        $g = random_int(0, 255);
+        $invalidB = random_int(256, 500);
+        Color::rgb($r, $g, $invalidB); // B > 255
     }
 
     public function testCreateRgbaColorWithInvalidAlpha(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::rgba(255, 100, 50, 300); // Alpha > 255
+        $r = random_int(0, 255);
+        $g = random_int(0, 255);
+        $b = random_int(0, 255);
+        $invalidAlpha = random_int(256, 500);
+        Color::rgba($r, $g, $b, $invalidAlpha); // Alpha > 255
     }
 
     public function testCreateCmykColorWithInvalidCChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::cmyk(150, 50, 0, 25); // C > 100
+        $invalidC = random_int(101, 200);
+        $m = random_int(0, 100);
+        $y = random_int(0, 100);
+        $k = random_int(0, 100);
+        Color::cmyk($invalidC, $m, $y, $k); // C > 100
     }
 
     public function testCreateCmykColorWithInvalidMChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::cmyk(100, -10, 0, 25); // M < 0
+        $c = random_int(0, 100);
+        $invalidM = random_int(-100, -1);
+        $y = random_int(0, 100);
+        $k = random_int(0, 100);
+        Color::cmyk($c, $invalidM, $y, $k); // M < 0
     }
 
     public function testCreateHslColorWithInvalidHChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::hsl(400, 50, 40); // H > 360
+        $invalidH = random_int(361, 500);
+        $s = random_int(0, 100);
+        $l = random_int(0, 100);
+        Color::hsl($invalidH, $s, $l); // H > 360
     }
 
     public function testCreateHslColorWithInvalidSChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::hsl(210, 150, 40); // S > 100
+        $h = random_int(0, 360);
+        $invalidS = random_int(101, 200);
+        $l = random_int(0, 100);
+        Color::hsl($h, $invalidS, $l); // S > 100
     }
 
     public function testCreateHslColorWithInvalidLChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::hsl(210, 50, -10); // L < 0
+        $h = random_int(0, 360);
+        $s = random_int(0, 100);
+        $invalidL = random_int(-100, -1);
+        Color::hsl($h, $s, $invalidL); // L < 0
     }
 
     public function testCreateHsvColorWithInvalidVChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::hsv(210, 50, 200); // V > 100
+        $h = random_int(0, 360);
+        $s = random_int(0, 100);
+        $invalidV = random_int(101, 200);
+        Color::hsv($h, $s, $invalidV); // V > 100
     }
 
     public function testCreateLabColorWithInvalidLChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::lab(150, 20, -30); // L > 100
+        $invalidL = random_int(101, 200);
+        $a = random_int(-128, 127);
+        $b = random_int(-128, 127);
+        Color::lab($invalidL, $a, $b); // L > 100
     }
 
     public function testCreateLabColorWithNegativeLChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::lab(-10, 20, -30); // L < 0
+        $invalidL = random_int(-100, -1);
+        $a = random_int(-128, 127);
+        $b = random_int(-128, 127);
+        Color::lab($invalidL, $a, $b); // L < 0
     }
 
     public function testCreateLchColorWithInvalidHChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::lch(75, 36, 500); // H > 360
+        $l = random_int(0, 100);
+        $c = random_int(0, 100);
+        $invalidH = random_int(361, 500);
+        Color::lch($l, $c, $invalidH); // H > 360
     }
 
     public function testCreateYcbcrColorWithInvalidYChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::ycbcr(150, 0, -100); // Y > 100
+        $invalidY = random_int(101, 200);
+        $cb = random_int(-128, 127);
+        $cr = random_int(-128, 127);
+        Color::ycbcr($invalidY, $cb, $cr); // Y > 100
     }
 
     public function testCreateYcbcrColorWithInvalidCbChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::ycbcr(78, 200, -100); // Cb > 127
+        $y = random_int(0, 100);
+        $invalidCb = random_int(128, 255);
+        $cr = random_int(-128, 127);
+        Color::ycbcr($y, $invalidCb, $cr); // Cb > 127
     }
 
     public function testCreateYcbcrColorWithInvalidCrChannel(): void
     {
         $this->expectException(InvalidColorValueException::class);
-        Color::ycbcr(78, 0, -200); // Cr < -128
+        $y = random_int(0, 100);
+        $cb = random_int(-128, 127);
+        $invalidCr = random_int(-255, -129);
+        Color::ycbcr($y, $cb, $invalidCr); // Cr < -128
     }
 
     // ========== Color Conversion Tests ==========
