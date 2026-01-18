@@ -657,10 +657,11 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         }
         unset($val);
 
+        // Clamp RGB values to 0-255 (XYZ has wider gamut than sRGB)
         return [
-            'r' => (int) round($rgb[0]),
-            'g' => (int) round($rgb[1]),
-            'b' => (int) round($rgb[2])
+            'r' => (int) round(max(0, min(255, $rgb[0]))),
+            'g' => (int) round(max(0, min(255, $rgb[1]))),
+            'b' => (int) round(max(0, min(255, $rgb[2])))
         ];
     }
 
@@ -721,10 +722,11 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         }
         unset($val);
 
+        // Clamp RGB values to 0-255 (Lab has wider gamut than sRGB)
         return [
-            'r' => (int) round($rgb[0]),
-            'g' => (int) round($rgb[1]),
-            'b' => (int) round($rgb[2])
+            'r' => (int) round(max(0, min(255, $rgb[0]))),
+            'g' => (int) round(max(0, min(255, $rgb[1]))),
+            'b' => (int) round(max(0, min(255, $rgb[2])))
         ];
     }
 
@@ -768,10 +770,11 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         }
         unset($val);
 
+        // Clamp RGB values to 0-255 (LCh has wider gamut than sRGB)
         return [
-            'r' => (int) round($rgb[0]),
-            'g' => (int) round($rgb[1]),
-            'b' => (int) round($rgb[2])
+            'r' => (int) round(max(0, min(255, $rgb[0]))),
+            'g' => (int) round(max(0, min(255, $rgb[1]))),
+            'b' => (int) round(max(0, min(255, $rgb[2])))
         ];
     }
 
