@@ -76,10 +76,16 @@ final class Color extends AbstractColor
                 $rgba = $this->colorSpace;
                 return self::rgb($rgba->getR(), $rgba->getG(), $rgba->getB());
             case CMYK::class:
-                $r = 255 * (1 - $this->getC() / 100) * (1 - $this->getK() / 100);
-                $g = 255 * (1 - $this->getM() / 100) * (1 - $this->getK() / 100);
-                $b = 255 * (1 - $this->getY() / 100) * (1 - $this->getK() / 100);
-                return self::rgb((int)$r, (int)$g, (int)$b);
+                $c = $this->getC() / 100;
+                $m = $this->getM() / 100;
+                $y = $this->getY() / 100;
+                $k = $this->getK() / 100;
+                
+                $r = 255 * (1 - $c) * (1 - $k);
+                $g = 255 * (1 - $m) * (1 - $k);
+                $b = 255 * (1 - $y) * (1 - $k);
+                
+                return self::rgb((int) round($r), (int) round($g), (int) round($b));
             case HSL::class:
                 $c = (1 - abs(2 * ($this->getL() / 100) - 1)) * ($this->getS() / 100);
                 $h = fmod($this->getH(), 360) / 60;
@@ -385,9 +391,9 @@ final class Color extends AbstractColor
             return self::cmyk(0, 0, 0, 100);
         }
 
-        $c = (1 - $r - $k) / (1 - $k);
-        $m = (1 - $g - $k) / (1 - $k);
-        $y = (1 - $b - $k) / (1 - $k);
+        $c = max(0, min(1, (1 - $r - $k) / (1 - $k)));
+        $m = max(0, min(1, (1 - $g - $k) / (1 - $k)));
+        $y = max(0, min(1, (1 - $b - $k) / (1 - $k)));
 
         return self::cmyk(
             (int)round($c * 100),
