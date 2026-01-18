@@ -41,7 +41,7 @@ final class Lab extends AbstractColorSpace
     {
         match ($channel) {
             'l' => static::assertRange((int)$value, 0, 100, $channel),
-            'a', 'b' => static::assertRange((int)$value, -128, 127, $channel),
+            'a', 'b' => is_numeric($value) ? null : throw new InvalidColorValueException("Channel '{$channel}' must be numeric."),
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in Lab color space.', $channel)),
         };
     }

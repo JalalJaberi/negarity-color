@@ -189,38 +189,45 @@ final class Color extends AbstractColor
                     (int) round($b)
                 );
             case Lab::class:
-                $l = $this->getL();
-                $a = $this->getA();
-                $b = $this->getB();
-                /*
-                 * Convert Lab to XYZ
-                 * Reference white D65
-                 */
+                $l = $this->getL(); // L: 0–100, float
+                $a = $this->getA(); // a: float
+                $b = $this->getB(); // b: float
+            
+                // Reference white D65
                 $refX = 95.047;
                 $refY = 100.000;
                 $refZ = 108.883;
-
+            
+                // Lab -> XYZ
                 $y = ($l + 16) / 116;
                 $x = $a / 500 + $y;
                 $z = $y - $b / 200;
-
+            
                 $x3 = pow($x, 3);
+                $y3 = pow($y, 3);
                 $z3 = pow($z, 3);
-
+            
                 $x = $refX * (($x3 > 0.008856) ? $x3 : (($x - 16/116) / 7.787));
-                $y = $refY * ((pow($y, 3) > 0.008856) ? pow($y, 3) : (($y - 16/116) / 7.787));
+                $y = $refY * (($y3 > 0.008856) ? $y3 : (($y - 16/116) / 7.787));
                 $z = $refZ * (($z3 > 0.008856) ? $z3 : (($z - 16/116) / 7.787));
-
-                // Now convert XYZ to RGB (sRGB D65)
+            
+                // Scale XYZ to 0–1 for sRGB conversion
                 $x = $x / 100;
                 $y = $y / 100;
                 $z = $z / 100;
-
-                $r = $x * 3.2404542 + $y * -1.5371385 + $z * -0.4985314;
-                $g = $x * -0.9692660 + $y * 1.8760108 + $z * 0.0415560;
-                $b = $x * 0.0556434 + $y * -0.2040259 + $z * 1.0572252;
-
-                // Apply gamma correction
+            
+                // XYZ -> linear RGB
+                $matrix = [
+                    [3.2404542, -1.5371385, -0.4985314],
+                    [-0.9692660, 1.8760108, 0.0415560],
+                    [0.0556434, -0.2040259, 1.0572252]
+                ];
+            
+                $r = $x * $matrix[0][0] + $y * $matrix[0][1] + $z * $matrix[0][2];
+                $g = $x * $matrix[1][0] + $y * $matrix[1][1] + $z * $matrix[1][2];
+                $b = $x * $matrix[2][0] + $y * $matrix[2][1] + $z * $matrix[2][2];
+            
+                // Apply gamma correction and optionally clamp for display
                 $rgb = [$r, $g, $b];
                 foreach ($rgb as &$val) {
                     if ($val <= 0.0031308) {
@@ -228,12 +235,20 @@ final class Color extends AbstractColor
                     } else {
                         $val = 1.055 * pow($val, 1 / 2.4) - 0.055;
                     }
-                    $val = max(0, min(1, $val)); // Clamp between 0 and 1
-                    $val = (int)round($val * 255);
+            
+                    if ($clampForDisplay) {
+                        $val = max(0, min(1, $val));
+                    }
+            
+                    $val = $val * 255;
                 }
                 unset($val);
-
-                return self::rgb($rgb[0], $rgb[1], $rgb[2]);
+            
+                return self::rgb(
+                    (int) round($rgb[0]),
+                    (int) round($rgb[1]),
+                    (int) round($rgb[2])
+                );            
             case LCh::class:
                 $l = $this->getL();
                 $c = $this->getC();
@@ -513,36 +528,33 @@ final class Color extends AbstractColor
         $r = $rgb->getR() / 255;
         $g = $rgb->getG() / 255;
         $b = $rgb->getB() / 255;
-
-        // Apply inverse gamma correction
-        $r = ($r > 0.04045) ? pow(($r + 0.055) / 1.055, 2.4) : $r / 12.92;
-        $g = ($g > 0.04045) ? pow(($g + 0.055) / 1.055, 2.4) : $g / 12.92;
-        $b = ($b > 0.04045) ? pow(($b + 0.055) / 1.055, 2.4) : $b / 12.92;
-
-        // Convert to XYZ (sRGB D65, more precise values)
-        $x = $r * 0.4124564 + $g * 0.3575761 + $b * 0.1804375;
-        $y = $r * 0.2126729 + $g * 0.7151522 + $b * 0.0721750;
-        $z = $r * 0.0193339 + $g * 0.1191920 + $b * 0.9503041;
-
-        // Normalize for D65 white point
+    
+        // Inverse gamma
+        $r = ($r > 0.04045) ? pow(($r + 0.055)/1.055, 2.4) : $r / 12.92;
+        $g = ($g > 0.04045) ? pow(($g + 0.055)/1.055, 2.4) : $g / 12.92;
+        $b = ($b > 0.04045) ? pow(($b + 0.055)/1.055, 2.4) : $b / 12.92;
+    
+        // RGB -> XYZ
+        $x = $r*0.4124564 + $g*0.3575761 + $b*0.1804375;
+        $y = $r*0.2126729 + $g*0.7151522 + $b*0.0721750;
+        $z = $r*0.0193339 + $g*0.1191920 + $b*0.9503041;
+    
+        // Normalize for D65
         $x /= 0.95047;
         $y /= 1.00000;
         $z /= 1.08883;
-
-        // Convert to Lab
-        $fx = ($x > 0.008856) ? pow($x, 1/3) : (7.787 * $x) + (16 / 116);
-        $fy = ($y > 0.008856) ? pow($y, 1/3) : (7.787 * $y) + (16 / 116);
-        $fz = ($z > 0.008856) ? pow($z, 1/3) : (7.787 * $z) + (16 / 116);
-
-        $l = (116 * $fy) - 16;
-        $a = 500 * ($fx - $fy);
-        $b = 200 * ($fy - $fz);
-
-        return self::lab(
-            (int)round($l),
-            (int)round($a),
-            (int)round($b)
-        );
+    
+        $delta = 6/29;
+    
+        $fx = ($x > $delta**3) ? pow($x, 1/3) : ($x/(3*$delta*$delta) + 4/29);
+        $fy = ($y > $delta**3) ? pow($y, 1/3) : ($y/(3*$delta*$delta) + 4/29);
+        $fz = ($z > $delta**3) ? pow($z, 1/3) : ($z/(3*$delta*$delta) + 4/29);
+    
+        $l = 116*$fy - 16;
+        $a = 500*($fx - $fy);
+        $b = 200*($fy - $fz);
+    
+        return self::lab($l, $a, $b);
     }
 
     #[\Override]
