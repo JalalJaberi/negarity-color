@@ -7,6 +7,7 @@
 ### more flexibility for channel values (use float and percentage)
 ### more flexibility to convert from string (percentage values, float values, regex)
 ### Add more named colors (web, ...)
+ - https://people.csail.mit.edu/jaffer/Color/Dictionaries#The%20Dictionaries
 ### add some helper functions like rgbtohex(r, g, b) to work as standalone functions
 ### add palletes as a feature
 ### add generators: random color generator, random pallete generator, pallet generator having some info, ...

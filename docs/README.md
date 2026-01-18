@@ -74,6 +74,10 @@ $color = Color::rgb(255, 100, 50)
 
 [Getting started](https://jalaljaberi.github.io/negarity-color/docs/getting-started)
 
+## References
+
+- [Martin Krzywinski color table](https://mk.bcgsc.ca/colornames/) - A comprehensive list of 9,284 named colors with conversions across multiple color spaces (RGB, HSV, XYZ, Lab, LCH, CMYK)
+
 ## License
 
 MIT
