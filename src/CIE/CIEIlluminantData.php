@@ -25,34 +25,21 @@ final class CIEIlluminantData
      */
     public static function getXYZ(CIEIlluminant $illuminant, CIEObserver $observer): array
     {
-        $data = self::getData($observer);
-        return $data[$illuminant] ?? throw new \InvalidArgumentException(
-            "XYZ values not available for illuminant {$illuminant->value} with observer {$observer->value}"
-        );
-    }
-
-    /**
-     * Get all XYZ data for a specific observer.
-     * 
-     * @param CIEObserver $observer
-     * @return array<CIEIlluminant, array{x: float, y: float, z: float}>
-     */
-    private static function getData(CIEObserver $observer): array
-    {
         return match ($observer) {
-            CIEObserver::TwoDegree => self::getTwoDegreeData(),
-            CIEObserver::TenDegree => self::getTenDegreeData(),
+            CIEObserver::TwoDegree => self::getTwoDegreeXYZ($illuminant),
+            CIEObserver::TenDegree => self::getTenDegreeXYZ($illuminant),
         };
     }
 
     /**
-     * XYZ tristimulus values for 2° standard observer (CIE 1931).
+     * Get XYZ tristimulus values for 2° standard observer (CIE 1931).
      * 
-     * @return array<CIEIlluminant, array{x: float, y: float, z: float}>
+     * @param CIEIlluminant $illuminant
+     * @return array{x: float, y: float, z: float}
      */
-    private static function getTwoDegreeData(): array
+    private static function getTwoDegreeXYZ(CIEIlluminant $illuminant): array
     {
-        return [
+        return match ($illuminant) {
             CIEIlluminant::A => ['x' => 109.850, 'y' => 100.000, 'z' => 35.585],
             CIEIlluminant::B => ['x' => 99.0927, 'y' => 100.000, 'z' => 85.313],
             CIEIlluminant::C => ['x' => 98.074, 'y' => 100.000, 'z' => 118.232],
@@ -73,17 +60,18 @@ final class CIEIlluminantData
             CIEIlluminant::F10 => ['x' => 96.174, 'y' => 100.000, 'z' => 81.712],
             CIEIlluminant::F11 => ['x' => 100.966, 'y' => 100.000, 'z' => 64.370],
             CIEIlluminant::F12 => ['x' => 108.046, 'y' => 100.000, 'z' => 39.228],
-        ];
+        };
     }
 
     /**
-     * XYZ tristimulus values for 10° standard observer (CIE 1964).
+     * Get XYZ tristimulus values for 10° standard observer (CIE 1964).
      * 
-     * @return array<CIEIlluminant, array{x: float, y: float, z: float}>
+     * @param CIEIlluminant $illuminant
+     * @return array{x: float, y: float, z: float}
      */
-    private static function getTenDegreeData(): array
+    private static function getTenDegreeXYZ(CIEIlluminant $illuminant): array
     {
-        return [
+        return match ($illuminant) {
             CIEIlluminant::A => ['x' => 111.144, 'y' => 100.000, 'z' => 35.200],
             CIEIlluminant::B => ['x' => 99.178, 'y' => 100.000, 'z' => 84.349],
             CIEIlluminant::C => ['x' => 97.285, 'y' => 100.000, 'z' => 116.145],
@@ -104,6 +92,6 @@ final class CIEIlluminantData
             CIEIlluminant::F10 => ['x' => 99.001, 'y' => 100.000, 'z' => 83.134],
             CIEIlluminant::F11 => ['x' => 103.866, 'y' => 100.000, 'z' => 65.627],
             CIEIlluminant::F12 => ['x' => 111.428, 'y' => 100.000, 'z' => 40.353],
-        ];
+        };
     }
 }
