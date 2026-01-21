@@ -45,4 +45,16 @@ final class Lab extends AbstractColorSpace
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in Lab color space.', $channel)),
         };
     }
+
+    #[\Override]
+    public static function supportsIlluminant(): bool
+    {
+        return true;
+    }
+
+    #[\Override]
+    public static function supportsObserver(): bool
+    {
+        return true;
+    }
 }

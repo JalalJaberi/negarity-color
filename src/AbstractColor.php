@@ -24,6 +24,9 @@ use Negarity\Color\Filter\{
     Parameterized\ParameterizedColorFilterInterface,
     Binary\BinaryColorFilterInterface
 };
+use Negarity\Color\CIE\CIEIlluminant;
+use Negarity\Color\CIE\CIEObserver;
+use Negarity\Color\CIE\CIEIlluminantData;
 
 abstract class AbstractColor implements \JsonSerializable, ColorInterface
 {
@@ -33,16 +36,26 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     protected string $colorSpace;
     /** @var array<string, float|int> */
     protected array $values = [];
+    /** @var CIEIlluminant */
+    protected CIEIlluminant $illuminant;
+    /** @var CIEObserver */
+    protected CIEObserver $observer;
 
     /**
      * Constructor.
      * 
      * @param class-string<ColorSpaceInterface> $colorSpace
      * @param array<string, float|int> $values
+     * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
+     * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
      * @throws \InvalidArgumentException
      */
-    public function __construct(string $colorSpace, array $values = [])
-    {
+    public function __construct(
+        string $colorSpace, 
+        array $values = [],
+        ?CIEIlluminant $illuminant = null,
+        ?CIEObserver $observer = null
+    ) {
         if (!is_subclass_of($colorSpace, ColorSpaceInterface::class)) {
             throw new \InvalidArgumentException(
                 "$colorSpace must implement ColorSpaceInterface"
@@ -50,6 +63,8 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         }
 
         $this->colorSpace = $colorSpace;
+        $this->illuminant = $illuminant ?? CIEIlluminant::D65;
+        $this->observer = $observer ?? CIEObserver::TwoDegree;
 
         $colorSpaceChannels = $colorSpace::getChannels();
 
@@ -104,12 +119,101 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         return $this->values[$name];
     }
 
+    /**
+     * Get the CIE standard illuminant for this color.
+     * 
+     * @return CIEIlluminant
+     */
+    final public function getIlluminant(): CIEIlluminant
+    {
+        return $this->illuminant;
+    }
+
+    /**
+     * Get the CIE standard observer for this color.
+     * 
+     * @return CIEObserver
+     */
+    final public function getObserver(): CIEObserver
+    {
+        return $this->observer;
+    }
+
+    /**
+     * Create a new color instance with a different illuminant.
+     * 
+     * @param CIEIlluminant $illuminant The new illuminant
+     * @return static
+     */
+    final public function withIlluminant(CIEIlluminant $illuminant): static
+    {
+        return new static($this->colorSpace, $this->values, $illuminant, $this->observer);
+    }
+
+    /**
+     * Create a new color instance with a different observer.
+     * 
+     * @param CIEObserver $observer The new observer
+     * @return static
+     */
+    final public function withObserver(CIEObserver $observer): static
+    {
+        return new static($this->colorSpace, $this->values, $this->illuminant, $observer);
+    }
+
+    /**
+     * Adapt the color to a different illuminant using chromatic adaptation.
+     * 
+     * This method converts the color to XYZ, performs chromatic adaptation,
+     * and returns a new color instance with the target illuminant.
+     * 
+     * @param CIEIlluminant $targetIlluminant The target illuminant
+     * @param \Negarity\Color\CIE\AdaptationMethod|null $method The adaptation method (default: Bradford)
+     * @return static
+     */
+    public function adaptIlluminant(
+        CIEIlluminant $targetIlluminant,
+        ?\Negarity\Color\CIE\AdaptationMethod $method = null
+    ): static {
+        // For now, convert to XYZ with current illuminant, then create new color with target illuminant
+        // Full chromatic adaptation will be implemented later
+        $xyz = $this->toXYZ();
+        return new static(
+            \Negarity\Color\ColorSpace\XYZ::class,
+            ['x' => $xyz->getX(), 'y' => $xyz->getY(), 'z' => $xyz->getZ()],
+            $targetIlluminant,
+            $this->observer
+        );
+    }
+
+    /**
+     * Adapt the color to a different observer.
+     * 
+     * This method converts the color to XYZ, then creates a new color instance
+     * with the target observer.
+     * 
+     * @param CIEObserver $targetObserver The target observer
+     * @return static
+     */
+    public function adaptObserver(CIEObserver $targetObserver): static
+    {
+        $xyz = $this->toXYZ();
+        return new static(
+            \Negarity\Color\ColorSpace\XYZ::class,
+            ['x' => $xyz->getX(), 'y' => $xyz->getY(), 'z' => $xyz->getZ()],
+            $this->illuminant,
+            $targetObserver
+        );
+    }
+
     #[\Override]
     final public function toArray(): array
     {
         return [
             'color-space' => $this->getColorSpaceName(),
             'values' => $this->values,
+            'illuminant' => $this->illuminant->value,
+            'observer' => $this->observer->value,
         ];
     }
 
@@ -215,29 +319,43 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     /**
      * Create a Color in Lab color space.
      * 
-     * @param int $l Lightness channel (0-100)
-     * @param int $a A channel (-128 to 127)
-     * @param int $b B channel (-128 to 127)
+     * @param int|float $l Lightness channel (0-100)
+     * @param int|float $a A channel (-128 to 127)
+     * @param int|float $b B channel (-128 to 127)
+     * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
+     * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
      * @return static
      * @throws \InvalidArgumentException
      */
-    final public static function lab(int $l, int $a, int $b): static
-    {
-        return new static(Lab::class, ['l' => $l, 'a' => $a, 'b' => $b]);
+    final public static function lab(
+        int|float $l, 
+        int|float $a, 
+        int|float $b, 
+        ?CIEIlluminant $illuminant = null,
+        ?CIEObserver $observer = null
+    ): static {
+        return new static(Lab::class, ['l' => $l, 'a' => $a, 'b' => $b], $illuminant, $observer);
     }
 
     /**
      * Create a Color in LCh color space.
      * 
-     * @param int $l Lightness channel (0-100)
-     * @param int $c Chroma channel (0-100)
-     * @param int $h Hue channel (0-360)
+     * @param int|float $l Lightness channel (0-100)
+     * @param int|float $c Chroma channel (0-100)
+     * @param int|float $h Hue channel (0-360)
+     * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
+     * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
      * @return static
      * @throws \InvalidArgumentException
      */
-    final public static function lch(int $l, int $c, int $h): static
-    {
-        return new static(LCh::class, ['l' => $l, 'c' => $c, 'h' => $h]);
+    final public static function lch(
+        int|float $l, 
+        int|float $c, 
+        int|float $h, 
+        ?CIEIlluminant $illuminant = null,
+        ?CIEObserver $observer = null
+    ): static {
+        return new static(LCh::class, ['l' => $l, 'c' => $c, 'h' => $h], $illuminant, $observer);
     }
 
     /**
@@ -246,12 +364,19 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * @param int $x X channel
      * @param int $y Y channel
      * @param int $z Z channel
+     * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
+     * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
      * @return static
      * @throws \InvalidArgumentException
      */
-    final public static function xyz(int $x, int $y, int $z): static
-    {
-        return new static(XYZ::class, ['x' => $x, 'y' => $y, 'z' => $z]);
+    final public static function xyz(
+        int $x, 
+        int $y, 
+        int $z, 
+        ?CIEIlluminant $illuminant = null,
+        ?CIEObserver $observer = null
+    ): static {
+        return new static(XYZ::class, ['x' => $x, 'y' => $y, 'z' => $z], $illuminant, $observer);
     }
 
     /**
@@ -437,21 +562,23 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     /**
      * Convert the color to Lab color space.
      * 
+     * @param CIEIlluminant|null $illuminant Optional illuminant (uses instance illuminant if null)
+     * @param CIEObserver|null $observer Optional observer (uses instance observer if null)
      * @return static
      */
-    abstract public function toLab(): static;
+    abstract public function toLab(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static;
     /**
      * Convert the color to LCh color space.
      * 
      * @return static
      */
-    abstract public function toLCh(): static;
+    abstract public function toLCh(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static;
     /**
      * Convert the color to XYZ color space.
      * 
      * @return static
      */
-    abstract public function toXYZ(): static;
+    abstract public function toXYZ(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static;
     /**
      * Convert the color to YCbCr color space.
      * 
@@ -668,18 +795,23 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     /**
      * Convert Lab to RGB values (via XYZ).
      * 
+     * @param CIEIlluminant|null $illuminant Optional illuminant (uses instance illuminant if null)
+     * @param CIEObserver|null $observer Optional observer (uses instance observer if null)
      * @return array{r: int, g: int, b: int}
      */
-    protected function convertLabToRgb(): array
+    protected function convertLabToRgb(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array
     {
         $l = $this->getL();
         $a = $this->getA();
         $b = $this->getB();
 
-        // Reference white D65
-        $refX = 95.047;
-        $refY = 100.000;
-        $refZ = 108.883;
+        // Get reference white from illuminant/observer
+        $illuminant = $illuminant ?? $this->illuminant;
+        $observer = $observer ?? $this->observer;
+        $refWhite = CIEIlluminantData::getXYZ($illuminant, $observer);
+        $refX = $refWhite['x'];
+        $refY = $refWhite['y'];
+        $refZ = $refWhite['z'];
 
         // Lab -> XYZ
         $y = ($l + 16) / 116;
@@ -735,7 +867,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * 
      * @return array{r: int, g: int, b: int}
      */
-    protected function convertLchToRgb(): array
+    protected function convertLchToRgb(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array
     {
         $l = $this->getL();
         $c = $this->getC();
@@ -745,8 +877,13 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         $a = cos($h) * $c;
         $b = sin($h) * $c;
 
-        // Lab -> XYZ
-        $refX = 95.047; $refY = 100.000; $refZ = 108.883;
+        // Get reference white from illuminant/observer
+        $illuminant = $illuminant ?? $this->illuminant;
+        $observer = $observer ?? $this->observer;
+        $refWhite = CIEIlluminantData::getXYZ($illuminant, $observer);
+        $refX = $refWhite['x'];
+        $refY = $refWhite['y'];
+        $refZ = $refWhite['z'];
         $y = ($l + 16) / 116;
         $x = $a / 500 + $y;
         $z = $y - $b / 200;
@@ -974,9 +1111,11 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * @param int $r Red channel (0-255)
      * @param int $g Green channel (0-255)
      * @param int $b Blue channel (0-255)
+     * @param CIEIlluminant|null $illuminant Optional illuminant (uses instance illuminant if null)
+     * @param CIEObserver|null $observer Optional observer (uses instance observer if null)
      * @return array{l: float, a: float, b: float}
      */
-    protected function convertRgbToLab(int $r, int $g, int $b): array
+    protected function convertRgbToLab(int $r, int $g, int $b, ?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array
     {
         $r = $r / 255;
         $g = $g / 255;
@@ -992,10 +1131,15 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         $y = $r*0.2126729 + $g*0.7151522 + $b*0.0721750;
         $z = $r*0.0193339 + $g*0.1191920 + $b*0.9503041;
 
-        // Normalize for D65
-        $x /= 0.95047;
-        $y /= 1.00000;
-        $z /= 1.08883;
+        // Get reference white from illuminant/observer
+        $illuminant = $illuminant ?? $this->illuminant;
+        $observer = $observer ?? $this->observer;
+        $refWhite = CIEIlluminantData::getXYZ($illuminant, $observer);
+        
+        // Normalize using reference white
+        $x /= $refWhite['x'] / 100;
+        $y /= $refWhite['y'] / 100;
+        $z /= $refWhite['z'] / 100;
 
         $delta = 6/29;
 
@@ -1016,11 +1160,13 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * @param int $r Red channel (0-255)
      * @param int $g Green channel (0-255)
      * @param int $b Blue channel (0-255)
+     * @param CIEIlluminant|null $illuminant Optional illuminant (uses instance illuminant if null)
+     * @param CIEObserver|null $observer Optional observer (uses instance observer if null)
      * @return array{l: float, c: float, h: float}
      */
-    protected function convertRgbToLch(int $r, int $g, int $b): array
+    protected function convertRgbToLch(int $r, int $g, int $b, ?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array
     {
-        $lab = $this->convertRgbToLab($r, $g, $b);
+        $lab = $this->convertRgbToLab($r, $g, $b, $illuminant, $observer);
         $l = $lab['l'];
         $a = $lab['a'];
         $b = $lab['b'];

@@ -18,6 +18,8 @@ use Negarity\Color\ColorSpace\{
     YCbCr
 };
 use Negarity\Color\Registry\NamedColorRegistryInterface;
+use Negarity\Color\CIE\CIEIlluminant;
+use Negarity\Color\CIE\CIEObserver;
 
 final class Color extends AbstractColor
 {
@@ -26,12 +28,18 @@ final class Color extends AbstractColor
      * 
      * @param class-string<ColorSpaceInterface> $colorSpace
      * @param array<string, float|int> $values
+     * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
+     * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
      * @return void
      * @throws \InvalidArgumentException
      */
-    public function __construct(string $colorSpace, array $values = [])
-    {
-        parent::__construct($colorSpace, $values);
+    public function __construct(
+        string $colorSpace, 
+        array $values = [],
+        ?CIEIlluminant $illuminant = null,
+        ?CIEObserver $observer = null
+    ) {
+        parent::__construct($colorSpace, $values, $illuminant, $observer);
     }
 
     #[\Override]
@@ -45,7 +53,7 @@ final class Color extends AbstractColor
             $values[$channel] = $this->colorSpace::getChannelDefaultValue($channel);
         }
 
-        return new self($this->colorSpace, $values);
+        return new self($this->colorSpace, $values, $this->illuminant, $this->observer);
     }
 
     #[\Override]
@@ -62,7 +70,7 @@ final class Color extends AbstractColor
             $values[$channel] = $value;
         }
 
-        return new self($this->colorSpace, $values);
+        return new self($this->colorSpace, $values, $this->illuminant, $this->observer);
     }
 
     #[\Override]
@@ -70,7 +78,7 @@ final class Color extends AbstractColor
     {
         switch ($this->colorSpace) {
             case RGB::class:
-                return new self($this->colorSpace, $this->values);
+                return new self($this->colorSpace, $this->values, $this->illuminant, $this->observer);
             case RGBA::class:
                 /** @var RGBA $rgba */
                 $rgba = $this->colorSpace;
@@ -89,10 +97,10 @@ final class Color extends AbstractColor
                 return self::rgb($rgb['r'], $rgb['g'], $rgb['b']);
             case Lab::class:
                 $rgb = $this->convertLabToRgb();
-                return self::rgb($rgb['r'], $rgb['g'], $rgb['b']);
+                return new self(RGB::class, ['r' => $rgb['r'], 'g' => $rgb['g'], 'b' => $rgb['b']], $this->illuminant, $this->observer);
             case LCh::class:
                 $rgb = $this->convertLchToRgb();
-                return self::rgb($rgb['r'], $rgb['g'], $rgb['b']);
+                return new self(RGB::class, ['r' => $rgb['r'], 'g' => $rgb['g'], 'b' => $rgb['b']], $this->illuminant, $this->observer);
             case XYZ::class:
                 $rgb = $this->convertXyzToRgb();
                 return self::rgb($rgb['r'], $rgb['g'], $rgb['b']);
@@ -113,7 +121,7 @@ final class Color extends AbstractColor
 
         switch ($this->colorSpace) {
             case RGBA::class:
-                return new self($this->colorSpace, $this->values);
+                return new self($this->colorSpace, $this->values, $this->illuminant, $this->observer);
             case RGB::class:
                 return self::rgba($this->getR(), $this->getG(), $this->getB(), $alpha);
             case HSLA::class:
@@ -150,7 +158,7 @@ final class Color extends AbstractColor
 
         switch ($this->colorSpace) {
             case HSLA::class:
-                return new self($this->colorSpace, $this->values);
+                return new self($this->colorSpace, $this->values, $this->illuminant, $this->observer);
             case HSL::class:
                 return self::hsla(
                     $this->getH(),
@@ -188,27 +196,33 @@ final class Color extends AbstractColor
     }
 
     #[\Override]
-    public function toLab(): static
+    public function toLab(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
         $rgb = $this->toRGB();
-        $lab = $this->convertRgbToLab($rgb->getR(), $rgb->getG(), $rgb->getB());
-        return self::lab((int)round($lab['l']), (int)round($lab['a']), (int)round($lab['b']));
+        $illuminant = $illuminant ?? $this->illuminant;
+        $observer = $observer ?? $this->observer;
+        $lab = $this->convertRgbToLab($rgb->getR(), $rgb->getG(), $rgb->getB(), $illuminant, $observer);
+        return self::lab((int)round($lab['l']), (int)round($lab['a']), (int)round($lab['b']), $illuminant, $observer);
     }
 
     #[\Override]
-    public function toLCh(): static
+    public function toLCh(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
         $rgb = $this->toRGB();
-        $lch = $this->convertRgbToLch($rgb->getR(), $rgb->getG(), $rgb->getB());
-        return self::lch((int)round($lch['l']), (int)round($lch['c']), (int)round($lch['h']));
+        $illuminant = $illuminant ?? $this->illuminant;
+        $observer = $observer ?? $this->observer;
+        $lch = $this->convertRgbToLch($rgb->getR(), $rgb->getG(), $rgb->getB(), $illuminant, $observer);
+        return self::lch((int)round($lch['l']), (int)round($lch['c']), (int)round($lch['h']), $illuminant, $observer);
     }
 
     #[\Override]
-    public function toXYZ(): static
+    public function toXYZ(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
         $rgb = $this->toRGB();
+        $illuminant = $illuminant ?? $this->illuminant;
+        $observer = $observer ?? $this->observer;
         $xyz = $this->convertRgbToXyz($rgb->getR(), $rgb->getG(), $rgb->getB());
-        return self::xyz((int)round($xyz['x']), (int)round($xyz['y']), (int)round($xyz['z']));
+        return self::xyz((int)round($xyz['x']), (int)round($xyz['y']), (int)round($xyz['z']), $illuminant, $observer);
     }
 
     #[\Override]

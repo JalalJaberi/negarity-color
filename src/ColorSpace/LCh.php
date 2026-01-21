@@ -46,4 +46,16 @@ final class LCh extends AbstractColorSpace
             default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space '{static::getName()}'."),
         };
     }
+
+    #[\Override]
+    public static function supportsIlluminant(): bool
+    {
+        return true;
+    }
+
+    #[\Override]
+    public static function supportsObserver(): bool
+    {
+        return true;
+    }
 }

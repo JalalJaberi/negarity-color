@@ -17,6 +17,8 @@ use Negarity\Color\ColorSpace\{
     XYZ,
     YCbCr
 };
+use Negarity\Color\CIE\CIEIlluminant;
+use Negarity\Color\CIE\CIEObserver;
 
 final class MutableColor extends AbstractColor
 {
@@ -25,12 +27,18 @@ final class MutableColor extends AbstractColor
      * 
      * @param class-string<ColorSpaceInterface> $colorSpace
      * @param array<string, float|int> $values
+     * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
+     * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
      * @return void
      * @throws \InvalidArgumentException
      */
-    public function __construct(string $colorSpace, array $values = [])
-    {
-        parent::__construct($colorSpace, $values);
+    public function __construct(
+        string $colorSpace, 
+        array $values = [],
+        ?CIEIlluminant $illuminant = null,
+        ?CIEObserver $observer = null
+    ) {
+        parent::__construct($colorSpace, $values, $illuminant, $observer);
     }
 
     /**
@@ -48,6 +56,30 @@ final class MutableColor extends AbstractColor
         } else {
             throw new InvalidColorValueException("Channel '{$name}' does not exist in color space '{$this->getName()}'.");
         }
+    }
+
+    /**
+     * Set the CIE standard illuminant for this color.
+     * 
+     * @param CIEIlluminant $illuminant The new illuminant
+     * @return $this
+     */
+    public function setIlluminant(CIEIlluminant $illuminant): static
+    {
+        $this->illuminant = $illuminant;
+        return $this;
+    }
+
+    /**
+     * Set the CIE standard observer for this color.
+     * 
+     * @param CIEObserver $observer The new observer
+     * @return $this
+     */
+    public function setObserver(CIEObserver $observer): static
+    {
+        $this->observer = $observer;
+        return $this;
     }
 
     #[\Override]
@@ -273,32 +305,44 @@ final class MutableColor extends AbstractColor
     }
 
     #[\Override]
-    public function toLab(): static
+    public function toLab(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
         $rgb = $this->toRGB();
-        $lab = $this->convertRgbToLab($rgb->getR(), $rgb->getG(), $rgb->getB());
+        $illuminant = $illuminant ?? $this->illuminant;
+        $observer = $observer ?? $this->observer;
+        $lab = $this->convertRgbToLab($rgb->getR(), $rgb->getG(), $rgb->getB(), $illuminant, $observer);
         $this->colorSpace = Lab::class;
         $this->values = ['l' => $lab['l'], 'a' => $lab['a'], 'b' => $lab['b']];
+        $this->illuminant = $illuminant;
+        $this->observer = $observer;
         return $this;
     }
 
     #[\Override]
-    public function toLCh(): static
+    public function toLCh(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
         $rgb = $this->toRGB();
-        $lch = $this->convertRgbToLch($rgb->getR(), $rgb->getG(), $rgb->getB());
+        $illuminant = $illuminant ?? $this->illuminant;
+        $observer = $observer ?? $this->observer;
+        $lch = $this->convertRgbToLch($rgb->getR(), $rgb->getG(), $rgb->getB(), $illuminant, $observer);
         $this->colorSpace = LCh::class;
         $this->values = ['l' => $lch['l'], 'c' => $lch['c'], 'h' => $lch['h']];
+        $this->illuminant = $illuminant;
+        $this->observer = $observer;
         return $this;
     }
 
     #[\Override]
-    public function toXYZ(): static
+    public function toXYZ(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
         $rgb = $this->toRGB();
+        $illuminant = $illuminant ?? $this->illuminant;
+        $observer = $observer ?? $this->observer;
         $xyz = $this->convertRgbToXyz($rgb->getR(), $rgb->getG(), $rgb->getB());
         $this->colorSpace = XYZ::class;
         $this->values = ['x' => $xyz['x'], 'y' => $xyz['y'], 'z' => $xyz['z']];
+        $this->illuminant = $illuminant;
+        $this->observer = $observer;
         return $this;
     }
 

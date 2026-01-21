@@ -15,6 +15,26 @@ abstract class AbstractColorSpace implements ColorSpaceInterface
     abstract public static function validateValue(string $channel, int|float $value): void;
 
     /**
+     * Check if this color space supports CIE standard illuminants.
+     * 
+     * @return bool True if the color space uses illuminants (XYZ, Lab, LCh), false otherwise
+     */
+    public static function supportsIlluminant(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Check if this color space supports CIE standard observers.
+     * 
+     * @return bool True if the color space uses observers (XYZ, Lab, LCh), false otherwise
+     */
+    public static function supportsObserver(): bool
+    {
+        return false;
+    }
+
+    /**
      * Asserts that a given value is within the specified range.
      * 
      * @param int|float $value The value to check.

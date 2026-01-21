@@ -38,4 +38,16 @@ final class XYZ extends AbstractColorSpace
             throw new InvalidColorValueException("Channel '{$channel}' must be numeric.");
         }
     }
+
+    #[\Override]
+    public static function supportsIlluminant(): bool
+    {
+        return true;
+    }
+
+    #[\Override]
+    public static function supportsObserver(): bool
+    {
+        return true;
+    }
 }
