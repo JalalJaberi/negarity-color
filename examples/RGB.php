@@ -4,6 +4,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\RGB;
 use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
 
 $color = new Color(RGB::class, ['r' => 255, 'g' => 100, 'b' => 50]);
 echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "rgb"

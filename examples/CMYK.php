@@ -4,6 +4,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\CMYK;
 use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
 
 $color = new Color(CMYK::class, ['c' => 0, 'm' => 50, 'y' => 100, 'k' => 0]);
 echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "cmyk"

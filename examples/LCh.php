@@ -4,11 +4,15 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\LCh;
 use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
 
 $color = new Color(LCh::class, ['l' => 70, 'c' => 50, 'h' => 180]);
 echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "lch"
 echo 'l => ' . $color->getChannel('l') .  PHP_EOL; // 70
-echo 'l => ' . $color ->getL() .  PHP_EOL; // 70
+echo 'l => ' . $color->getL() .  PHP_EOL; // 70
 echo 'c => ' . $color->getChannel('c') .  PHP_EOL; // 50
 echo 'c => ' . $color->getC() .  PHP_EOL; // 50
 echo 'h => ' . $color->getChannel('h') .  PHP_EOL; // 180

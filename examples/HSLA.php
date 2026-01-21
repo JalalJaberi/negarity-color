@@ -4,6 +4,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\HSLA;
 use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
 
 $color = new Color(HSLA::class, ['h' => 240, 's' => 100, 'l' => 50, 'a' => 255]);
 echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "hsla"

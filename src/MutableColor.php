@@ -17,6 +17,7 @@ use Negarity\Color\ColorSpace\{
     XYZ,
     YCbCr
 };
+use Negarity\Color\Registry\ColorSpaceRegistry;
 use Negarity\Color\CIE\CIEIlluminant;
 use Negarity\Color\CIE\CIEObserver;
 
@@ -102,7 +103,8 @@ final class MutableColor extends AbstractColor
             if (!in_array($channel, $this->getChannels(), true)) {
                 throw new \InvalidArgumentException("Channel '{$channel}' does not exist in color space '{$this->getColorSpaceName()}'.");
             }
-            if (gettype($value) !== 'integer' && gettype($value) !== 'float') {
+            $type = gettype($value);
+            if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
                 throw new \InvalidArgumentException("Channel '{$channel}' must be of type int or float.");
             }
             $this->values[$channel] = $value;
@@ -114,77 +116,9 @@ final class MutableColor extends AbstractColor
     #[\Override]
     public function toRGB(): static
     {
-        $r = $g = $b = 0;
-
-        switch ($this->colorSpace) {
-            case RGB::class:
-                $r = $this->getR();
-                $g = $this->getG();
-                $b = $this->getB();
-                break;
-            case RGBA::class:
-                $r = $this->getR();
-                $g = $this->getG();
-                $b = $this->getB();
-                break;
-            case CMYK::class:
-                $rgb = $this->convertCmykToRgb();
-                $r = $rgb['r'];
-                $g = $rgb['g'];
-                $b = $rgb['b'];
-                break;
-            case HSL::class:
-                $rgb = $this->convertHslToRgb();
-                $r = $rgb['r'];
-                $g = $rgb['g'];
-                $b = $rgb['b'];
-                break;
-            case HSLA::class:
-                $rgb = $this->convertHslaToRgb();
-                $r = $rgb['r'];
-                $g = $rgb['g'];
-                $b = $rgb['b'];
-                break;
-            case HSV::class:
-                $rgb = $this->convertHsvToRgb();
-                $r = $rgb['r'];
-                $g = $rgb['g'];
-                $b = $rgb['b'];
-                break;
-            case Lab::class:
-                $rgb = $this->convertLabToRgb();
-                $r = $rgb['r'];
-                $g = $rgb['g'];
-                $b = $rgb['b'];
-                break;
-            case LCh::class:
-                $rgb = $this->convertLchToRgb();
-                $r = $rgb['r'];
-                $g = $rgb['g'];
-                $b = $rgb['b'];
-                break;
-            case XYZ::class:
-                $rgb = $this->convertXyzToRgb();
-                $r = $rgb['r'];
-                $g = $rgb['g'];
-                $b = $rgb['b'];
-                break;
-            case YCbCr::class:
-                $rgb = $this->convertYcbcrToRgb();
-                $r = $rgb['r'];
-                $g = $rgb['g'];
-                $b = $rgb['b'];
-                break;
-            default:
-                throw new \RuntimeException('Conversion to RGB not implemented for this color space.');
-        }
-
+        $rgbValues = $this->convertToColorSpace('rgb');
         $this->colorSpace = RGB::class;
-        $this->values = [];
-        $this->values['r'] = max(0, min(255, (int)round($r)));
-        $this->values['g'] = max(0, min(255, (int)round($g)));
-        $this->values['b'] = max(0, min(255, (int)round($b)));
-
+        $this->values = $rgbValues;
         return $this;
     }
 
@@ -231,20 +165,20 @@ final class MutableColor extends AbstractColor
     #[\Override]
     public function toCMYK(): static
     {
-        $rgb = $this->toRGB();
-        $cmyk = $this->convertRgbToCmyk($rgb->getR(), $rgb->getG(), $rgb->getB());
-        $this->colorSpace = CMYK::class;
-        $this->values = $cmyk;
+        $cmykValues = $this->convertToColorSpace('cmyk');
+        $cmykClass = ColorSpaceRegistry::get('cmyk');
+        $this->colorSpace = $cmykClass;
+        $this->values = $cmykValues;
         return $this;
     }
 
     #[\Override]
     public function toHSL(): static
     {
-        $rgb = $this->toRGB();
-        $hsl = $this->convertRgbToHsl($rgb->getR(), $rgb->getG(), $rgb->getB());
-        $this->colorSpace = HSL::class;
-        $this->values = $hsl;
+        $hslValues = $this->convertToColorSpace('hsl');
+        $hslClass = ColorSpaceRegistry::get('hsl');
+        $this->colorSpace = $hslClass;
+        $this->values = $hslValues;
         return $this;
     }
 
@@ -255,64 +189,55 @@ final class MutableColor extends AbstractColor
             throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
         }
 
-        $h = $s = $l = 0;
-
-        switch ($this->colorSpace) {
-            case HSLA::class:
-                $h = $this->getH();
-                $s = $this->getS();
-                $l = $this->getL();
-                $alpha = $this->getA();
-                break;
-            case HSL::class:
-                $h = $hsl->getH();
-                $s = $hsl->getS();
-                $l = $hsl->getL();
-                break;
-            case RGBA::class:
-                $rgbColor = self::rgb($this->getR(), $this->getG(), $this->getB());
-                $hslColor = $rgbColor->toHSL();
-                $h = $hsl->getH();
-                $s = $hsl->getS();
-                $l = $hsl->getL();
-                $alpha = $this->getA();
-                break;
-            default:
-                $hsl = $this->toHSL();
-                $h = $hsl->getH();
-                $s = $hsl->getS();
-                $l = $hsl->getL();
+        // If already HSLA, update alpha if different
+        if ($this->colorSpace === HSLA::class) {
+            if ($this->getA() !== $alpha) {
+                $this->values['a'] = $alpha;
+            }
+            return $this;
         }
 
-        $this->colorSpace = HSLA::class;
-        $this->values = [];
-        $this->values['h'] = (int)round($h);
-        $this->values['s'] = (int)round($s);
-        $this->values['l'] = (int)round($l);
-        $this->values['a'] = $alpha;
+        // If HSL, convert to HSLA with specified alpha
+        if ($this->colorSpace === HSL::class) {
+            $this->values['a'] = $alpha;
+            $hslaClass = ColorSpaceRegistry::get('hsla');
+            $this->colorSpace = $hslaClass;
+            return $this;
+        }
 
+        // If RGBA, preserve alpha
+        if ($this->colorSpace === RGBA::class) {
+            $alpha = $this->getA();
+        }
+
+        // Convert to HSL first, then to HSLA
+        $hsl = $this->toHSL();
+        $hslaValues = HSLA::fromRGB($hsl->toRGB()->values, $alpha);
+        $hslaClass = ColorSpaceRegistry::get('hsla');
+        $this->colorSpace = $hslaClass;
+        $this->values = $hslaValues;
         return $this;
     }
 
     #[\Override]
     public function toHSV(): static
     {
-        $rgb = $this->toRGB();
-        $hsv = $this->convertRgbToHsv($rgb->getR(), $rgb->getG(), $rgb->getB());
-        $this->colorSpace = HSV::class;
-        $this->values = $hsv;
+        $hsvValues = $this->convertToColorSpace('hsv');
+        $hsvClass = ColorSpaceRegistry::get('hsv');
+        $this->colorSpace = $hsvClass;
+        $this->values = $hsvValues;
         return $this;
     }
 
     #[\Override]
     public function toLab(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
-        $rgb = $this->toRGB();
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
-        $lab = $this->convertRgbToLab($rgb->getR(), $rgb->getG(), $rgb->getB(), $illuminant, $observer);
-        $this->colorSpace = Lab::class;
-        $this->values = ['l' => $lab['l'], 'a' => $lab['a'], 'b' => $lab['b']];
+        $labValues = $this->convertToColorSpace('lab', $illuminant, $observer);
+        $labClass = ColorSpaceRegistry::get('lab');
+        $this->colorSpace = $labClass;
+        $this->values = $labValues;
         $this->illuminant = $illuminant;
         $this->observer = $observer;
         return $this;
@@ -321,12 +246,12 @@ final class MutableColor extends AbstractColor
     #[\Override]
     public function toLCh(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
-        $rgb = $this->toRGB();
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
-        $lch = $this->convertRgbToLch($rgb->getR(), $rgb->getG(), $rgb->getB(), $illuminant, $observer);
-        $this->colorSpace = LCh::class;
-        $this->values = ['l' => $lch['l'], 'c' => $lch['c'], 'h' => $lch['h']];
+        $lchValues = $this->convertToColorSpace('lch', $illuminant, $observer);
+        $lchClass = ColorSpaceRegistry::get('lch');
+        $this->colorSpace = $lchClass;
+        $this->values = $lchValues;
         $this->illuminant = $illuminant;
         $this->observer = $observer;
         return $this;
@@ -335,12 +260,12 @@ final class MutableColor extends AbstractColor
     #[\Override]
     public function toXYZ(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
-        $rgb = $this->toRGB();
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
-        $xyz = $this->convertRgbToXyz($rgb->getR(), $rgb->getG(), $rgb->getB());
-        $this->colorSpace = XYZ::class;
-        $this->values = ['x' => $xyz['x'], 'y' => $xyz['y'], 'z' => $xyz['z']];
+        $xyzValues = $this->convertToColorSpace('xyz', $illuminant, $observer);
+        $xyzClass = ColorSpaceRegistry::get('xyz');
+        $this->colorSpace = $xyzClass;
+        $this->values = $xyzValues;
         $this->illuminant = $illuminant;
         $this->observer = $observer;
         return $this;
@@ -349,10 +274,10 @@ final class MutableColor extends AbstractColor
     #[\Override]
     public function toYCbCr(): static
     {
-        $rgb = $this->toRGB();
-        $ycbcr = $this->convertRgbToYcbcr($rgb->getR(), $rgb->getG(), $rgb->getB());
-        $this->colorSpace = YCbCr::class;
-        $this->values = $ycbcr;
+        $ycbcrValues = $this->convertToColorSpace('ycbcr');
+        $ycbcrClass = ColorSpaceRegistry::get('ycbcr');
+        $this->colorSpace = $ycbcrClass;
+        $this->values = $ycbcrValues;
         return $this;
     }
 }

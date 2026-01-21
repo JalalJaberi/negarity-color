@@ -67,22 +67,22 @@ final class BrightnessFilter implements ParameterizedColorFilterInterface
                 $h = $color->getChannel('h');
                 $s = $color->getChannel('s');
                 return $color->with(['h' => $h, 's' => $s, 'v' => $v]);
-            case LAB::class:
+            case Lab::class:
                 $l = max(0, min(100, $color->getChannel('l') + $factor));
                 $a = $color->getChannel('a');
                 $b = $color->getChannel('b');
-                return $color->with(['l' => $l, 'a' => $a, 'b' => $b]);
+                return $color->with(['l' => (float)$l, 'a' => (float)$a, 'b' => (float)$b]);
             case LCh::class:
                 $l = max(0, min(100, $color->getChannel('l') + $factor));
                 $c = $color->getChannel('c');
                 $h = $color->getChannel('h');
-                return $color->with(['l' => $l, 'c' => $c, 'h' => $h]);
+                return $color->with(['l' => (float)$l, 'c' => (float)$c, 'h' => (float)$h]);
             case XYZ::class:
                 $x = max(0, min(100, $color->getChannel('x') + $factor));
                 $y = max(0, min(100, $color->getChannel('y') + $factor));
                 $z = max(0, min(100, $color->getChannel('z') + $factor));
-                return $color->with(['x' => $x, 'y' => $y, 'z' => $z]);
-            case YCBCR::class:
+                return $color->with(['x' => (float)$x, 'y' => (float)$y, 'z' => (float)$z]);
+            case YCbCr::class:
                 $y = max(0, min(255, $color->getChannel('y') + $factor));
                 $cb = $color->getChannel('cb');
                 $cr = $color->getChannel('cr');

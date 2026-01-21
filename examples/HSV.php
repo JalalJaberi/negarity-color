@@ -4,6 +4,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\HSV;
 use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
 
 $color = new Color(HSV::class, ['h' => 210, 's' => 50, 'v' => 40]);
 echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "rgb"

@@ -18,6 +18,7 @@ use Negarity\Color\ColorSpace\{
     YCbCr
 };
 use Negarity\Color\Registry\NamedColorRegistryInterface;
+use Negarity\Color\Registry\ColorSpaceRegistry;
 use Negarity\Color\Filter\{
     FilterRegistry,
     Unary\UnaryColorFilterInterface,
@@ -27,6 +28,8 @@ use Negarity\Color\Filter\{
 use Negarity\Color\CIE\CIEIlluminant;
 use Negarity\Color\CIE\CIEObserver;
 use Negarity\Color\CIE\CIEIlluminantData;
+use Negarity\Color\Exception\ColorSpaceNotFoundException;
+use Negarity\Color\Exception\ConversionNotSupportedException;
 
 abstract class AbstractColor implements \JsonSerializable, ColorInterface
 {
@@ -90,6 +93,21 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     public static function addRegistry(NamedColorRegistryInterface $registry): void
     {
         static::$registries[] = $registry;
+    }
+
+    /**
+     * Remove a named color registry.
+     * 
+     * @param NamedColorRegistryInterface $registry
+     * @return void
+     */
+    public static function removeRegistry(NamedColorRegistryInterface $registry): void
+    {
+        $key = array_search($registry, static::$registries, true);
+        if ($key !== false) {
+            unset(static::$registries[$key]);
+            static::$registries = array_values(static::$registries); // Reindex array
+        }
     }
 
     #[\Override]
@@ -238,173 +256,187 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         return $this->toArray();
     }
 
-    final public static function rgb(int $r, int $g, int $b): static
-    {
-        return new static(RGB::class, ['r' => $r, 'g' => $g, 'b' => $b]);
-    }
-
     /**
-     * Create a Color in RGBA color space.
+     * Helper method to convert to a target color space using the registry system.
      * 
-     * @param int $r Red channel (0-255)
-     * @param int $g Green channel (0-255)
-     * @param int $b Blue channel (0-255)
-     * @param int $a Alpha channel (0-255)
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    final public static function rgba(int $r, int $g, int $b, int $a): static
-    {
-        return new static(RGBA::class, ['r' => $r, 'g' => $g, 'b' => $b, 'a' => $a]);
-    }
-
-    /**
-     * Create a Color in CMYK color space.
+     * This method tries:
+     * 1. Current color space's to{TargetSpace}() method
+     * 2. Target color space's from{CurrentSpace}() method
+     * 3. Conversion chain through RGB (A → RGB → B)
      * 
-     * @param int $c Cyan channel (0-100)
-     * @param int $m Magenta channel (0-100)
-     * @param int $y Yellow channel (0-100)
-     * @param int $k Black channel (0-100)
-     * @return static
-     * @throws \InvalidArgumentException
+     * @param string $targetSpaceName The name of the target color space (e.g., "rgb", "hsl")
+     * @param CIEIlluminant|null $illuminant Optional illuminant override
+     * @param CIEObserver|null $observer Optional observer override
+     * @return array<string, float|int> Array of channel values for the target color space
+     * @throws ConversionNotSupportedException If conversion is not supported
      */
-    final public static function cmyk(int $c, int $m, int $y, int $k): static
-    {
-        return new static(CMYK::class, ['c' => $c, 'm' => $m, 'y' => $y, 'k' => $k]);
-    }
-
-    /**
-     * Create a Color in HSL color space.
-     * 
-     * @param int $h Hue channel (0-360)
-     * @param int $s Saturation channel (0-100)
-     * @param int $l Lightness channel (0-100)
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    final public static function hsl(int $h, int $s, int $l): static
-    {
-        return new static(HSL::class, ['h' => $h, 's' => $s, 'l' => $l]);
-    }
-
-    /**
-     * Create a Color in HSLA color space.
-     * 
-     * @param int $h Hue channel (0-360)
-     * @param int $s Saturation channel (0-100)
-     * @param int $l Lightness channel (0-100)
-     * @param int $a Alpha channel (0-100)
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    final public static function hsla(int $h, int $s, int $l, int $a): static
-    {
-        return new static(HSLA::class, ['h' => $h, 's' => $s, 'l' => $l, 'a' => $a]);
-    }
-
-    /**
-     * Create a Color in HSV color space.
-     * 
-     * @param int $h Hue channel (0-360)
-     * @param int $s Saturation channel (0-100)
-     * @param int $v Value channel (0-100)
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    final public static function hsv(int $h, int $s, int $v): static
-    {
-        return new static(HSV::class, ['h' => $h, 's' => $s, 'v' => $v]);
-    }
-
-    /**
-     * Create a Color in Lab color space.
-     * 
-     * @param int|float $l Lightness channel (0-100)
-     * @param int|float $a A channel (-128 to 127)
-     * @param int|float $b B channel (-128 to 127)
-     * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
-     * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    final public static function lab(
-        int|float $l, 
-        int|float $a, 
-        int|float $b, 
+    protected function convertToColorSpace(
+        string $targetSpaceName,
         ?CIEIlluminant $illuminant = null,
         ?CIEObserver $observer = null
-    ): static {
-        return new static(Lab::class, ['l' => $l, 'a' => $a, 'b' => $b], $illuminant, $observer);
-    }
+    ): array {
+        $currentSpaceName = $this->colorSpace::getName();
+        
+        // If already in target space, return current values
+        if ($currentSpaceName === $targetSpaceName) {
+            return $this->values;
+        }
 
-    /**
-     * Create a Color in LCh color space.
-     * 
-     * @param int|float $l Lightness channel (0-100)
-     * @param int|float $c Chroma channel (0-100)
-     * @param int|float $h Hue channel (0-360)
-     * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
-     * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    final public static function lch(
-        int|float $l, 
-        int|float $c, 
-        int|float $h, 
-        ?CIEIlluminant $illuminant = null,
-        ?CIEObserver $observer = null
-    ): static {
-        return new static(LCh::class, ['l' => $l, 'c' => $c, 'h' => $h], $illuminant, $observer);
-    }
+        // Try method 1: Current color space's to{TargetSpace}() method
+        try {
+            $methodName = 'to' . ucfirst($targetSpaceName);
+            if (method_exists($this->colorSpace, $methodName)) {
+                // Determine if we need to pass CIE parameters
+                $supportsCIE = $this->colorSpace::supportsIlluminant() || $this->colorSpace::supportsObserver();
+                $illuminant = $illuminant ?? $this->illuminant;
+                $observer = $observer ?? $this->observer;
+                
+                if ($supportsCIE) {
+                    return $this->colorSpace::$methodName($this->values, $illuminant, $observer);
+                } else {
+                    return $this->colorSpace::$methodName($this->values);
+                }
+            }
+        } catch (\BadMethodCallException $e) {
+            // Method doesn't exist, try fallback
+        }
 
-    /**
-     * Create a Color in XYZ color space.
-     * 
-     * @param int $x X channel
-     * @param int $y Y channel
-     * @param int $z Z channel
-     * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
-     * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    final public static function xyz(
-        int $x, 
-        int $y, 
-        int $z, 
-        ?CIEIlluminant $illuminant = null,
-        ?CIEObserver $observer = null
-    ): static {
-        return new static(XYZ::class, ['x' => $x, 'y' => $y, 'z' => $z], $illuminant, $observer);
-    }
+        // Try method 2: Target color space's from{CurrentSpace}() method
+        try {
+            if (!ColorSpaceRegistry::has($targetSpaceName)) {
+                throw new ColorSpaceNotFoundException("Color space '{$targetSpaceName}' not registered.");
+            }
+            
+            $targetSpaceClass = ColorSpaceRegistry::get($targetSpaceName);
+            $methodName = 'from' . ucfirst($currentSpaceName);
+            
+            if (method_exists($targetSpaceClass, $methodName)) {
+                // Determine if we need to pass CIE parameters
+                $supportsCIE = $this->colorSpace::supportsIlluminant() || $this->colorSpace::supportsObserver();
+                $illuminant = $illuminant ?? $this->illuminant;
+                $observer = $observer ?? $this->observer;
+                
+                if ($supportsCIE) {
+                    return $targetSpaceClass::$methodName($this->values, $illuminant, $observer);
+                } else {
+                    return $targetSpaceClass::$methodName($this->values);
+                }
+            }
+        } catch (\BadMethodCallException $e) {
+            // Method doesn't exist
+        }
 
-    /**
-     * Create a Color in YCbCr color space.
-     * 
-     * @param int $y Y channel
-     * @param int $cb Cb channel
-     * @param int $cr Cr channel
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    final public static function ycbcr(int $y, int $cb, int $cr): static
-    {
-        return new static(YCbCr::class, ['y' => $y, 'cb' => $cb, 'cr' => $cr]);
+        // Try method 3: Conversion chain through RGB (A → RGB → B)
+        // This allows any color space to convert to any other via RGB as intermediate
+        // Note: We skip this if either source or target is RGB to avoid circular conversion
+        if ($targetSpaceName !== 'rgb' && $currentSpaceName !== 'rgb') {
+            try {
+                // First convert current space to RGB (this should always work since all spaces have toRGB/fromRGB)
+                // We use a direct call to avoid recursion - check if current space has toRGB or RGB has from{CurrentSpace}
+                $rgbValues = null;
+                
+                // Try current space's toRGB method
+                if (method_exists($this->colorSpace, 'toRGB')) {
+                    $supportsCIE = $this->colorSpace::supportsIlluminant() || $this->colorSpace::supportsObserver();
+                    $illuminantForRgb = $illuminant ?? $this->illuminant;
+                    $observerForRgb = $observer ?? $this->observer;
+                    
+                    if ($supportsCIE) {
+                        $rgbValues = $this->colorSpace::toRGB($this->values, $illuminantForRgb, $observerForRgb);
+                    } else {
+                        $rgbValues = $this->colorSpace::toRGB($this->values);
+                    }
+                } 
+                // Try RGB's from{CurrentSpace} method
+                elseif (ColorSpaceRegistry::has('rgb')) {
+                    $rgbClass = ColorSpaceRegistry::get('rgb');
+                    $fromMethod = 'from' . ucfirst($currentSpaceName);
+                    
+                    if (method_exists($rgbClass, $fromMethod)) {
+                        $supportsCIE = $this->colorSpace::supportsIlluminant() || $this->colorSpace::supportsObserver();
+                        $illuminantForRgb = $illuminant ?? $this->illuminant;
+                        $observerForRgb = $observer ?? $this->observer;
+                        
+                        if ($supportsCIE) {
+                            $rgbValues = $rgbClass::$fromMethod($this->values, $illuminantForRgb, $observerForRgb);
+                        } else {
+                            $rgbValues = $rgbClass::$fromMethod($this->values);
+                        }
+                    }
+                }
+                
+                if ($rgbValues === null) {
+                    throw new ConversionNotSupportedException("Cannot convert '{$currentSpaceName}' to RGB for intermediate conversion.");
+                }
+                
+                // Then convert RGB to target space
+                if (!ColorSpaceRegistry::has($targetSpaceName)) {
+                    throw new ColorSpaceNotFoundException("Color space '{$targetSpaceName}' not registered.");
+                }
+                
+                $targetSpaceClass = ColorSpaceRegistry::get($targetSpaceName);
+                $fromRgbMethod = 'fromRGB';
+                
+                if (method_exists($targetSpaceClass, $fromRgbMethod)) {
+                    // Check if target space supports CIE parameters
+                    $targetSupportsCIE = $targetSpaceClass::supportsIlluminant() || $targetSpaceClass::supportsObserver();
+                    $illuminant = $illuminant ?? $this->illuminant;
+                    $observer = $observer ?? $this->observer;
+                    
+                    // Check if we need to pass alpha for RGBA/HSLA
+                    if ($targetSpaceName === 'rgba') {
+                        // For RGBA, we need to handle alpha
+                        // If source has alpha, preserve it; otherwise use default 255
+                        $alpha = 255;
+                        if ($currentSpaceName === 'rgba' && isset($this->values['a'])) {
+                            $alpha = $this->values['a'];
+                        } elseif ($currentSpaceName === 'hsla' && isset($this->values['a'])) {
+                            $alpha = $this->values['a'];
+                        }
+                        return $targetSpaceClass::$fromRgbMethod($rgbValues, $alpha);
+                    } elseif ($targetSpaceName === 'hsla') {
+                        // For HSLA, we need to handle alpha
+                        $alpha = 255;
+                        if ($currentSpaceName === 'rgba' && isset($this->values['a'])) {
+                            $alpha = $this->values['a'];
+                        } elseif ($currentSpaceName === 'hsla' && isset($this->values['a'])) {
+                            $alpha = $this->values['a'];
+                        }
+                        return $targetSpaceClass::$fromRgbMethod($rgbValues, $alpha);
+                    } else {
+                        // For other color spaces, check CIE support
+                        if ($targetSupportsCIE) {
+                            $illuminant = $illuminant ?? $this->illuminant;
+                            $observer = $observer ?? $this->observer;
+                            return $targetSpaceClass::$fromRgbMethod($rgbValues, $illuminant, $observer);
+                        } else {
+                            return $targetSpaceClass::$fromRgbMethod($rgbValues);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // If RGB conversion chain fails, fall through to exception
+            }
+        }
+
+        throw new ConversionNotSupportedException(
+            "Conversion from '{$currentSpaceName}' to '{$targetSpaceName}' is not supported. " .
+            "Neither direct conversion methods nor RGB conversion chain are available."
+        );
     }
 
     /**
      * Create a Color from a hex string.
      * 
      * @param string $value Hex string (e.g. "#RRGGBB" or "RRGGBBAA")
-     * @param class-string<ColorSpaceInterface> $colorSpace
+     * @param class-string<ColorSpaceInterface>|string $colorSpace Color space class or name (default: "rgb")
      * @return static
      * @throws \InvalidArgumentException
      */
-    final public static function hex(string $value, string $colorSpace = RGB::class): static
+    final public static function hex(string $value, string $colorSpace = 'rgb'): static
     {
         $value = ltrim($value, '#');
-        $r = $g = $b = $a = '';
+        $r = $g = $b = $a = 0;
 
         if (strlen($value) === 8) {
             $r = hexdec(substr($value, 0, 2));
@@ -429,47 +461,134 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         } else {
             throw new \InvalidArgumentException('Hex value must be 3 (rgb), 4 (rgba), 6 (rrggbb), or 8 (rrggbbaa) characters long.');
         }
-        return match ($colorSpace) {
-            RGB::class => static::rgb($r, $g, $b),
-            RGBA::class => static::rgba($r, $g, $b, $a),
-            CMYK::class => static::rgb($r, $g, $b)->toCMYK(),
-            HSL::class => static::rgb($r, $g, $b)->toHSL(),
-            HSLA::class => static::rgb($r, $g, $b)->toHSLA($a),
-            HSV::class => static::rgb($r, $g, $b)->toHSV(),
-            LAB::class => static::rgb($r, $g, $b)->toLab(),
-            LCH::class => static::rgb($r, $g, $b)->toLCh(),
-            XYZ::class => static::rgb($r, $g, $b)->toXYZ(),
-            YCBCR::class => static::rgb($r, $g, $b)->toYCbCr(),
-            default => throw new \InvalidArgumentException('Unsupported color space for hex input.'),
-        };
+
+        // First, create RGB color using the registry via __callStatic
+        if (!ColorSpaceRegistry::has('rgb')) {
+            throw new ColorSpaceNotFoundException('RGB color space must be registered to use hex() method. Call ColorSpaceRegistry::registerBuiltIn() first.');
+        }
+        
+        // Use __callStatic to create RGB color
+        $rgbColor = static::rgb($r, $g, $b);
+        
+        // If target color space is RGB, return it
+        $targetSpaceName = is_a($colorSpace, ColorSpaceInterface::class, true) 
+            ? $colorSpace::getName() 
+            : strtolower($colorSpace);
+            
+        if ($targetSpaceName === 'rgb') {
+            return $rgbColor;
+        }
+        
+        // Convert to target color space
+        if (!ColorSpaceRegistry::has($targetSpaceName)) {
+            throw new ColorSpaceNotFoundException("Color space '{$targetSpaceName}' not registered.");
+        }
+        
+        // Handle special cases for alpha channels
+        if ($targetSpaceName === 'rgba') {
+            return $rgbColor->toRGBA($a);
+        }
+        
+        if ($targetSpaceName === 'hsla') {
+            return $rgbColor->toHSLA($a);
+        }
+        
+        // For other color spaces, use the conversion method
+        $methodName = 'to' . ucfirst($targetSpaceName);
+        if (method_exists($rgbColor, $methodName)) {
+            return $rgbColor->$methodName();
+        }
+        
+        throw new \InvalidArgumentException("Conversion to '{$targetSpaceName}' is not supported from hex input.");
     }
 
     /**
-     * Create a Color from a named color.
+     * Create a Color from a named color or color space factory method.
      * 
-     * @param string $name Named color (e.g. "red", "blue", "cyan")
-     * @param class-string<ColorSpaceInterface> $colorSpace
+     * Precedence: Named colors first, then color spaces.
+     * Conflict detection: If both a named color and color space exist with the same name,
+     * a warning is logged and the named color takes precedence.
+     * 
+     * @param string $name Named color (e.g. "red", "blue") or color space name (e.g. "rgb", "hsl")
+     * @param array $arguments Arguments for the factory method
      * @return static
      * @throws \InvalidArgumentException
      */
     public static function __callStatic(string $name, array $arguments): static
     {
         $colorName = strtolower($name);
+        
+        // Check for conflicts: both named color and color space exist
+        $hasNamedColor = false;
+        $hasColorSpace = ColorSpaceRegistry::has($colorName);
+        
         $colorSpace = $arguments[0] ?? RGB::class;
-
-        foreach (static::$registries as $registry) {
-            if ($registry->has($colorName, $colorSpace)) {
-
-                // registry gives back an array of channel values
-                $values = $registry->getColorValuesByName($colorName, $colorSpace);
-
-                // you just wrap that into a Color object
-                return new static($colorSpace, $values);
+        if (is_string($colorSpace) && class_exists($colorSpace)) {
+            foreach (static::$registries as $registry) {
+                if ($registry->has($colorName, $colorSpace)) {
+                    $hasNamedColor = true;
+                    break;
+                }
+            }
+        }
+        
+        // Conflict detection: warn if both exist
+        if ($hasNamedColor && $hasColorSpace) {
+            // Log a warning (in production, you might want to use a proper logger)
+            error_log(
+                "Warning: Both named color '{$colorName}' and color space '{$colorName}' exist. " .
+                "Named color takes precedence."
+            );
+        }
+        
+        // First, check named color registries (named colors take precedence)
+        if (is_string($colorSpace) && class_exists($colorSpace)) {
+            foreach (static::$registries as $registry) {
+                if ($registry->has($colorName, $colorSpace)) {
+                    // registry gives back an array of channel values
+                    $values = $registry->getColorValuesByName($colorName, $colorSpace);
+                    // you just wrap that into a Color object
+                    return new static($colorSpace, $values);
+                }
             }
         }
 
+        // Then, check color space registry
+        if ($hasColorSpace) {
+            $colorSpaceClass = ColorSpaceRegistry::get($colorName);
+            $channels = $colorSpaceClass::getChannels();
+            
+            // Build values array from arguments
+            $values = [];
+            $argIndex = 0;
+            foreach ($channels as $channel) {
+                if (isset($arguments[$argIndex])) {
+                    $values[$channel] = $arguments[$argIndex];
+                    $argIndex++;
+                } else {
+                    $values[$channel] = $colorSpaceClass::getChannelDefaultValue($channel);
+                }
+            }
+            
+            // Handle CIE parameters for color spaces that support them
+            $illuminant = null;
+            $observer = null;
+            if ($colorSpaceClass::supportsIlluminant() || $colorSpaceClass::supportsObserver()) {
+                // Check if illuminant/observer are provided after channel arguments
+                if (isset($arguments[$argIndex]) && $arguments[$argIndex] instanceof CIEIlluminant) {
+                    $illuminant = $arguments[$argIndex];
+                    $argIndex++;
+                }
+                if (isset($arguments[$argIndex]) && $arguments[$argIndex] instanceof CIEObserver) {
+                    $observer = $arguments[$argIndex];
+                }
+            }
+            
+            return new static($colorSpaceClass, $values, $illuminant, $observer);
+        }
+
         throw new \InvalidArgumentException(
-            "Named color '{$colorName}' not found in space '{$colorSpace}'"
+            "Named color or color space '{$colorName}' not found."
         );
     }
 

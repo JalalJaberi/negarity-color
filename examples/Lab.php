@@ -4,6 +4,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\Lab;
 use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
 
 $color = new Color(Lab::class, ['l' => 50, 'a' => 20, 'b' => -30]);
 echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "lab"

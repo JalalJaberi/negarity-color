@@ -5,6 +5,10 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 use Negarity\Color\Color;
 use Negarity\Color\Filter\FilterRegistry;
 use Negarity\Color\Filter\Binary\BlendFilter;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
 
 // Register the BlendFilter
 $blendFilter = new BlendFilter();

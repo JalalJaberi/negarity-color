@@ -49,4 +49,20 @@ final class FilterRegistry
     {
         return isset(self::$filters[$name]);
     }
+
+    /**
+     * Unregister a filter.
+     * 
+     * @param string $name The name of the filter to unregister.
+     * @return void
+     * @throws FilterNotFoundException If the filter is not registered.
+     */
+    public static function unregister(string $name): void
+    {
+        if (!isset(self::$filters[$name])) {
+            throw new FilterNotFoundException("Filter '{$name}' not registered.");
+        }
+
+        unset(self::$filters[$name]);
+    }
 }

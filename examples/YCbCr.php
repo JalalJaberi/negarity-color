@@ -4,6 +4,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Negarity\Color\ColorSpace\YCbCr;
 use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
 
 $color = new Color(YCbCr::class, ['y' => 78.5, 'cb' => 100, 'cr' => -100]);
 echo 'name => ' . $color->getColorSpaceName() .  PHP_EOL; // "ycbcr"
