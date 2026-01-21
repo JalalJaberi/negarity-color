@@ -1,154 +1,97 @@
 ---
 title: Color Spaces Reference
-sidebar_position: 1
+sidebar_position: 0
 ---
 
 # Color Spaces Reference
 
-This is a complete reference for all color spaces supported by Negarity Color.
+A **color space** is a specific organization of colors that defines how colors are represented numerically. Different color spaces are optimized for different purposes—some are intuitive for human perception, others are optimized for displays, printing, or color science.
 
-## RGB (Red, Green, Blue)
+## What is a Color Space?
 
-**Channels**: `r`, `g`, `b`  
-**Range**: 0-255 for each channel  
-**Use Case**: Screen display, web colors, digital images
+In Negarity Color, a color space is defined by the `ColorSpaceInterface`, which provides a standardized way to work with colors:
 
-```php
-$color = Color::rgb(255, 100, 50);
-```
+- **Channels**: Each color space has specific channels (e.g., RGB has `r`, `g`, `b`)
+- **Ranges**: Each channel has a valid range of values
+- **Validation**: Values are automatically validated to ensure they're within acceptable ranges
+- **Default Values**: Each channel has a default value when not specified
 
-RGB is the most common color space for digital displays. Each channel represents the intensity of red, green, or blue light.
+All color spaces in Negarity Color extend `AbstractColorSpace`, which provides common functionality like:
+- Channel validation
+- Range checking
+- Support for CIE Standard Illuminants and Observers (for certain color spaces)
 
-## RGBA (Red, Green, Blue, Alpha)
+## Available Color Spaces
 
-**Channels**: `r`, `g`, `b`, `a`  
-**Range**: 0-255 for each channel  
-**Use Case**: Colors with transparency, web graphics
+Negarity Color supports the following color spaces:
 
-```php
-$color = Color::rgba(255, 100, 50, 128); // 50% opacity
-```
+### Screen & Web Color Spaces
 
-RGBA extends RGB with an alpha channel for transparency. Alpha 0 is fully transparent, 255 is fully opaque.
+- **[RGB](/docs/references/color-spaces/rgb)** - Red, Green, Blue - The standard color space for digital displays
+- **[RGBA](/docs/references/color-spaces/rgba)** - RGB with Alpha channel for transparency
 
-## HSL (Hue, Saturation, Lightness)
+### Perceptual Color Spaces
 
-**Channels**: `h`, `s`, `l`  
-**Range**: H: 0-360°, S: 0-100%, L: 0-100%  
-**Use Case**: Color manipulation, intuitive color adjustments
+- **[HSL](/docs/references/color-spaces/hsl)** - Hue, Saturation, Lightness - Intuitive for color manipulation
+- **[HSLA](/docs/references/color-spaces/hsla)** - HSL with Alpha channel
+- **[HSV](/docs/references/color-spaces/hsv)** - Hue, Saturation, Value - Common in color pickers
 
-```php
-$color = Color::hsl(210, 50, 40);
-```
+### Print Color Spaces
 
-HSL is intuitive for color manipulation:
-- **Hue**: The color itself (0°=red, 120°=green, 240°=blue)
-- **Saturation**: Color intensity (0%=gray, 100%=full color)
-- **Lightness**: Brightness (0%=black, 100%=white)
+- **[CMYK](/docs/references/color-spaces/cmyk)** - Cyan, Magenta, Yellow, Key (Black) - Used for professional printing
 
-## HSLA (Hue, Saturation, Lightness, Alpha)
+### Color Science Spaces
 
-**Channels**: `h`, `s`, `l`, `a`  
-**Range**: H: 0-360°, S: 0-100%, L: 0-100%, A: 0-255  
-**Use Case**: HSL colors with transparency
+- **[Lab (CIELAB)](/docs/references/color-spaces/lab)** - Perceptually uniform color space for color matching
+- **[LCh](/docs/references/color-spaces/lch)** - Lightness, Chroma, Hue - Polar representation of Lab
+- **[XYZ (CIE XYZ)](/docs/references/color-spaces/xyz)** - Device-independent color space for color science
 
-```php
-$color = Color::hsla(210, 50, 40, 200);
-```
+### Video & Compression
 
-## HSV (Hue, Saturation, Value)
+- **[YCbCr](/docs/references/color-spaces/ycbcr)** - Luminance and chrominance separation for video encoding
 
-**Channels**: `h`, `s`, `v`  
-**Range**: H: 0-360°, S: 0-100%, V: 0-100%  
-**Use Case**: Color pickers, graphics software
+## Color Space Interface Methods
 
-```php
-$color = Color::hsv(210, 50, 40);
-```
+All color spaces implement the `ColorSpaceInterface`, which provides these methods:
 
-Similar to HSL but uses Value instead of Lightness:
-- **Value**: Brightness of the color (0%=black, 100%=full brightness)
+### `getName(): string`
+Returns the unique name of the color space (e.g., `"rgb"`, `"hsl"`, `"lab"`).
 
-## CMYK (Cyan, Magenta, Yellow, Key/Black)
+### `getChannels(): array`
+Returns all channel names in order (e.g., `["r", "g", "b"]` for RGB).
 
-**Channels**: `c`, `m`, `y`, `k`  
-**Range**: 0-100% for each channel  
-**Use Case**: Print media, professional printing
+### `hasChannel(string $name): bool`
+Checks if a channel exists by name.
 
-```php
-$color = Color::cmyk(0, 50, 100, 0);
-```
+### `getChannelDefaultValue(string $name): float|int`
+Returns the default value for a channel when not specified.
 
-CMYK is used for printing. Higher values mean more ink. The K (key/black) channel is used for richer blacks and cost efficiency.
+### `validateValue(string $channel, int|float $value): void`
+Validates that a channel value is within the acceptable range. Throws `InvalidColorValueException` if invalid.
 
-## Lab (CIELAB)
+## CIE Standard Support
 
-**Channels**: `l`, `a`, `b`  
-**Range**: L: 0-100, a: -128 to 127, b: -128 to 127  
-**Use Case**: Perceptually uniform color, color matching
+Some color spaces support CIE Standard Illuminants and Observers:
 
-```php
-$color = Color::lab(50, 20, -30);
-```
+- **Lab** - Supports illuminants and observers
+- **LCh** - Supports illuminants and observers  
+- **XYZ** - Supports illuminants and observers
 
-Lab is perceptually uniform, meaning equal changes in values produce equal perceived color differences. Useful for color matching and analysis.
-
-## LCh (Lightness, Chroma, Hue)
-
-**Channels**: `l`, `c`, `h`  
-**Range**: L: 0-100, C: 0-100, H: 0-360°  
-**Use Case**: Perceptual color manipulation, color harmony
-
-```php
-$color = Color::lch(50, 30, 210);
-```
-
-LCh is a polar representation of Lab:
-- **Lightness**: Same as Lab
-- **Chroma**: Color intensity (distance from gray)
-- **Hue**: Color direction
-
-## XYZ (CIE XYZ)
-
-**Channels**: `x`, `y`, `z`  
-**Range**: Typically 0-100  
-**Use Case**: Color science, color space conversions
-
-```php
-$color = Color::xyz(20, 30, 40);
-```
-
-XYZ is a device-independent color space used as an intermediate in many color conversions. Based on human color perception.
-
-## YCbCr
-
-**Channels**: `y`, `cb`, `cr`  
-**Range**: Y: 0-255, Cb: 0-255, Cr: 0-255  
-**Use Case**: Video encoding, digital photography, JPEG compression
-
-```php
-$color = Color::ycbcr(78, 100, -100);
-```
-
-YCbCr separates luminance (Y) from chrominance (Cb, Cr):
-- **Y**: Luminance (brightness)
-- **Cb**: Blue-difference chroma
-- **Cr**: Red-difference chroma
-
-## Conversion Support
-
-All color spaces can be converted to and from each other. The library automatically handles intermediate conversions (usually through RGB or XYZ) to ensure accuracy.
+You can check if a color space supports these features using:
+- `supportsIlluminant(): bool`
+- `supportsObserver(): bool`
 
 ## Choosing a Color Space
 
-- **RGB/RGBA**: For screen/web applications
-- **HSL/HSV**: For intuitive color manipulation
-- **CMYK**: For print media
-- **Lab/LCh**: For color matching and analysis
-- **XYZ**: For color science and conversions
-- **YCbCr**: For video and image compression
+- **RGB/RGBA**: For screen/web applications, digital images
+- **HSL/HSV**: For intuitive color manipulation and adjustments
+- **CMYK**: For print media and professional printing
+- **Lab/LCh**: For color matching, analysis, and perceptually uniform operations
+- **XYZ**: For color science and as an intermediate in conversions
+- **YCbCr**: For video encoding, digital photography, and JPEG compression
 
 ## See Also
 
 - [Creating Colors](/docs/basics/creating-colors) - How to create colors in different spaces
 - [Converting Colors](/docs/basics/converting-colors) - How to convert between spaces
+- [Getting Channels](/docs/basics/getting-channels) - How to access color channel values
