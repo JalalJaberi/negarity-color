@@ -20,12 +20,30 @@ final class ColorConversionTest extends TestCase
     private const COLOR_NAMES_FILE = __DIR__ . '/fixtures/color.names.txt';
 
     /**
-     * Read a random color record from the color names file.
+     * Get the test coverage percentage from environment variable.
      * 
-     * @return array{line_number: int, line_content: string, rgb: array{r: int, g: int, b: int}, hsl: array{h: int, s: int, l: int}, hsv: array{h: int, s: int, v: int}, cmyk: array{c: int, m: int, y: int, k: int}, lab: array{l: float, a: float, b: float}, lch: array{l: float, c: float, h: float}, xyz: array{x: float, y: float, z: float}}
+     * @return int Percentage (0-100), default is 0
      */
-    private function getRandomColorFromFile(): array
+    private function getTestCoveragePercentage(): int
     {
+        $coverage = getenv('COLOR_TEST_COVERAGE');
+        if ($coverage === false) {
+            return 0;
+        }
+        
+        $coverage = (int) $coverage;
+        return max(0, min(100, $coverage)); // Clamp between 0 and 100
+    }
+
+    /**
+     * Get color data from file based on test coverage percentage.
+     * 
+     * @return array<int, array{line_number: int, line_content: string, rgb: array{r: int, g: int, b: int}, hsl: array{h: int, s: int, l: int}, hsv: array{h: int, s: int, v: int}, cmyk: array{c: int, m: int, y: int, k: int}, lab: array{l: float, a: float, b: float}, lch: array{l: float, c: float, h: float}, xyz: array{x: float, y: float, z: float}}>
+     */
+    private function getColorsFromFile(): array
+    {
+        $coverage = $this->getTestCoveragePercentage();
+        
         // Read all lines
         $lines = file(self::COLOR_NAMES_FILE, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         
@@ -40,14 +58,49 @@ final class ColorConversionTest extends TestCase
             }
         }
         
-        // Pick a random line
-        $randomEntry = $dataLinesWithNumbers[array_rand($dataLinesWithNumbers)];
-        $randomLine = $randomEntry['content'];
-        $lineNumber = $randomEntry['line_number'];
+        $totalLines = count($dataLinesWithNumbers);
         
+        if ($coverage === 0) {
+            // Return one random line
+            $randomEntry = $dataLinesWithNumbers[array_rand($dataLinesWithNumbers)];
+            return [$this->parseColorLine($randomEntry['content'], $randomEntry['line_number'])];
+        } elseif ($coverage === 100) {
+            // Return all lines
+            $colors = [];
+            foreach ($dataLinesWithNumbers as $entry) {
+                $colors[] = $this->parseColorLine($entry['content'], $entry['line_number']);
+            }
+            return $colors;
+        } else {
+            // Return percentage of lines
+            $numLines = (int) round($totalLines * ($coverage / 100));
+            $numLines = max(1, min($numLines, $totalLines)); // At least 1, at most all
+            
+            // Shuffle and take first N lines
+            $shuffled = $dataLinesWithNumbers;
+            shuffle($shuffled);
+            $selectedLines = array_slice($shuffled, 0, $numLines);
+            
+            $colors = [];
+            foreach ($selectedLines as $entry) {
+                $colors[] = $this->parseColorLine($entry['content'], $entry['line_number']);
+            }
+            return $colors;
+        }
+    }
+
+    /**
+     * Parse a color line from the file into structured data.
+     * 
+     * @param string $line The line content
+     * @param int $lineNumber The line number in the file
+     * @return array{line_number: int, line_content: string, rgb: array{r: int, g: int, b: int}, hsl: array{h: int, s: int, l: int}, hsv: array{h: int, s: int, v: int}, cmyk: array{c: int, m: int, y: int, k: int}, lab: array{l: float, a: float, b: float}, lch: array{l: float, c: float, h: float}, xyz: array{x: float, y: float, z: float}}
+     */
+    private function parseColorLine(string $line, int $lineNumber): array
+    {
         // Parse the line
         // Format: idx name rgb R G B hex HEX hsv H S V xyz X Y Z lab L A B lch L C H cmyk C M Y K ...
-        $parts = preg_split('/\s+/', $randomLine);
+        $parts = preg_split('/\s+/', $line);
         
         // Extract color space values
         $rgbIdx = array_search('rgb', $parts);
@@ -66,7 +119,7 @@ final class ColorConversionTest extends TestCase
         
         return [
             'line_number' => $lineNumber,
-            'line_content' => $randomLine,
+            'line_content' => $line,
             'rgb' => [
                 'r' => $r,
                 'g' => $g,
@@ -100,6 +153,18 @@ final class ColorConversionTest extends TestCase
                 'k' => (int) $parts[$cmykIdx + 4],
             ],
         ];
+    }
+
+    /**
+     * Read a random color record from the color names file.
+     * 
+     * @deprecated Use getColorsFromFile() instead. This method is kept for backward compatibility.
+     * @return array{line_number: int, line_content: string, rgb: array{r: int, g: int, b: int}, hsl: array{h: int, s: int, l: int}, hsv: array{h: int, s: int, v: int}, cmyk: array{c: int, m: int, y: int, k: int}, lab: array{l: float, a: float, b: float}, lch: array{l: float, c: float, h: float}, xyz: array{x: float, y: float, z: float}}
+     */
+    private function getRandomColorFromFile(): array
+    {
+        $colors = $this->getColorsFromFile();
+        return $colors[0];
     }
 
     /**
@@ -164,84 +229,95 @@ final class ColorConversionTest extends TestCase
 
     public function testConvertRgbToCmyk(): void
     {
-        $colorData = $this->getRandomColorFromFile();
-        $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
-        $cmyk = $rgb->toCMYK();
+        $colors = $this->getColorsFromFile();
         
-        $this->assertEquals(CMYK::getName(), $cmyk->getColorSpaceName());
-        // Validate ranges are correct (CMYK conversions may differ from reference file algorithm)
-        $this->assertGreaterThanOrEqual(0, $cmyk->getC());
-        $this->assertLessThanOrEqual(100, $cmyk->getC());
-        $this->assertGreaterThanOrEqual(0, $cmyk->getM());
-        $this->assertLessThanOrEqual(100, $cmyk->getM());
-        $this->assertGreaterThanOrEqual(0, $cmyk->getY());
-        $this->assertLessThanOrEqual(100, $cmyk->getY());
-        $this->assertGreaterThanOrEqual(0, $cmyk->getK());
-        $this->assertLessThanOrEqual(100, $cmyk->getK());
+        foreach ($colors as $colorData) {
+            $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
+            $cmyk = $rgb->toCMYK();
+            
+            $this->assertEquals(CMYK::getName(), $cmyk->getColorSpaceName());
+            // Validate ranges are correct (CMYK conversions may differ from reference file algorithm)
+            $this->assertGreaterThanOrEqual(0, $cmyk->getC());
+            $this->assertLessThanOrEqual(100, $cmyk->getC());
+            $this->assertGreaterThanOrEqual(0, $cmyk->getM());
+            $this->assertLessThanOrEqual(100, $cmyk->getM());
+            $this->assertGreaterThanOrEqual(0, $cmyk->getY());
+            $this->assertLessThanOrEqual(100, $cmyk->getY());
+            $this->assertGreaterThanOrEqual(0, $cmyk->getK());
+            $this->assertLessThanOrEqual(100, $cmyk->getK());
+        }
     }
 
     public function testConvertCmykToRgb(): void
     {
-        $colorData = $this->getRandomColorFromFile();
-        $cmyk = Color::cmyk($colorData['cmyk']['c'], $colorData['cmyk']['m'], $colorData['cmyk']['y'], $colorData['cmyk']['k']);
-        $rgb = $cmyk->toRGB();
+        $colors = $this->getColorsFromFile();
         
-        $this->assertEquals(RGB::getName(), $rgb->getColorSpaceName());
-        // Validate ranges are correct (CMYK to RGB conversions may differ from reference file algorithm)
-        $this->assertGreaterThanOrEqual(0, $rgb->getR());
-        $this->assertLessThanOrEqual(255, $rgb->getR());
-        $this->assertGreaterThanOrEqual(0, $rgb->getG());
-        $this->assertLessThanOrEqual(255, $rgb->getG());
-        $this->assertGreaterThanOrEqual(0, $rgb->getB());
-        $this->assertLessThanOrEqual(255, $rgb->getB());
+        foreach ($colors as $colorData) {
+            $cmyk = Color::cmyk($colorData['cmyk']['c'], $colorData['cmyk']['m'], $colorData['cmyk']['y'], $colorData['cmyk']['k']);
+            $rgb = $cmyk->toRGB();
+            
+            $this->assertEquals(RGB::getName(), $rgb->getColorSpaceName());
+            // Validate ranges are correct (CMYK to RGB conversions may differ from reference file algorithm)
+            $this->assertGreaterThanOrEqual(0, $rgb->getR());
+            $this->assertLessThanOrEqual(255, $rgb->getR());
+            $this->assertGreaterThanOrEqual(0, $rgb->getG());
+            $this->assertLessThanOrEqual(255, $rgb->getG());
+            $this->assertGreaterThanOrEqual(0, $rgb->getB());
+            $this->assertLessThanOrEqual(255, $rgb->getB());
+        }
     }
 
     public function testConvertRgbToHsl(): void
     {
-        $colorData = $this->getRandomColorFromFile();
-        $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
-        $hsl = $rgb->toHSL();
+        $colors = $this->getColorsFromFile();
         
-        $this->assertEquals(HSL::getName(), $hsl->getColorSpaceName());
-        // Validate against calculated HSL from file RGB (with tolerance)
-        $this->assertEqualsWithDelta(
-            $colorData['hsl']['h'], 
-            $hsl->getH(), 
-            2,
-            sprintf('HSL H channel mismatch at line %d. RGB(%d, %d, %d) -> Expected H=%d, Got H=%d', 
-                $colorData['line_number'],
-                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+        foreach ($colors as $colorData) {
+            $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
+            $hsl = $rgb->toHSL();
+            
+            $this->assertEquals(HSL::getName(), $hsl->getColorSpaceName());
+            // Validate against calculated HSL from file RGB (with tolerance)
+            $this->assertEqualsWithDelta(
                 $colorData['hsl']['h'], 
-                $hsl->getH()
-            )
-        );
-        $this->assertEqualsWithDelta(
-            $colorData['hsl']['s'], 
-            $hsl->getS(), 
-            2,
-            sprintf('HSL S channel mismatch at line %d. RGB(%d, %d, %d) -> Expected S=%d, Got S=%d', 
-                $colorData['line_number'],
-                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $hsl->getH(), 
+                2,
+                sprintf('HSL H channel mismatch at line %d. RGB(%d, %d, %d) -> Expected H=%d, Got H=%d', 
+                    $colorData['line_number'],
+                    $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                    $colorData['hsl']['h'], 
+                    $hsl->getH()
+                )
+            );
+            $this->assertEqualsWithDelta(
                 $colorData['hsl']['s'], 
-                $hsl->getS()
-            )
-        );
-        $this->assertEqualsWithDelta(
-            $colorData['hsl']['l'], 
-            $hsl->getL(), 
-            2,
-            sprintf('HSL L channel mismatch at line %d. RGB(%d, %d, %d) -> Expected L=%d, Got L=%d', 
-                $colorData['line_number'],
-                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $hsl->getS(), 
+                2,
+                sprintf('HSL S channel mismatch at line %d. RGB(%d, %d, %d) -> Expected S=%d, Got S=%d', 
+                    $colorData['line_number'],
+                    $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                    $colorData['hsl']['s'], 
+                    $hsl->getS()
+                )
+            );
+            $this->assertEqualsWithDelta(
                 $colorData['hsl']['l'], 
-                $hsl->getL()
-            )
-        );
+                $hsl->getL(), 
+                2,
+                sprintf('HSL L channel mismatch at line %d. RGB(%d, %d, %d) -> Expected L=%d, Got L=%d', 
+                    $colorData['line_number'],
+                    $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                    $colorData['hsl']['l'], 
+                    $hsl->getL()
+                )
+            );
+        }
     }
 
     public function testConvertHslToRgb(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $hsl = Color::hsl($colorData['hsl']['h'], $colorData['hsl']['s'], $colorData['hsl']['l']);
         $rgb = $hsl->toRGB();
         
@@ -280,61 +356,67 @@ final class ColorConversionTest extends TestCase
                 $rgb->getB()
             )
         );
+        }
     }
 
     public function testConvertRgbToHsv(): void
     {
-        $colorData = $this->getRandomColorFromFile();
-        $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
-        $hsv = $rgb->toHSV();
+        $colors = $this->getColorsFromFile();
         
-        $this->assertEquals(HSV::getName(), $hsv->getColorSpaceName());
-        // Validate against file data with tolerance (HSV hue can wrap around 360)
-        // For hue, handle wraparound (0 and 360 are the same)
-        $expectedH = $colorData['hsv']['h'];
-        $actualH = $hsv->getH();
-        if ($expectedH == 0 && ($actualH > 350 || $actualH < 10)) {
-            $this->assertTrue(true); // Accept 0/360 wraparound
-        } else {
+        foreach ($colors as $colorData) {
+            $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
+            $hsv = $rgb->toHSV();
+            
+            $this->assertEquals(HSV::getName(), $hsv->getColorSpaceName());
+            // Validate against file data with tolerance (HSV hue can wrap around 360)
+            // For hue, handle wraparound (0 and 360 are the same)
+            $expectedH = $colorData['hsv']['h'];
+            $actualH = $hsv->getH();
+            if ($expectedH == 0 && ($actualH > 350 || $actualH < 10)) {
+                $this->assertTrue(true); // Accept 0/360 wraparound
+            } else {
+                $this->assertEqualsWithDelta(
+                    $expectedH, 
+                    $actualH, 
+                    5,
+                    sprintf('HSV H channel mismatch at line %d. RGB(%d, %d, %d) -> Expected H=%d, Got H=%d', 
+                        $colorData['line_number'],
+                        $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                        $expectedH, 
+                        $actualH
+                    )
+                );
+            }
             $this->assertEqualsWithDelta(
-                $expectedH, 
-                $actualH, 
+                $colorData['hsv']['s'], 
+                $hsv->getS(), 
                 5,
-                sprintf('HSV H channel mismatch at line %d. RGB(%d, %d, %d) -> Expected H=%d, Got H=%d', 
+                sprintf('HSV S channel mismatch at line %d. RGB(%d, %d, %d) -> Expected S=%d, Got S=%d', 
                     $colorData['line_number'],
                     $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
-                    $expectedH, 
-                    $actualH
+                    $colorData['hsv']['s'], 
+                    $hsv->getS()
+                )
+            );
+            $this->assertEqualsWithDelta(
+                $colorData['hsv']['v'], 
+                $hsv->getV(), 
+                5,
+                sprintf('HSV V channel mismatch at line %d. RGB(%d, %d, %d) -> Expected V=%d, Got V=%d', 
+                    $colorData['line_number'],
+                    $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                    $colorData['hsv']['v'], 
+                    $hsv->getV()
                 )
             );
         }
-        $this->assertEqualsWithDelta(
-            $colorData['hsv']['s'], 
-            $hsv->getS(), 
-            5,
-            sprintf('HSV S channel mismatch at line %d. RGB(%d, %d, %d) -> Expected S=%d, Got S=%d', 
-                $colorData['line_number'],
-                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
-                $colorData['hsv']['s'], 
-                $hsv->getS()
-            )
-        );
-        $this->assertEqualsWithDelta(
-            $colorData['hsv']['v'], 
-            $hsv->getV(), 
-            5,
-            sprintf('HSV V channel mismatch at line %d. RGB(%d, %d, %d) -> Expected V=%d, Got V=%d', 
-                $colorData['line_number'],
-                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
-                $colorData['hsv']['v'], 
-                $hsv->getV()
-            )
-        );
     }
 
     public function testConvertHsvToRgb(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $hsv = Color::hsv($colorData['hsv']['h'], $colorData['hsv']['s'], $colorData['hsv']['v']);
         $rgb = $hsv->toRGB();
         
@@ -373,58 +455,64 @@ final class ColorConversionTest extends TestCase
                 $rgb->getB()
             )
         );
+        }
     }
 
     public function testConvertRgbToLab(): void
     {
-        $colorData = $this->getRandomColorFromFile();
-        $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
-        $lab = $rgb->toLab();
+        $colors = $this->getColorsFromFile();
         
-        $this->assertEquals(Lab::getName(), $lab->getColorSpaceName());
-        // Lab values are rounded to int: L: 0-100, a: -128 to 127, b: -128 to 127
-        $this->assertIsInt($lab->getL());
-        $this->assertIsInt($lab->getA());
-        $this->assertIsInt($lab->getB());
-        // Validate against file data with tolerance (Lab values are rounded)
-        $this->assertEqualsWithDelta(
-            $colorData['lab']['l'], 
-            $lab->getL(), 
-            2,
-            sprintf('Lab L channel mismatch at line %d. RGB(%d, %d, %d) -> Expected L=%.1f, Got L=%d', 
-                $colorData['line_number'],
-                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+        foreach ($colors as $colorData) {
+            $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
+            $lab = $rgb->toLab();
+            
+            $this->assertEquals(Lab::getName(), $lab->getColorSpaceName());
+            // Lab values are rounded to int: L: 0-100, a: -128 to 127, b: -128 to 127
+            $this->assertIsInt($lab->getL());
+            $this->assertIsInt($lab->getA());
+            $this->assertIsInt($lab->getB());
+            // Validate against file data with tolerance (Lab values are rounded)
+            $this->assertEqualsWithDelta(
                 $colorData['lab']['l'], 
-                $lab->getL()
-            )
-        );
-        $this->assertEqualsWithDelta(
-            $colorData['lab']['a'], 
-            $lab->getA(), 
-            2,
-            sprintf('Lab A channel mismatch at line %d. RGB(%d, %d, %d) -> Expected A=%.1f, Got A=%d', 
-                $colorData['line_number'],
-                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $lab->getL(), 
+                2,
+                sprintf('Lab L channel mismatch at line %d. RGB(%d, %d, %d) -> Expected L=%.1f, Got L=%d', 
+                    $colorData['line_number'],
+                    $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                    $colorData['lab']['l'], 
+                    $lab->getL()
+                )
+            );
+            $this->assertEqualsWithDelta(
                 $colorData['lab']['a'], 
-                $lab->getA()
-            )
-        );
-        $this->assertEqualsWithDelta(
-            $colorData['lab']['b'], 
-            $lab->getB(), 
-            2,
-            sprintf('Lab B channel mismatch at line %d. RGB(%d, %d, %d) -> Expected B=%.1f, Got B=%d', 
-                $colorData['line_number'],
-                $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                $lab->getA(), 
+                2,
+                sprintf('Lab A channel mismatch at line %d. RGB(%d, %d, %d) -> Expected A=%.1f, Got A=%d', 
+                    $colorData['line_number'],
+                    $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                    $colorData['lab']['a'], 
+                    $lab->getA()
+                )
+            );
+            $this->assertEqualsWithDelta(
                 $colorData['lab']['b'], 
-                $lab->getB()
-            )
-        );
+                $lab->getB(), 
+                2,
+                sprintf('Lab B channel mismatch at line %d. RGB(%d, %d, %d) -> Expected B=%.1f, Got B=%d', 
+                    $colorData['line_number'],
+                    $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'],
+                    $colorData['lab']['b'], 
+                    $lab->getB()
+                )
+            );
+        }
     }
 
     public function testConvertLabToRgb(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $lab = Color::lab((int)round($colorData['lab']['l']), (int)round($colorData['lab']['a']), (int)round($colorData['lab']['b']));
         $rgb = $lab->toRGB();
         
@@ -469,11 +557,14 @@ final class ColorConversionTest extends TestCase
                 $rgb->getB()
             )
         );
+        }
     }
 
     public function testConvertRgbToLch(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
         $lch = $rgb->toLCh();
         
@@ -517,11 +608,14 @@ final class ColorConversionTest extends TestCase
                 $lch->getH()
             )
         );
+        }
     }
 
     public function testConvertLchToRgb(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $lch = Color::lch((int)round($colorData['lch']['l']), (int)round($colorData['lch']['c']), (int)round($colorData['lch']['h']));
         $rgb = $lch->toRGB();
         
@@ -566,11 +660,14 @@ final class ColorConversionTest extends TestCase
                 $rgb->getB()
             )
         );
+        }
     }
 
     public function testConvertRgbToXyz(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $rgb = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
         $xyz = $rgb->toXYZ();
         
@@ -613,18 +710,16 @@ final class ColorConversionTest extends TestCase
                 $xyz->getZ()
             )
         );
+        }
     }
 
     public function testConvertXyzToRgb(): void
     {
-        // Try multiple colors until we find one that produces valid RGB
-        // Some XYZ values from the file may produce out-of-range RGB values
-        $maxAttempts = 10;
-        $colorData = null;
-        $rgb = null;
+        $colors = $this->getColorsFromFile();
+        $testedCount = 0;
+        $skippedCount = 0;
         
-        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
-            $colorData = $this->getRandomColorFromFile();
+        foreach ($colors as $colorData) {
             $xyz = Color::xyz((int)round($colorData['xyz']['x']), (int)round($colorData['xyz']['y']), (int)round($colorData['xyz']['z']));
             
             try {
@@ -633,60 +728,62 @@ final class ColorConversionTest extends TestCase
                 if ($rgb->getR() >= 0 && $rgb->getR() <= 255 &&
                     $rgb->getG() >= 0 && $rgb->getG() <= 255 &&
                     $rgb->getB() >= 0 && $rgb->getB() <= 255) {
-                    break;
+                    $testedCount++;
+                    
+                    $this->assertEquals(RGB::getName(), $rgb->getColorSpaceName());
+                    // Validate against file data with tolerance (XYZ to RGB can have larger differences due to clamping)
+                    $this->assertEqualsWithDelta(
+                        $colorData['rgb']['r'], 
+                        $rgb->getR(), 
+                        10,
+                        sprintf('RGB R channel mismatch at line %d. XYZ(%d, %d, %d) -> Expected R=%d, Got R=%d', 
+                            $colorData['line_number'],
+                            (int)round($colorData['xyz']['x']), 
+                            (int)round($colorData['xyz']['y']), 
+                            (int)round($colorData['xyz']['z']),
+                            $colorData['rgb']['r'], 
+                            $rgb->getR()
+                        )
+                    );
+                    $this->assertEqualsWithDelta(
+                        $colorData['rgb']['g'], 
+                        $rgb->getG(), 
+                        5,
+                        sprintf('RGB G channel mismatch at line %d. XYZ(%d, %d, %d) -> Expected G=%d, Got G=%d', 
+                            $colorData['line_number'],
+                            (int)round($colorData['xyz']['x']), 
+                            (int)round($colorData['xyz']['y']), 
+                            (int)round($colorData['xyz']['z']),
+                            $colorData['rgb']['g'], 
+                            $rgb->getG()
+                        )
+                    );
+                    $this->assertEqualsWithDelta(
+                        $colorData['rgb']['b'], 
+                        $rgb->getB(), 
+                        10,
+                        sprintf('RGB B channel mismatch at line %d. XYZ(%d, %d, %d) -> Expected B=%d, Got B=%d', 
+                            $colorData['line_number'],
+                            (int)round($colorData['xyz']['x']), 
+                            (int)round($colorData['xyz']['y']), 
+                            (int)round($colorData['xyz']['z']),
+                            $colorData['rgb']['b'], 
+                            $rgb->getB()
+                        )
+                    );
+                } else {
+                    $skippedCount++;
                 }
             } catch (\Exception $e) {
-                // Try next color if this one produces invalid RGB
+                // Skip colors that produce invalid RGB
+                $skippedCount++;
                 continue;
             }
         }
         
-        if ($rgb === null) {
-            $this->markTestSkipped('Could not find valid XYZ color that produces in-range RGB after ' . $maxAttempts . ' attempts');
-            return;
+        if ($testedCount === 0) {
+            $this->markTestSkipped('Could not find any valid XYZ color that produces in-range RGB (tested ' . count($colors) . ' colors)');
         }
-        
-        $this->assertEquals(RGB::getName(), $rgb->getColorSpaceName());
-        // Validate against file data with tolerance (XYZ to RGB can have larger differences due to clamping)
-        $this->assertEqualsWithDelta(
-            $colorData['rgb']['r'], 
-            $rgb->getR(), 
-            10,
-            sprintf('RGB R channel mismatch at line %d. XYZ(%d, %d, %d) -> Expected R=%d, Got R=%d', 
-                $colorData['line_number'],
-                (int)round($colorData['xyz']['x']), 
-                (int)round($colorData['xyz']['y']), 
-                (int)round($colorData['xyz']['z']),
-                $colorData['rgb']['r'], 
-                $rgb->getR()
-            )
-        );
-        $this->assertEqualsWithDelta(
-            $colorData['rgb']['g'], 
-            $rgb->getG(), 
-            5,
-            sprintf('RGB G channel mismatch at line %d. XYZ(%d, %d, %d) -> Expected G=%d, Got G=%d', 
-                $colorData['line_number'],
-                (int)round($colorData['xyz']['x']), 
-                (int)round($colorData['xyz']['y']), 
-                (int)round($colorData['xyz']['z']),
-                $colorData['rgb']['g'], 
-                $rgb->getG()
-            )
-        );
-        $this->assertEqualsWithDelta(
-            $colorData['rgb']['b'], 
-            $rgb->getB(), 
-            10,
-            sprintf('RGB B channel mismatch at line %d. XYZ(%d, %d, %d) -> Expected B=%d, Got B=%d', 
-                $colorData['line_number'],
-                (int)round($colorData['xyz']['x']), 
-                (int)round($colorData['xyz']['y']), 
-                (int)round($colorData['xyz']['z']),
-                $colorData['rgb']['b'], 
-                $rgb->getB()
-            )
-        );
     }
 
     public function testConvertRgbToYcbcr(): void
@@ -727,7 +824,9 @@ final class ColorConversionTest extends TestCase
 
     public function testRoundTripRgbToCmykAndBack(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $original = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
         $cmyk = $original->toCMYK();
         $backToRgb = $cmyk->toRGB();
@@ -769,11 +868,14 @@ final class ColorConversionTest extends TestCase
                 $backToRgb->getB()
             )
         );
+        }
     }
 
     public function testRoundTripRgbToHslAndBack(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $original = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
         $hsl = $original->toHSL();
         $backToRgb = $hsl->toRGB();
@@ -815,11 +917,14 @@ final class ColorConversionTest extends TestCase
                 $backToRgb->getB()
             )
         );
+        }
     }
 
     public function testRoundTripRgbToHsvAndBack(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $original = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
         $hsv = $original->toHSV();
         $backToRgb = $hsv->toRGB();
@@ -861,39 +966,49 @@ final class ColorConversionTest extends TestCase
                 $backToRgb->getB()
             )
         );
+        }
     }
 
     // ========== ToHex Tests ==========
 
     public function testRgbToHex(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $color = Color::rgb($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
         $hex = $color->toHex();
         
         $expectedHex = sprintf('#%02X%02X%02X', $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b']);
         $this->assertEquals($expectedHex, $hex);
+        }
     }
 
     public function testRgbaToHex(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $a = random_int(0, 255);
         $color = Color::rgba($colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'], $a);
         $hex = $color->toHex();
         
         $expectedHex = sprintf('#%02X%02X%02X%02X', $colorData['rgb']['r'], $colorData['rgb']['g'], $colorData['rgb']['b'], $a);
         $this->assertEquals($expectedHex, $hex);
+        }
     }
 
     public function testColorSpaceConversionToHex(): void
     {
-        $colorData = $this->getRandomColorFromFile();
+        $colors = $this->getColorsFromFile();
+        
+        foreach ($colors as $colorData) {
         $hsl = Color::hsl($colorData['hsl']['h'], $colorData['hsl']['s'], $colorData['hsl']['l']);
         $hex = $hsl->toHex();
         
         // Should convert to RGB first, then to hex
         $this->assertStringStartsWith('#', $hex);
         $this->assertEquals(7, strlen($hex)); // #RRGGBB format
+        }
     }
 }
