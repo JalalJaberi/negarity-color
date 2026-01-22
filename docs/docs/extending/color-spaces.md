@@ -77,6 +77,17 @@ final class MyCustomColorSpace extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        return match ($channel) {
+            'channel1', 'channel2', 'channel3' => static::clampRange($value, 0.0, 100.0),
+            default => throw new InvalidColorValueException(
+                "Channel '{$channel}' does not exist in mycustom color space."
+            ),
+        };
+    }
+
     /**
      * Convert from this color space to RGB.
      * This is REQUIRED for all color spaces.
@@ -147,8 +158,10 @@ final class MyCustomColorSpace extends AbstractColorSpace
 
 - **Channel values are always floats**: All channel values must be `float` type for precision
 - **`toRGB()` and `fromRGB()` are required**: These methods enable automatic conversions through RGB
+- **`clampValue()` is required**: This method is used to clamp values to valid ranges
 - **Clamp values**: Always clamp converted values to valid ranges to prevent invalid colors
 - **Return types**: Both methods must return `array<string, float>`
+- **Clamping responsibility**: Color spaces are responsible for clamping values. The clamping system automatically uses `clampValue()` when needed.
 
 ## Step 2: Register the Color Space
 

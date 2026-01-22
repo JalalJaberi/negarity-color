@@ -31,13 +31,13 @@ final class MixFilter implements BinaryColorFilterInterface
     {
         // If colors are in the same color space, use direct mixing
         if ($base->getColorSpace() === $blend->getColorSpace()) {
-            $baseChannels = $base->toArray()['values'];
-            $blendChannels = $blend->toArray()['values'];
+            $baseChannels = $base->getChannels();
             $resultChannels = [];
 
-            foreach ($baseChannels as $channel => $value) {
-                $blendValue = $blendChannels[$channel] ?? 0;
-                $resultChannels[$channel] = (1 - $this->weight) * $value + $this->weight * $blendValue;
+            foreach ($baseChannels as $channel) {
+                $baseValue = $base->getChannelForCalculation($channel);
+                $blendValue = $blend->getChannelForCalculation($channel);
+                $resultChannels[$channel] = (1 - $this->weight) * $baseValue + $this->weight * $blendValue;
             }
 
             return $base->with($resultChannels);
@@ -47,13 +47,10 @@ final class MixFilter implements BinaryColorFilterInterface
         $baseRgb = $base->toRGB();
         $blendRgb = $blend->toRGB();
         
-        $baseRgbValues = $baseRgb->toArray()['values'];
-        $blendRgbValues = $blendRgb->toArray()['values'];
-        
         $resultRgb = [
-            'r' => (1 - $this->weight) * $baseRgbValues['r'] + $this->weight * $blendRgbValues['r'],
-            'g' => (1 - $this->weight) * $baseRgbValues['g'] + $this->weight * $blendRgbValues['g'],
-            'b' => (1 - $this->weight) * $baseRgbValues['b'] + $this->weight * $blendRgbValues['b'],
+            'r' => (1 - $this->weight) * $baseRgb->getChannelForCalculation('r') + $this->weight * $blendRgb->getChannelForCalculation('r'),
+            'g' => (1 - $this->weight) * $baseRgb->getChannelForCalculation('g') + $this->weight * $blendRgb->getChannelForCalculation('g'),
+            'b' => (1 - $this->weight) * $baseRgb->getChannelForCalculation('b') + $this->weight * $blendRgb->getChannelForCalculation('b'),
         ];
         
         // Convert back to base color space

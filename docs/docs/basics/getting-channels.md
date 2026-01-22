@@ -7,9 +7,18 @@ sidebar_position: 3
 
 Every color in Negarity Color consists of channels that represent the color's values in its color space. This guide shows you how to access these channel values.
 
+## Clamping and Value Modes
+
+Negarity Color supports two modes for handling channel values:
+
+- **Non-Strict Mode (Default)**: Original values are preserved internally, but clamped values are returned when accessing channels. This allows out-of-gamut colors to exist for advanced operations.
+- **Strict Mode**: Values are clamped immediately when assigned. This ensures all stored values are always within valid ranges.
+
+You can access both clamped and raw (original) values using different methods.
+
 ## Using getChannel()
 
-The `getChannel()` method allows you to access any channel by name:
+The `getChannel()` method allows you to access any channel by name. **This method always returns clamped values** (values within the valid range for that channel):
 
 ```php
 use Negarity\Color\Color;
@@ -20,6 +29,23 @@ echo $color->getChannel('r'); // 255
 echo $color->getChannel('g'); // 100
 echo $color->getChannel('b'); // 50
 ```
+
+### Getting Raw (Original) Values
+
+In non-strict mode, you can access the original (unclamped) values using `getChannelRaw()`:
+
+```php
+// In non-strict mode, out-of-range values are allowed
+$color = Color::rgb(300, -10, 50);
+
+echo $color->getChannel('r');    // 255 (clamped)
+echo $color->getChannelRaw('r'); // 300 (original)
+
+echo $color->getChannel('g');    // 0 (clamped)
+echo $color->getChannelRaw('g'); // -10 (original)
+```
+
+This is useful when you need to work with out-of-gamut colors or preserve precision in calculations.
 
 This works for any color space:
 
@@ -33,20 +59,26 @@ echo $hsl->getChannel('l'); // 40
 
 ## Using Getter Methods
 
-For convenience, you can use dedicated getter methods for each channel. These methods are dynamically available based on the color space:
+For convenience, you can use dedicated getter methods for each channel. These methods are dynamically available based on the color space. **These methods return clamped values** (same as `getChannel()`).
+
+You can also access raw values using `get{Channel}Raw()` methods:
 
 ### RGB/RGBA Channels
 
 ```php
 $color = Color::rgb(255, 100, 50);
 
-echo $color->getR(); // 255
-echo $color->getG(); // 100
-echo $color->getB(); // 50
+echo $color->getR(); // 255 (clamped)
+echo $color->getG(); // 100 (clamped)
+echo $color->getB(); // 50 (clamped)
+
+// Access raw values
+echo $color->getRRaw(); // Original value (may be out of range in non-strict mode)
 
 // For RGBA
 $rgba = Color::rgba(255, 100, 50, 128);
-echo $rgba->getA(); // 128
+echo $rgba->getA(); // 128 (clamped)
+echo $rgba->getARaw(); // Original alpha value
 ```
 
 ### HSL/HSLA Channels
@@ -214,6 +246,32 @@ if ($rgba->getA() < 255) {
     echo "Color is " . $opacity . "% opaque\n";
 }
 ```
+
+## Clamping Behavior
+
+### Non-Strict Mode (Default)
+
+In non-strict mode, out-of-range values are allowed when creating colors:
+
+```php
+// This works in non-strict mode (default)
+$color = Color::rgb(300, -10, 50);
+
+// getChannel() returns clamped values
+echo $color->getR(); // 255 (clamped from 300)
+echo $color->getG(); // 0 (clamped from -10)
+
+// getChannelRaw() returns original values
+echo $color->getRRaw(); // 300
+echo $color->getGRaw(); // -10
+
+// String representation uses clamped values
+echo $color; // "rgb(255, 0, 50)"
+```
+
+### Strict Mode
+
+In strict mode, values are clamped immediately when assigned. To enable strict mode, you need to override the `STRICT_CLAMPING` constant in a custom class (this is an advanced feature).
 
 ## Error Handling
 

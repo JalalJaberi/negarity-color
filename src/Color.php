@@ -75,12 +75,12 @@ final class Color extends AbstractColor
             $floatValue = (float)$value;
             
             // In strict mode: clamp immediately and store original
-            // In non-strict mode: validate (throws if out of range) and store original
+            // In non-strict mode: allow out-of-range values (no validation), store as-is
             if (static::STRICT_CLAMPING) {
                 $originalValues[$channel] = $floatValue;
                 $values[$channel] = $this->colorSpace::clampValue($channel, $floatValue);
             } else {
-                $this->colorSpace::validateValue($channel, $floatValue);
+                // Non-strict: store original value, clamp only on output
                 $values[$channel] = $floatValue;
             }
         }

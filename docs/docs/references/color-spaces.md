@@ -110,7 +110,13 @@ Checks if a channel exists by name.
 Returns the default value for a channel when not specified (always returns a float).
 
 ### `validateValue(string $channel, float $value): void`
-Validates that a channel value is within the acceptable range. Throws `InvalidColorValueException` if invalid.
+Validates that a channel value is within the acceptable range. Throws `InvalidColorValueException` if invalid. **Note**: In non-strict mode (default), validation is skipped and out-of-range values are allowed.
+
+### `clampValue(string $channel, float $value): float`
+Clamps a channel value to its valid range. This method is called automatically when:
+- Creating colors in strict mode
+- Accessing channels via `getChannel()` (always clamps)
+- Converting to string or hex (always clamps)
 
 ### `toRGB(array $values, ?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array`
 Converts color values from this color space to RGB. Returns an array with `['r' => float, 'g' => float, 'b' => float]`.

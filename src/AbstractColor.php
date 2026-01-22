@@ -97,12 +97,12 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                 $floatValue = (float)$value;
                 
                 // In strict mode: clamp immediately and store original
-                // In non-strict mode: validate (throws if out of range) and store original
+                // In non-strict mode: allow out-of-range values (no validation), store as-is
                 if (static::STRICT_CLAMPING) {
                     $this->originalValues[$name] = $floatValue;
                     $this->values[$name] = $colorSpace::clampValue($name, $floatValue);
                 } else {
-                    $colorSpace::validateValue($name, $floatValue);
+                    // Non-strict: store original value, clamp only on output
                     $this->values[$name] = $floatValue;
                 }
             }
@@ -193,6 +193,19 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * @return float The channel value appropriate for operations.
      */
     final protected function getChannelForOperation(string $name): float
+    {
+        return static::STRICT_CLAMPING ? $this->getChannelRaw($name) : $this->getChannel($name);
+    }
+
+    /**
+     * Get channel value for operations (public method for filters and external code).
+     * In strict mode: returns raw (original) value (because stored values are already clamped).
+     * In non-strict mode: returns clamped value (for safety).
+     * 
+     * @param string $name The channel name.
+     * @return float The channel value appropriate for operations.
+     */
+    final public function getChannelForCalculation(string $name): float
     {
         return static::STRICT_CLAMPING ? $this->getChannelRaw($name) : $this->getChannel($name);
     }

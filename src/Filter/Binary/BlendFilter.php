@@ -19,13 +19,13 @@ final class BlendFilter implements BinaryColorFilterInterface
     {
         // If colors are in the same color space, use direct blending
         if ($base->getColorSpace() === $blend->getColorSpace()) {
-            $baseChannels = $base->toArray()['values'];
-            $blendChannels = $blend->toArray()['values'];
+            $baseChannels = $base->getChannels();
             $resultChannels = [];
 
-            foreach ($baseChannels as $channel => $value) {
-                $blendValue = $blendChannels[$channel] ?? 0;
-                $resultChannels[$channel] = (1 - 0.5) * $value + 0.5 * $blendValue;
+            foreach ($baseChannels as $channel) {
+                $baseValue = $base->getChannelForCalculation($channel);
+                $blendValue = $blend->getChannelForCalculation($channel);
+                $resultChannels[$channel] = (1 - 0.5) * $baseValue + 0.5 * $blendValue;
             }
 
             return $base->with($resultChannels);
@@ -35,13 +35,10 @@ final class BlendFilter implements BinaryColorFilterInterface
         $baseRgb = $base->toRGB();
         $blendRgb = $blend->toRGB();
         
-        $baseRgbValues = $baseRgb->toArray()['values'];
-        $blendRgbValues = $blendRgb->toArray()['values'];
-        
         $resultRgb = [
-            'r' => (1 - 0.5) * $baseRgbValues['r'] + 0.5 * $blendRgbValues['r'],
-            'g' => (1 - 0.5) * $baseRgbValues['g'] + 0.5 * $blendRgbValues['g'],
-            'b' => (1 - 0.5) * $baseRgbValues['b'] + 0.5 * $blendRgbValues['b'],
+            'r' => (1 - 0.5) * $baseRgb->getChannelForCalculation('r') + 0.5 * $blendRgb->getChannelForCalculation('r'),
+            'g' => (1 - 0.5) * $baseRgb->getChannelForCalculation('g') + 0.5 * $blendRgb->getChannelForCalculation('g'),
+            'b' => (1 - 0.5) * $baseRgb->getChannelForCalculation('b') + 0.5 * $blendRgb->getChannelForCalculation('b'),
         ];
         
         // Convert back to base color space

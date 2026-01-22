@@ -7,6 +7,21 @@ sidebar_position: 2
 
 Complete reference for all methods available on `Color` and `MutableColor` classes.
 
+## Clamping and Value Modes
+
+Negarity Color supports two modes for handling channel values:
+
+- **Non-Strict Mode (Default)**: Original values are preserved internally, but clamped values are returned when accessing channels. Out-of-range values are allowed when creating colors.
+- **Strict Mode**: Values are clamped immediately when assigned. All stored values are always within valid ranges.
+
+The default mode is non-strict, which allows for out-of-gamut colors and preserves precision in calculations. Values are automatically clamped when:
+- Using `getChannel()` or getter methods (e.g., `getR()`)
+- Converting to string (`__toString()`)
+- Converting to hex (`toHex()`)
+- Serializing to JSON
+
+Use `getChannelRaw()` or `get{Channel}Raw()` methods to access original (unclamped) values.
+
 ## Static Factory Methods
 
 ### Color Creation
@@ -127,20 +142,42 @@ $channels = $color->getChannels(); // ['r', 'g', 'b']
 
 ### Channel Access
 
-#### `getChannel(string $name): float|int`
-Gets a specific channel value by name.
+#### `getChannel(string $name): float`
+Gets a specific channel value by name. **Always returns clamped values** (within valid range).
 
 ```php
 $r = $color->getChannel('r');
 ```
 
+#### `getChannelRaw(string $name): float`
+Gets the raw (original) channel value without clamping. In strict mode, returns the original value before clamping. In non-strict mode, returns the stored value (which may be out of range).
+
+```php
+$rRaw = $color->getChannelRaw('r');
+```
+
+#### `getChannelForCalculation(string $name): float`
+Gets the channel value appropriate for calculations. In strict mode, returns raw value (because stored values are already clamped). In non-strict mode, returns clamped value (for safety). This method is primarily used by filters and conversion methods.
+
+```php
+$r = $color->getChannelForCalculation('r');
+```
+
 #### `getR()`, `getG()`, `getB()`, `getA()`, etc.
-Dynamic getter methods for each channel.
+Dynamic getter methods for each channel. **These return clamped values** (same as `getChannel()`).
 
 ```php
 $r = $color->getR();
 $h = $color->getH(); // For HSL/HSV
 $c = $color->getC(); // For CMYK/LCh
+```
+
+#### `getRRaw()`, `getGRaw()`, `getBRaw()`, `getARaw()`, etc.
+Dynamic getter methods for raw (original) channel values. **These return unclamped values**.
+
+```php
+$rRaw = $color->getRRaw();
+$hRaw = $color->getHRaw(); // For HSL/HSV
 ```
 
 ### Conversion Methods

@@ -198,6 +198,35 @@ $rgba = Color::rgba(255, 100, 50, 128);
 echo $rgba->toHex(); // Outputs: "#FF643280"
 ```
 
+## Value Clamping and Out-of-Range Values
+
+By default, Negarity Color operates in **non-strict mode**, which allows out-of-range values to be stored internally. This is useful for:
+- Working with out-of-gamut colors
+- Preserving precision in calculations
+- Advanced color science operations
+
+### Non-Strict Mode (Default)
+
+In non-strict mode, you can create colors with out-of-range values:
+
+```php
+// These work in non-strict mode (default)
+$color = Color::rgb(300, -10, 50);  // R > 255, G < 0
+
+// Values are clamped when accessed
+echo $color->getR();     // 255 (clamped)
+echo $color->getRRaw();  // 300 (original)
+echo $color->getG();     // 0 (clamped)
+echo $color->getGRaw();  // -10 (original)
+
+// String representation uses clamped values
+echo $color; // "rgb(255, 0, 50)"
+```
+
+### Strict Mode
+
+In strict mode, values are clamped immediately when assigned. This ensures all stored values are always within valid ranges. Strict mode is an advanced feature that requires overriding the `STRICT_CLAMPING` constant.
+
 ## Next Steps
 
 Now that you know how to create colors, learn about:

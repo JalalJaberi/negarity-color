@@ -251,149 +251,229 @@ final class ColorCreationTest extends TestCase
 
     public function testCreateRgbColorWithInvalidRChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $invalidR = random_int(256, 500);
         $g = random_int(0, 255);
         $b = random_int(0, 255);
-        Color::rgb($invalidR, $g, $b); // R > 255
+        $color = Color::rgb($invalidR, $g, $b);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidR, $color->getRRaw());
+        // Clamped value should be returned
+        $this->assertEquals(255, $color->getR());
     }
 
     public function testCreateRgbColorWithInvalidGChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $r = random_int(0, 255);
         $invalidG = random_int(-100, -1);
         $b = random_int(0, 255);
-        Color::rgb($r, $invalidG, $b); // G < 0
+        $color = Color::rgb($r, $invalidG, $b);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidG, $color->getGRaw());
+        // Clamped value should be returned
+        $this->assertEquals(0, $color->getG());
     }
 
     public function testCreateRgbColorWithInvalidBChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $r = random_int(0, 255);
         $g = random_int(0, 255);
         $invalidB = random_int(256, 500);
-        Color::rgb($r, $g, $invalidB); // B > 255
+        $color = Color::rgb($r, $g, $invalidB);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidB, $color->getBRaw());
+        // Clamped value should be returned
+        $this->assertEquals(255, $color->getB());
     }
 
     public function testCreateRgbaColorWithInvalidAlpha(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $r = random_int(0, 255);
         $g = random_int(0, 255);
         $b = random_int(0, 255);
         $invalidAlpha = random_int(256, 500);
-        Color::rgba($r, $g, $b, $invalidAlpha); // Alpha > 255
+        $color = Color::rgba($r, $g, $b, $invalidAlpha);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidAlpha, $color->getARaw());
+        // Clamped value should be returned
+        $this->assertEquals(255, $color->getA());
     }
 
     public function testCreateCmykColorWithInvalidCChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $invalidC = random_int(101, 200);
         $m = random_int(0, 100);
         $y = random_int(0, 100);
         $k = random_int(0, 100);
-        Color::cmyk($invalidC, $m, $y, $k); // C > 100
+        $color = Color::cmyk($invalidC, $m, $y, $k);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidC, $color->getCRaw());
+        // Clamped value should be returned
+        $this->assertEquals(100, $color->getC());
     }
 
     public function testCreateCmykColorWithInvalidMChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $c = random_int(0, 100);
         $invalidM = random_int(-100, -1);
         $y = random_int(0, 100);
         $k = random_int(0, 100);
-        Color::cmyk($c, $invalidM, $y, $k); // M < 0
+        $color = Color::cmyk($c, $invalidM, $y, $k);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidM, $color->getMRaw());
+        // Clamped value should be returned
+        $this->assertEquals(0, $color->getM());
     }
 
     public function testCreateHslColorWithInvalidHChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $invalidH = random_int(361, 500);
         $s = random_int(0, 100);
         $l = random_int(0, 100);
-        Color::hsl($invalidH, $s, $l); // H > 360
+        $color = Color::hsl($invalidH, $s, $l);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidH, $color->getHRaw());
+        // Clamped value should be returned
+        $this->assertEquals(360, $color->getH());
     }
 
     public function testCreateHslColorWithInvalidSChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $h = random_int(0, 360);
         $invalidS = random_int(101, 200);
         $l = random_int(0, 100);
-        Color::hsl($h, $invalidS, $l); // S > 100
+        $color = Color::hsl($h, $invalidS, $l);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidS, $color->getSRaw());
+        // Clamped value should be returned
+        $this->assertEquals(100, $color->getS());
     }
 
     public function testCreateHslColorWithInvalidLChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $h = random_int(0, 360);
         $s = random_int(0, 100);
         $invalidL = random_int(-100, -1);
-        Color::hsl($h, $s, $invalidL); // L < 0
+        $color = Color::hsl($h, $s, $invalidL);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidL, $color->getLRaw());
+        // Clamped value should be returned
+        $this->assertEquals(0, $color->getL());
     }
 
     public function testCreateHsvColorWithInvalidVChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $h = random_int(0, 360);
         $s = random_int(0, 100);
         $invalidV = random_int(101, 200);
-        Color::hsv($h, $s, $invalidV); // V > 100
+        $color = Color::hsv($h, $s, $invalidV);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidV, $color->getVRaw());
+        // Clamped value should be returned
+        $this->assertEquals(100, $color->getV());
     }
 
     public function testCreateLabColorWithInvalidLChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $invalidL = random_int(101, 200);
         $a = random_int(-128, 127);
         $b = random_int(-128, 127);
-        Color::lab($invalidL, $a, $b); // L > 100
+        $color = Color::lab($invalidL, $a, $b);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidL, $color->getLRaw());
+        // Clamped value should be returned
+        $this->assertEquals(100, $color->getL());
     }
 
     public function testCreateLabColorWithNegativeLChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $invalidL = random_int(-100, -1);
         $a = random_int(-128, 127);
         $b = random_int(-128, 127);
-        Color::lab($invalidL, $a, $b); // L < 0
+        $color = Color::lab($invalidL, $a, $b);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidL, $color->getLRaw());
+        // Clamped value should be returned
+        $this->assertEquals(0, $color->getL());
     }
 
     public function testCreateLchColorWithInvalidHChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $l = random_int(0, 100);
         $c = random_int(0, 100);
         $invalidH = random_int(361, 500);
-        Color::lch($l, $c, $invalidH); // H > 360
+        $color = Color::lch($l, $c, $invalidH);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidH, $color->getHRaw());
+        // Clamped value should be returned
+        $this->assertEquals(360, $color->getH());
     }
 
     public function testCreateYcbcrColorWithInvalidYChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $invalidY = random_int(101, 200);
         $cb = random_int(-128, 127);
         $cr = random_int(-128, 127);
-        Color::ycbcr($invalidY, $cb, $cr); // Y > 100
+        $color = Color::ycbcr($invalidY, $cb, $cr);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidY, $color->getYRaw());
+        // Clamped value should be returned
+        $this->assertEquals(100, $color->getY());
     }
 
     public function testCreateYcbcrColorWithInvalidCbChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $y = random_int(0, 100);
         $invalidCb = random_int(128, 255);
         $cr = random_int(-128, 127);
-        Color::ycbcr($y, $invalidCb, $cr); // Cb > 127
+        $color = Color::ycbcr($y, $invalidCb, $cr);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidCb, $color->getCbRaw());
+        // Clamped value should be returned
+        $this->assertEquals(127, $color->getCb());
     }
 
     public function testCreateYcbcrColorWithInvalidCrChannel(): void
     {
-        $this->expectException(InvalidColorValueException::class);
+        // In non-strict mode (default), out-of-range values are allowed and clamped on output
         $y = random_int(0, 100);
         $cb = random_int(-128, 127);
         $invalidCr = random_int(-255, -129);
-        Color::ycbcr($y, $cb, $invalidCr); // Cr < -128
+        $color = Color::ycbcr($y, $cb, $invalidCr);
+        
+        // Original value should be preserved
+        $this->assertEquals($invalidCr, $color->getCrRaw());
+        // Clamped value should be returned
+        $this->assertEquals(-128, $color->getCr());
     }
 
     // ========== Channel Access Tests ==========

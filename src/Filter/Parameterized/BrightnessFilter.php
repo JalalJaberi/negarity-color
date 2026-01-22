@@ -35,65 +35,65 @@ final class BrightnessFilter implements ParameterizedColorFilterInterface
         // check the color space first and then do the calculation based on the color space
         switch ($color->getColorSpace()) {
             case RGB::class:
-                $r = max(0.0, min(255.0, $color->getChannel('r') + $factor));
-                $g = max(0.0, min(255.0, $color->getChannel('g') + $factor));
-                $b = max(0.0, min(255.0, $color->getChannel('b') + $factor));
+                $r = max(0.0, min(255.0, $color->getChannelForCalculation('r') + $factor));
+                $g = max(0.0, min(255.0, $color->getChannelForCalculation('g') + $factor));
+                $b = max(0.0, min(255.0, $color->getChannelForCalculation('b') + $factor));
                 return $color->with(['r' => $r, 'g' => $g, 'b' => $b]);
             case RGBA::class:
-                $r = max(0.0, min(255.0, $color->getChannel('r') + $factor));
-                $g = max(0.0, min(255.0, $color->getChannel('g') + $factor));
-                $b = max(0.0, min(255.0, $color->getChannel('b') + $factor));
-                $a = $color->getChannel('a');
+                $r = max(0.0, min(255.0, $color->getChannelForCalculation('r') + $factor));
+                $g = max(0.0, min(255.0, $color->getChannelForCalculation('g') + $factor));
+                $b = max(0.0, min(255.0, $color->getChannelForCalculation('b') + $factor));
+                $a = $color->getChannelForCalculation('a');
                 return $color->with(['r' => $r, 'g' => $g, 'b' => $b, 'a' => $a]);
             case CMYK::class:
-                $c = max(0.0, min(100.0, $color->getChannel('c') - ($factor / 2.55)));
-                $m = max(0.0, min(100.0, $color->getChannel('m') - ($factor / 2.55)));
-                $y = max(0.0, min(100.0, $color->getChannel('y') - ($factor / 2.55)));
-                $k = $color->getChannel('k');
+                $c = max(0.0, min(100.0, $color->getChannelForCalculation('c') - ($factor / 2.55)));
+                $m = max(0.0, min(100.0, $color->getChannelForCalculation('m') - ($factor / 2.55)));
+                $y = max(0.0, min(100.0, $color->getChannelForCalculation('y') - ($factor / 2.55)));
+                $k = $color->getChannelForCalculation('k');
                 return $color->with(['c' => $c, 'm' => $m, 'y' => $y, 'k' => $k]);
             case HSL::class:
-                $l = max(0.0, min(100.0, $color->getChannel('l') + $factor));
-                $h = $color->getChannel('h');
-                $s = $color->getChannel('s');
+                $l = max(0.0, min(100.0, $color->getChannelForCalculation('l') + $factor));
+                $h = $color->getChannelForCalculation('h');
+                $s = $color->getChannelForCalculation('s');
                 return $color->with(['h' => $h, 's' => $s, 'l' => $l]);
             case HSLA::class:
-                $l = max(0.0, min(100.0, $color->getChannel('l') + $factor));
-                $h = $color->getChannel('h');
-                $s = $color->getChannel('s');
-                $a = $color->getChannel('a');
+                $l = max(0.0, min(100.0, $color->getChannelForCalculation('l') + $factor));
+                $h = $color->getChannelForCalculation('h');
+                $s = $color->getChannelForCalculation('s');
+                $a = $color->getChannelForCalculation('a');
                 return $color->with(['h' => $h, 's' => $s, 'l' => $l, 'a' => $a]);
             case HSV::class:
-                $v = max(0.0, min(100.0, $color->getChannel('v') + $factor));
-                $h = $color->getChannel('h');
-                $s = $color->getChannel('s');
+                $v = max(0.0, min(100.0, $color->getChannelForCalculation('v') + $factor));
+                $h = $color->getChannelForCalculation('h');
+                $s = $color->getChannelForCalculation('s');
                 return $color->with(['h' => $h, 's' => $s, 'v' => $v]);
             case Lab::class:
-                $l = max(0.0, min(100.0, $color->getChannel('l') + $factor));
-                $a = $color->getChannel('a');
-                $b = $color->getChannel('b');
+                $l = max(0.0, min(100.0, $color->getChannelForCalculation('l') + $factor));
+                $a = $color->getChannelForCalculation('a');
+                $b = $color->getChannelForCalculation('b');
                 return $color->with(['l' => $l, 'a' => $a, 'b' => $b]);
             case LCh::class:
-                $l = max(0.0, min(100.0, $color->getChannel('l') + $factor));
-                $c = $color->getChannel('c');
-                $h = $color->getChannel('h');
+                $l = max(0.0, min(100.0, $color->getChannelForCalculation('l') + $factor));
+                $c = $color->getChannelForCalculation('c');
+                $h = $color->getChannelForCalculation('h');
                 return $color->with(['l' => $l, 'c' => $c, 'h' => $h]);
             case XYZ::class:
-                $x = max(0.0, min(100.0, $color->getChannel('x') + $factor));
-                $y = max(0.0, min(100.0, $color->getChannel('y') + $factor));
-                $z = max(0.0, min(100.0, $color->getChannel('z') + $factor));
+                $x = max(0.0, min(100.0, $color->getChannelForCalculation('x') + $factor));
+                $y = max(0.0, min(100.0, $color->getChannelForCalculation('y') + $factor));
+                $z = max(0.0, min(100.0, $color->getChannelForCalculation('z') + $factor));
                 return $color->with(['x' => $x, 'y' => $y, 'z' => $z]);
             case YCbCr::class:
-                $y = max(0.0, min(255.0, $color->getChannel('y') + $factor));
-                $cb = $color->getChannel('cb');
-                $cr = $color->getChannel('cr');
+                $y = max(0.0, min(255.0, $color->getChannelForCalculation('y') + $factor));
+                $cb = $color->getChannelForCalculation('cb');
+                $cr = $color->getChannelForCalculation('cr');
                 return $color->with(['y' => $y, 'cb' => $cb, 'cr' => $cr]);
             default:
                 // Fallback: Convert to RGB, apply filter, convert back
                 $originalColorSpace = $color->getColorSpace();
                 $rgb = $color->toRGB();
-                $r = max(0.0, min(255.0, $rgb->getChannel('r') + $factor));
-                $g = max(0.0, min(255.0, $rgb->getChannel('g') + $factor));
-                $b = max(0.0, min(255.0, $rgb->getChannel('b') + $factor));
+                $r = max(0.0, min(255.0, $rgb->getChannelForCalculation('r') + $factor));
+                $g = max(0.0, min(255.0, $rgb->getChannelForCalculation('g') + $factor));
+                $b = max(0.0, min(255.0, $rgb->getChannelForCalculation('b') + $factor));
                 $rgbModified = $rgb->with(['r' => $r, 'g' => $g, 'b' => $b]);
                 
                 // Convert back to original color space
