@@ -47,6 +47,15 @@ final class RGBA extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        return match ($channel) {
+            'r', 'g', 'b', 'a' => static::clampRange($value, 0.0, 255.0),
+            default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in RGBA color space."),
+        };
+    }
+
     /**
      * Convert from RGBA to RGB (ignores alpha channel).
      * 

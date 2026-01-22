@@ -47,6 +47,17 @@ final class Lab extends AbstractColorSpace
     }
 
     #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        return match ($channel) {
+            'l' => static::clampRange($value, 0.0, 100.0),
+            // a and b don't have strict ranges, so return as-is
+            'a', 'b' => $value,
+            default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in Lab color space.', $channel)),
+        };
+    }
+
+    #[\Override]
     public static function supportsIlluminant(): bool
     {
         return true;

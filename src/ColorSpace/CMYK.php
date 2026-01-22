@@ -45,6 +45,15 @@ final class CMYK extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        return match ($channel) {
+            'c', 'm', 'y', 'k' => static::clampRange($value, 0.0, 100.0),
+            default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in CMYK color space.', $channel)),
+        };
+    }
+
     /**
      * Convert from CMYK to RGB.
      * 

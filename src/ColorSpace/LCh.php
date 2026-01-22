@@ -48,6 +48,18 @@ final class LCh extends AbstractColorSpace
     }
 
     #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        return match ($channel) {
+            'l' => static::clampRange($value, 0.0, 100.0),
+            'h' => static::clampRange($value, 0.0, 360.0),
+            // c doesn't have a strict range, so return as-is
+            'c' => $value,
+            default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space '{static::getName()}'."),
+        };
+    }
+
+    #[\Override]
     public static function supportsIlluminant(): bool
     {
         return true;

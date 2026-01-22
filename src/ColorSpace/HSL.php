@@ -46,6 +46,16 @@ final class HSL extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        return match ($channel) {
+            'h' => static::clampRange($value, 0.0, 360.0),
+            's', 'l' => static::clampRange($value, 0.0, 100.0),
+            default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSL color space.', $channel)),
+        };
+    }
+
     /**
      * Convert from HSL to RGB.
      * 

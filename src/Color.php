@@ -61,6 +61,8 @@ final class Color extends AbstractColor
     public function with(array $channels): static
     {
         $values = $this->values;
+        $originalValues = $this->originalValues;
+        
         foreach ($channels as $channel => $value) {
             if (!in_array($channel, $this->getChannels(), true)) {
                 throw new \InvalidArgumentException("Channel '{$channel}' does not exist in color space '{$this->getColorSpaceName()}'.");
@@ -69,11 +71,25 @@ final class Color extends AbstractColor
             if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
                 throw new \InvalidArgumentException("Channel '{$channel}' must be of type int or float.");
             }
-            // Convert to float and store
-            $values[$channel] = (float)$value;
+            // Convert to float
+            $floatValue = (float)$value;
+            
+            // In strict mode: clamp immediately and store original
+            // In non-strict mode: validate (throws if out of range) and store original
+            if (static::STRICT_CLAMPING) {
+                $originalValues[$channel] = $floatValue;
+                $values[$channel] = $this->colorSpace::clampValue($channel, $floatValue);
+            } else {
+                $this->colorSpace::validateValue($channel, $floatValue);
+                $values[$channel] = $floatValue;
+            }
         }
 
-        return new self($this->colorSpace, $values, $this->illuminant, $this->observer);
+        $newColor = new self($this->colorSpace, $values, $this->illuminant, $this->observer);
+        if (static::STRICT_CLAMPING) {
+            $newColor->originalValues = $originalValues;
+        }
+        return $newColor;
     }
 
     #[\Override]

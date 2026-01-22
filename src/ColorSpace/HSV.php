@@ -46,6 +46,16 @@ final class HSV extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        return match ($channel) {
+            'h' => static::clampRange($value, 0.0, 360.0),
+            's', 'v' => static::clampRange($value, 0.0, 100.0),
+            default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSV color space.', $channel)),
+        };
+    }
+
     /**
      * Convert from HSV to RGB.
      * 

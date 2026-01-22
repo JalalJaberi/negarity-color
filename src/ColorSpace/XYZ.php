@@ -40,6 +40,16 @@ final class XYZ extends AbstractColorSpace
     }
 
     #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        // XYZ channels don't have strict ranges, so return as-is
+        if (!in_array($channel, ['x', 'y', 'z'], true)) {
+            throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space 'xyz'.");
+        }
+        return $value;
+    }
+
+    #[\Override]
     public static function supportsIlluminant(): bool
     {
         return true;

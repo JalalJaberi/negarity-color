@@ -48,6 +48,17 @@ final class HSLA extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        return match ($channel) {
+            'h' => static::clampRange($value, 0.0, 360.0),
+            's', 'l' => static::clampRange($value, 0.0, 100.0),
+            'a' => static::clampRange($value, 0.0, 255.0),
+            default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSLA color space.', $channel)),
+        };
+    }
+
     /**
      * Convert from HSLA to RGB (ignores alpha channel).
      * 

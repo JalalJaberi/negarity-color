@@ -48,6 +48,15 @@ interface ColorSpaceInterface
     public static function validateValue(string $channel, float $value): void;
 
     /**
+     * Clamps a channel value to its valid range.
+     * 
+     * @param string $channel The name of the channel.
+     * @param float $value The value to clamp.
+     * @return float The clamped value within the valid range.
+     */
+    public static function clampValue(string $channel, float $value): float;
+
+    /**
      * Convert from this color space to RGB.
      * 
      * @param array<string, float> $values Color space values

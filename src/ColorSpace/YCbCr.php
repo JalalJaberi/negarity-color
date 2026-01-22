@@ -41,6 +41,16 @@ final class YCbCr extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function clampValue(string $channel, float $value): float
+    {
+        return match ($channel) {
+            'y' => static::clampRange($value, 0.0, 100.0),
+            'cb', 'cr' => static::clampRange($value, -128.0, 127.0),
+            default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space 'ycbcr'."),
+        };
+    }
+
     /**
      * Convert from YCbCr to RGB.
      * 

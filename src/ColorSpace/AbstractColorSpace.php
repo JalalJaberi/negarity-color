@@ -64,4 +64,17 @@ abstract class AbstractColorSpace implements ColorSpaceInterface
             );
         }
     }
+
+    /**
+     * Clamps a value to the specified range.
+     * 
+     * @param float $value The value to clamp.
+     * @param float $min The minimum allowed value.
+     * @param float $max The maximum allowed value.
+     * @return float The clamped value.
+     */
+    final protected static function clampRange(float $value, float $min, float $max): float
+    {
+        return max($min, min($max, $value));
+    }
 }
