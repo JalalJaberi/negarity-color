@@ -5,7 +5,18 @@ sidebar_position: 2
 
 # Converting Colors
 
-Negarity Color supports seamless conversion between all supported color spaces. You can convert any color to any other color space using the appropriate conversion method.
+Negarity Color supports seamless conversion between all registered color spaces. You can convert any color to any other color space using the appropriate conversion method. Conversions work automatically through the color space registry system.
+
+## Prerequisites
+
+Before converting colors, ensure color spaces are registered:
+
+```php
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register all built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
+```
 
 ## Basic Conversion Methods
 

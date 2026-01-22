@@ -25,6 +25,10 @@ Here's a practical example that demonstrates how to use Negarity Color to create
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces (required before using them)
+ColorSpaceRegistry::registerBuiltIn();
 
 // Create a color from RGB values
 $primaryColor = Color::rgb(255, 100, 50);

@@ -7,9 +7,22 @@ sidebar_position: 1
 
 Negarity Color provides multiple ways to create color instances. This guide covers all the available methods.
 
+## Prerequisites: Registering Color Spaces
+
+Before using color spaces, you need to register them. For built-in color spaces, use:
+
+```php
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register all built-in color spaces (RGB, HSL, CMYK, Lab, etc.)
+ColorSpaceRegistry::registerBuiltIn();
+```
+
+This is typically done once at the start of your application. Custom color spaces can be registered individually (see [Extending the Library](/docs/extending/color-spaces)).
+
 ## Using Static Factory Methods
 
-The easiest way to create colors is using the static factory methods on the `Color` class. These methods are available for all supported color spaces.
+The easiest way to create colors is using the static factory methods on the `Color` class. These methods work dynamically through the color space registry for all registered color spaces.
 
 ### RGB Colors
 
@@ -75,7 +88,8 @@ $cmyk = Color::cmyk(0, 50, 100, 0);
 Create colors in the CIELAB color space (Lightness: 0-100, a: -128 to 127, b: -128 to 127):
 
 ```php
-$lab = Color::lab(50, 20, -30);
+$lab = Color::lab(50.0, 20.0, -30.0);
+// Note: All channel values are floats for precision
 ```
 
 ### LCh Colors
@@ -83,7 +97,8 @@ $lab = Color::lab(50, 20, -30);
 Create colors using Lightness (0-100), Chroma (0-100), and Hue (0-360):
 
 ```php
-$lch = Color::lch(50, 30, 210);
+$lch = Color::lch(50.0, 30.0, 210.0);
+// Note: All channel values are floats for precision
 ```
 
 ### XYZ Colors
@@ -91,7 +106,8 @@ $lch = Color::lch(50, 30, 210);
 Create colors in the CIE XYZ color space:
 
 ```php
-$xyz = Color::xyz(20, 30, 40);
+$xyz = Color::xyz(20.0, 30.0, 40.0);
+// Note: All channel values are floats for precision
 ```
 
 ### YCbCr Colors
@@ -145,6 +161,18 @@ $color2 = new Color(HSL::class, ['h' => 210, 's' => 50, 'l' => 40]);
 ```
 
 This approach is useful when you need to create colors dynamically or when working with color spaces that don't have a dedicated factory method.
+
+## Channel Value Types
+
+All channel values in Negarity Color are **floats** for maximum precision. Even when you pass integers, they are stored and returned as floats:
+
+```php
+$color = Color::rgb(255, 100, 50);
+echo gettype($color->getR()); // "double" (float)
+echo $color->getR(); // 255.0 (displayed as 255)
+```
+
+This ensures precision is maintained throughout conversions and calculations.
 
 ## String Representation
 

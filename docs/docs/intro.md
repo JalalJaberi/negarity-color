@@ -11,11 +11,13 @@ Welcome to **Negarity Color** — a modern, extensible color manipulation librar
 Negarity Color is a comprehensive PHP library for working with colors. It provides:
 
 - **Multiple Color Spaces**: Support for RGB, RGBA, CMYK, HSL, HSLA, HSV, Lab, LCh, XYZ, and YCbCr
-- **Easy Conversions**: Convert between any supported color spaces seamlessly
+- **Pluggable Registry System**: All color spaces, filters, and named colors use a flexible registry system
+- **Easy Conversions**: Convert between any supported color spaces seamlessly (automatic via RGB hub)
 - **Named Colors**: Use predefined color names from various color registries
-- **Filters**: Apply various color filters and transformations
+- **Filters**: Apply various color filters and transformations (work with any color space via RGB fallback)
 - **Extractors**: Extract color palettes, histograms, and metadata
 - **Extensible**: Easily extend the library with custom color spaces, names, filters, and extractors
+- **Float Precision**: All channel values use floats for maximum precision throughout conversions
 
 ## Documentation Structure
 

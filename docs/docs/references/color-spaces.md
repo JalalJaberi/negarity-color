@@ -15,11 +15,54 @@ In Negarity Color, a color space is defined by the `ColorSpaceInterface`, which 
 - **Ranges**: Each channel has a valid range of values
 - **Validation**: Values are automatically validated to ensure they're within acceptable ranges
 - **Default Values**: Each channel has a default value when not specified
+- **Conversions**: Each color space must implement `toRGB()` and `fromRGB()` methods for conversions
 
 All color spaces in Negarity Color extend `AbstractColorSpace`, which provides common functionality like:
 - Channel validation
 - Range checking
 - Support for CIE Standard Illuminants and Observers (for certain color spaces)
+
+## Color Space Registry
+
+Negarity Color uses a **pluggable registry system** for color spaces. This means:
+
+- Color spaces must be **registered** before they can be used
+- Built-in color spaces (RGB, HSL, CMYK, etc.) are available via `ColorSpaceRegistry::registerBuiltIn()`
+- Custom color spaces can be registered just like built-in ones
+- Factory methods (like `Color::rgb()`) work dynamically through the registry
+- Conversion methods (like `toRGB()`) work automatically for all registered color spaces
+
+### Registering Built-in Color Spaces
+
+Before using color spaces, you should register the built-in ones:
+
+```php
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register all built-in color spaces
+ColorSpaceRegistry::registerBuiltIn();
+```
+
+This registers: RGB, RGBA, CMYK, HSL, HSLA, HSV, Lab, LCh, XYZ, and YCbCr.
+
+### Using Registered Color Spaces
+
+Once registered, you can use factory methods and conversions:
+
+```php
+use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+ColorSpaceRegistry::registerBuiltIn();
+
+// Factory methods work
+$color = Color::rgb(255, 100, 50);
+$hsl = Color::hsl(210, 50, 40);
+
+// Conversions work
+$rgb = $hsl->toRGB();
+$cmyk = $rgb->toCMYK();
+```
 
 ## Available Color Spaces
 
@@ -63,11 +106,17 @@ Returns all channel names in order (e.g., `["r", "g", "b"]` for RGB).
 ### `hasChannel(string $name): bool`
 Checks if a channel exists by name.
 
-### `getChannelDefaultValue(string $name): float|int`
-Returns the default value for a channel when not specified.
+### `getChannelDefaultValue(string $name): float`
+Returns the default value for a channel when not specified (always returns a float).
 
-### `validateValue(string $channel, int|float $value): void`
+### `validateValue(string $channel, float $value): void`
 Validates that a channel value is within the acceptable range. Throws `InvalidColorValueException` if invalid.
+
+### `toRGB(array $values, ?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array`
+Converts color values from this color space to RGB. Returns an array with `['r' => float, 'g' => float, 'b' => float]`.
+
+### `fromRGB(array $values, int $alpha = 255, ?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array`
+Converts RGB color values to this color space. Returns an array with channel values as floats.
 
 ## CIE Standard Support
 

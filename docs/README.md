@@ -16,6 +16,10 @@ composer require jalaljaberi/negarity-color
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Negarity\Color\Color;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+// Register built-in color spaces (required before use)
+ColorSpaceRegistry::registerBuiltIn();
 
 // Create colors
 $primary = Color::rgb(255, 100, 50);
@@ -50,6 +54,16 @@ Color::addRegistry(new VGANamedColors());
 
 $red = Color::red();
 $navyHsl = Color::navy(\Negarity\Color\ColorSpace\HSL::class);
+```
+
+### Color Spaces
+
+Color spaces must be registered before use. Register all built-in color spaces:
+
+```php
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+ColorSpaceRegistry::registerBuiltIn();
 ```
 
 ### Filters
