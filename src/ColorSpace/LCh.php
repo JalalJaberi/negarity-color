@@ -234,17 +234,19 @@ final class LCh extends AbstractColorSpace
      * Convert from RGB to LCh (via Lab).
      * 
      * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @param int $alpha Optional alpha channel (ignored for LCh)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional illuminant (default: D65)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional observer (default: TwoDegree)
      * @return array<string, float> LCh values: ['l' => float, 'c' => float, 'h' => float]
      */
     public static function fromRGB(
         array $values,
+        int $alpha = 255,
         ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         // First convert RGB to Lab
-        $lab = \Negarity\Color\ColorSpace\Lab::fromRGB($values, $illuminant, $observer);
+        $lab = \Negarity\Color\ColorSpace\Lab::fromRGB($values, 255, $illuminant, $observer);
         $l = $lab['l'];
         $a = $lab['a'];
         $b = $lab['b'];

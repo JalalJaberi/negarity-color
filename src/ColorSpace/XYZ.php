@@ -276,12 +276,14 @@ final class XYZ extends AbstractColorSpace
      * Convert from RGB to XYZ.
      * 
      * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @param int $alpha Optional alpha channel (ignored for XYZ)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional illuminant (default: D65)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional observer (default: TwoDegree)
      * @return array<string, float> XYZ values: ['x' => float, 'y' => float, 'z' => float]
      */
     public static function fromRGB(
         array $values,
+        int $alpha = 255,
         ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {

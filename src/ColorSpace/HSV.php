@@ -50,9 +50,15 @@ final class HSV extends AbstractColorSpace
      * Convert from HSV to RGB.
      * 
      * @param array<string, float|int> $values HSV values: ['h' => int, 's' => int, 'v' => int]
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSV)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSV)
      * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
      */
-    public static function toRGB(array $values): array
+    public static function toRGB(
+        array $values,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array
     {
         $h = fmod(($values['h'] ?? 0), 360);
         $s = ($values['s'] ?? 0) / 100;
@@ -168,7 +174,7 @@ final class HSV extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return Lab::fromRGB($rgb, $illuminant, $observer);
+        return Lab::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -185,7 +191,7 @@ final class HSV extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return LCh::fromRGB($rgb, $illuminant, $observer);
+        return LCh::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -202,7 +208,7 @@ final class HSV extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return XYZ::fromRGB($rgb, $illuminant, $observer);
+        return XYZ::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -221,9 +227,17 @@ final class HSV extends AbstractColorSpace
      * Convert from RGB to HSV.
      * 
      * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @param int $alpha Optional alpha channel (ignored for HSV)
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSV)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSV)
      * @return array<string, int> HSV values: ['h' => int, 's' => int, 'v' => int]
      */
-    public static function fromRGB(array $values): array
+    public static function fromRGB(
+        array $values,
+        int $alpha = 255,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array
     {
         $r = ($values['r'] ?? 0) / 255;
         $g = ($values['g'] ?? 0) / 255;

@@ -14,10 +14,17 @@ use Negarity\Color\ColorSpace\Lab;
 use Negarity\Color\ColorSpace\LCh;
 use Negarity\Color\ColorSpace\XYZ;
 use Negarity\Color\ColorSpace\YCbCr;
+use Negarity\Color\Registry\ColorSpaceRegistry;
 
 final class ColorConversionTest extends TestCase
 {
     private const COLOR_NAMES_FILE = __DIR__ . '/fixtures/color.names.txt';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        ColorSpaceRegistry::registerBuiltIn();
+    }
 
     /**
      * Get the test coverage percentage from environment variable.
@@ -467,10 +474,10 @@ final class ColorConversionTest extends TestCase
             $lab = $rgb->toLab();
             
             $this->assertEquals(Lab::getName(), $lab->getColorSpaceName());
-            // Lab values are rounded to int: L: 0-100, a: -128 to 127, b: -128 to 127
-            $this->assertIsInt($lab->getL());
-            $this->assertIsInt($lab->getA());
-            $this->assertIsInt($lab->getB());
+            // Lab values are floats: L: 0-100, a: -128 to 127, b: -128 to 127
+            $this->assertIsFloat($lab->getL());
+            $this->assertIsFloat($lab->getA());
+            $this->assertIsFloat($lab->getB());
             // Validate against file data with tolerance (Lab values are rounded)
             $this->assertEqualsWithDelta(
                 $colorData['lab']['l'], 
@@ -569,9 +576,9 @@ final class ColorConversionTest extends TestCase
         $lch = $rgb->toLCh();
         
         $this->assertEquals(LCh::getName(), $lch->getColorSpaceName());
-        // LCh values are rounded to int
-        $this->assertIsInt($lch->getL());
-        $this->assertIsInt($lch->getC());
+        // LCh values are floats
+        $this->assertIsFloat($lch->getL());
+        $this->assertIsFloat($lch->getC());
         $this->assertGreaterThanOrEqual(0, $lch->getH());
         $this->assertLessThanOrEqual(360, $lch->getH());
         // Validate against file data with tolerance (LCh values are rounded)
@@ -672,10 +679,10 @@ final class ColorConversionTest extends TestCase
         $xyz = $rgb->toXYZ();
         
         $this->assertEquals(XYZ::getName(), $xyz->getColorSpaceName());
-        // XYZ values are rounded to int
-        $this->assertIsInt($xyz->getX());
-        $this->assertIsInt($xyz->getY());
-        $this->assertIsInt($xyz->getZ());
+        // XYZ values are floats
+        $this->assertIsFloat($xyz->getX());
+        $this->assertIsFloat($xyz->getY());
+        $this->assertIsFloat($xyz->getZ());
         // Validate against file data with tolerance (XYZ values are rounded)
         $this->assertEqualsWithDelta(
             $colorData['xyz']['x'], 

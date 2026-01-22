@@ -17,9 +17,16 @@ use Negarity\Color\ColorSpace\Lab;
 use Negarity\Color\ColorSpace\LCh;
 use Negarity\Color\ColorSpace\XYZ;
 use Negarity\Color\ColorSpace\YCbCr;
+use Negarity\Color\Registry\ColorSpaceRegistry;
 
 final class ColorCreationTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        ColorSpaceRegistry::registerBuiltIn();
+    }
+
     // ========== Valid Color Creation Tests ==========
 
     public function testCreateRgbColor(): void

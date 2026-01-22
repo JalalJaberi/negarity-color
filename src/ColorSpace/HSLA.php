@@ -52,9 +52,15 @@ final class HSLA extends AbstractColorSpace
      * Convert from HSLA to RGB (ignores alpha channel).
      * 
      * @param array<string, float|int> $values HSLA values: ['h' => int, 's' => int, 'l' => int, 'a' => int]
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSLA)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSLA)
      * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
      */
-    public static function toRGB(array $values): array
+    public static function toRGB(
+        array $values,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array
     {
         // Use HSL conversion (ignore alpha)
         return HSL::toRGB($values);
@@ -125,7 +131,7 @@ final class HSLA extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return Lab::fromRGB($rgb, $illuminant, $observer);
+        return Lab::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -142,7 +148,7 @@ final class HSLA extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return LCh::fromRGB($rgb, $illuminant, $observer);
+        return LCh::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -159,7 +165,7 @@ final class HSLA extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return XYZ::fromRGB($rgb, $illuminant, $observer);
+        return XYZ::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -179,9 +185,16 @@ final class HSLA extends AbstractColorSpace
      * 
      * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
      * @param int $alpha Alpha channel value (0-255, default: 255)
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSLA)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSLA)
      * @return array<string, int> HSLA values: ['h' => int, 's' => int, 'l' => int, 'a' => int]
      */
-    public static function fromRGB(array $values, int $alpha = 255): array
+    public static function fromRGB(
+        array $values,
+        int $alpha = 255,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array
     {
         $hsl = HSL::fromRGB($values);
         return [

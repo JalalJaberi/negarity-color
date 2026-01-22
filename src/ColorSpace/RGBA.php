@@ -51,9 +51,15 @@ final class RGBA extends AbstractColorSpace
      * Convert from RGBA to RGB (ignores alpha channel).
      * 
      * @param array<string, float|int> $values RGBA values: ['r' => int, 'g' => int, 'b' => int, 'a' => int]
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for RGBA)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for RGBA)
      * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
      */
-    public static function toRGB(array $values): array
+    public static function toRGB(
+        array $values,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array
     {
         return [
             'r' => (int) ($values['r'] ?? 0),
@@ -129,7 +135,7 @@ final class RGBA extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return Lab::fromRGB($rgb, $illuminant, $observer);
+        return Lab::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -146,7 +152,7 @@ final class RGBA extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return LCh::fromRGB($rgb, $illuminant, $observer);
+        return LCh::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -163,7 +169,7 @@ final class RGBA extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return XYZ::fromRGB($rgb, $illuminant, $observer);
+        return XYZ::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -183,9 +189,16 @@ final class RGBA extends AbstractColorSpace
      * 
      * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
      * @param int $alpha Alpha channel value (0-255, default: 255)
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for RGBA)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for RGBA)
      * @return array<string, int> RGBA values: ['r' => int, 'g' => int, 'b' => int, 'a' => int]
      */
-    public static function fromRGB(array $values, int $alpha = 255): array
+    public static function fromRGB(
+        array $values,
+        int $alpha = 255,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array
     {
         return [
             'r' => (int) ($values['r'] ?? 0),

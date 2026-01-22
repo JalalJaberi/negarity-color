@@ -281,17 +281,19 @@ final class Lab extends AbstractColorSpace
      * Convert from RGB to Lab (via XYZ).
      * 
      * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @param int $alpha Optional alpha channel (ignored for Lab)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional illuminant (default: D65)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional observer (default: TwoDegree)
      * @return array<string, float> Lab values: ['l' => float, 'a' => float, 'b' => float]
      */
     public static function fromRGB(
         array $values,
+        int $alpha = 255,
         ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         // First convert RGB to XYZ
-        $xyz = \Negarity\Color\ColorSpace\XYZ::fromRGB($values, $illuminant, $observer);
+        $xyz = \Negarity\Color\ColorSpace\XYZ::fromRGB($values, 255, $illuminant, $observer);
         
         // Then convert XYZ to Lab
         $illuminant = $illuminant ?? \Negarity\Color\CIE\CIEIlluminant::D65;

@@ -49,9 +49,15 @@ final class CMYK extends AbstractColorSpace
      * Convert from CMYK to RGB.
      * 
      * @param array<string, float|int> $values CMYK values: ['c' => int, 'm' => int, 'y' => int, 'k' => int]
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for CMYK)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for CMYK)
      * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
      */
-    public static function toRGB(array $values): array
+    public static function toRGB(
+        array $values,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array
     {
         $c = ($values['c'] ?? 0) / 100;
         $m = ($values['m'] ?? 0) / 100;
@@ -133,7 +139,7 @@ final class CMYK extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return Lab::fromRGB($rgb, $illuminant, $observer);
+        return Lab::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -150,7 +156,7 @@ final class CMYK extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return LCh::fromRGB($rgb, $illuminant, $observer);
+        return LCh::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -167,7 +173,7 @@ final class CMYK extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         $rgb = static::toRGB($values);
-        return XYZ::fromRGB($rgb, $illuminant, $observer);
+        return XYZ::fromRGB($rgb, 255, $illuminant, $observer);
     }
 
     /**
@@ -186,9 +192,17 @@ final class CMYK extends AbstractColorSpace
      * Convert from RGB to CMYK.
      * 
      * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @param int $alpha Optional alpha channel (ignored for CMYK)
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for CMYK)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for CMYK)
      * @return array<string, int> CMYK values: ['c' => int, 'm' => int, 'y' => int, 'k' => int]
      */
-    public static function fromRGB(array $values): array
+    public static function fromRGB(
+        array $values,
+        int $alpha = 255,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array
     {
         $r = ($values['r'] ?? 0) / 255;
         $g = ($values['g'] ?? 0) / 255;

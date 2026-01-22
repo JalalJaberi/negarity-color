@@ -46,4 +46,34 @@ interface ColorSpaceInterface
      * @throws \Negarity\Color\Exception\InvalidColorValueException
      */
     public static function validateValue(string $channel, int|float $value): void;
+
+    /**
+     * Convert from this color space to RGB.
+     * 
+     * @param array<string, float|int> $values Color space values
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (for color spaces that support it)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (for color spaces that support it)
+     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     */
+    public static function toRGB(
+        array $values,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array;
+
+    /**
+     * Convert from RGB to this color space.
+     * 
+     * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @param int $alpha Optional alpha channel (for color spaces that support it, e.g., RGBA, HSLA)
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (for color spaces that support it)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (for color spaces that support it)
+     * @return array<string, float|int> Color space values
+     */
+    public static function fromRGB(
+        array $values,
+        int $alpha = 255,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array;
 }

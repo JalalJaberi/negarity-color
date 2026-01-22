@@ -383,35 +383,24 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                     $illuminant = $illuminant ?? $this->illuminant;
                     $observer = $observer ?? $this->observer;
                     
-                    // Check if we need to pass alpha for RGBA/HSLA
-                    if ($targetSpaceName === 'rgba') {
-                        // For RGBA, we need to handle alpha
+                    // Determine alpha value (for RGBA/HSLA)
+                    $alphaValue = 255;
+                    if ($targetSpaceName === 'rgba' || $targetSpaceName === 'hsla') {
                         // If source has alpha, preserve it; otherwise use default 255
-                        $alpha = 255;
                         if ($currentSpaceName === 'rgba' && isset($this->values['a'])) {
-                            $alpha = $this->values['a'];
+                            $alphaValue = $this->values['a'];
                         } elseif ($currentSpaceName === 'hsla' && isset($this->values['a'])) {
-                            $alpha = $this->values['a'];
+                            $alphaValue = $this->values['a'];
                         }
-                        return $targetSpaceClass::$fromRgbMethod($rgbValues, $alpha);
-                    } elseif ($targetSpaceName === 'hsla') {
-                        // For HSLA, we need to handle alpha
-                        $alpha = 255;
-                        if ($currentSpaceName === 'rgba' && isset($this->values['a'])) {
-                            $alpha = $this->values['a'];
-                        } elseif ($currentSpaceName === 'hsla' && isset($this->values['a'])) {
-                            $alpha = $this->values['a'];
-                        }
-                        return $targetSpaceClass::$fromRgbMethod($rgbValues, $alpha);
+                    }
+                    
+                    // For color spaces with CIE support, pass CIE parameters
+                    if ($targetSupportsCIE) {
+                        $illuminant = $illuminant ?? $this->illuminant;
+                        $observer = $observer ?? $this->observer;
+                        return $targetSpaceClass::$fromRgbMethod($rgbValues, $alphaValue, $illuminant, $observer);
                     } else {
-                        // For other color spaces, check CIE support
-                        if ($targetSupportsCIE) {
-                            $illuminant = $illuminant ?? $this->illuminant;
-                            $observer = $observer ?? $this->observer;
-                            return $targetSpaceClass::$fromRgbMethod($rgbValues, $illuminant, $observer);
-                        } else {
-                            return $targetSpaceClass::$fromRgbMethod($rgbValues);
-                        }
+                        return $targetSpaceClass::$fromRgbMethod($rgbValues, $alphaValue);
                     }
                 }
             } catch (\Exception $e) {

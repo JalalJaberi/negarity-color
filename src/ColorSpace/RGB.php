@@ -324,6 +324,48 @@ final class RGB extends AbstractColorSpace
     }
 
     /**
+     * Convert from RGB to RGB (identity conversion).
+     * 
+     * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for RGB)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for RGB)
+     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     */
+    public static function toRGB(
+        array $values,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array {
+        return [
+            'r' => (int) ($values['r'] ?? 0),
+            'g' => (int) ($values['g'] ?? 0),
+            'b' => (int) ($values['b'] ?? 0)
+        ];
+    }
+
+    /**
+     * Convert from RGB to RGB (identity conversion).
+     * 
+     * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @param int $alpha Optional alpha channel (ignored for RGB)
+     * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for RGB)
+     * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for RGB)
+     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     */
+    public static function fromRGB(
+        array $values,
+        int $alpha = 255,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array {
+        return [
+            'r' => (int) ($values['r'] ?? 0),
+            'g' => (int) ($values['g'] ?? 0),
+            'b' => (int) ($values['b'] ?? 0)
+        ];
+    }
+
+    /**
      * Convert from RGBA to RGB (ignores alpha channel).
      * 
      * @param array<string, float|int> $values RGBA values: ['r' => int, 'g' => int, 'b' => int, 'a' => int]
@@ -408,7 +450,7 @@ final class RGB extends AbstractColorSpace
         ?CIEIlluminant $illuminant = null,
         ?CIEObserver $observer = null
     ): array {
-        return Lab::fromRGB($values, $illuminant, $observer);
+        return Lab::fromRGB($values, 255, $illuminant, $observer);
     }
 
     /**
@@ -424,7 +466,7 @@ final class RGB extends AbstractColorSpace
         ?CIEIlluminant $illuminant = null,
         ?CIEObserver $observer = null
     ): array {
-        return LCh::fromRGB($values, $illuminant, $observer);
+        return LCh::fromRGB($values, 255, $illuminant, $observer);
     }
 
     /**
@@ -440,7 +482,7 @@ final class RGB extends AbstractColorSpace
         ?CIEIlluminant $illuminant = null,
         ?CIEObserver $observer = null
     ): array {
-        return XYZ::fromRGB($values, $illuminant, $observer);
+        return XYZ::fromRGB($values, 255, $illuminant, $observer);
     }
 
     /**

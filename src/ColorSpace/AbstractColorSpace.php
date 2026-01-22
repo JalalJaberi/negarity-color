@@ -13,6 +13,17 @@ abstract class AbstractColorSpace implements ColorSpaceInterface
     abstract public static function hasChannel(string $name): bool;
     abstract public static function getChannelDefaultValue(string $name): float|int;
     abstract public static function validateValue(string $channel, int|float $value): void;
+    abstract public static function toRGB(
+        array $values,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array;
+    abstract public static function fromRGB(
+        array $values,
+        int $alpha = 255,
+        ?\Negarity\Color\CIE\CIEIlluminant $illuminant = null,
+        ?\Negarity\Color\CIE\CIEObserver $observer = null
+    ): array;
 
     /**
      * Check if this color space supports CIE standard illuminants.
