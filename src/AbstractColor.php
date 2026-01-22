@@ -37,7 +37,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     private static array $registries = [];
     /** @var class-string<ColorSpaceInterface> */
     protected string $colorSpace;
-    /** @var array<string, float|int> */
+    /** @var array<string, float> */
     protected array $values = [];
     /** @var CIEIlluminant */
     protected CIEIlluminant $illuminant;
@@ -48,7 +48,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * Constructor.
      * 
      * @param class-string<ColorSpaceInterface> $colorSpace
-     * @param array<string, float|int> $values
+     * @param array<string, float|int> $values Accepts int|float for convenience, stores as float
      * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
      * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
      * @throws \InvalidArgumentException
@@ -74,12 +74,16 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         foreach ($colorSpaceChannels as $name) {
             if (!isset($values[$name])) {
                 $this->values[$name] = $colorSpace::getChannelDefaultValue($name);
-            } else if (gettype($values[$name]) !== 'integer' && gettype($values[$name]) !== 'double') {
-                throw new \InvalidArgumentException("Channel '{$name}' must be of type int or double. It's type is '".gettype($values[$name])."'.");
             } else {
-                // validateValue throws an exception if validation fails
-                $colorSpace::validateValue($name, $values[$name]);
-                $this->values[$name] = $values[$name];
+                $value = $values[$name];
+                $type = gettype($value);
+                if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
+                    throw new \InvalidArgumentException("Channel '{$name}' must be of type int or float. It's type is '{$type}'.");
+                }
+                // Convert to float and validate
+                $floatValue = (float)$value;
+                $colorSpace::validateValue($name, $floatValue);
+                $this->values[$name] = $floatValue;
             }
         }
     }
@@ -129,7 +133,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     }
 
     #[\Override]
-    final public function getChannel(string $name): float|int
+    final public function getChannel(string $name): float
     {
         if (!in_array($name, $this->getChannels(), true)) {
             throw new \InvalidArgumentException("Channel '{$name}' does not exist in color space '{$this->getColorSpaceName()}'.");
@@ -697,7 +701,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     /**
      * Convert CMYK to RGB values.
      * 
-     * @return array{r: int, g: int, b: int}
+     * @return array{r: float, g: float, b: float}
      */
     protected function convertCmykToRgb(): array
     {
@@ -711,16 +715,16 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         $b = 255 * (1 - $y) * (1 - $k);
         
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => max(0.0, min(255.0, $r)),
+            'g' => max(0.0, min(255.0, $g)),
+            'b' => max(0.0, min(255.0, $b))
         ];
     }
 
     /**
      * Convert HSL to RGB values.
      * 
-     * @return array{r: int, g: int, b: int}
+     * @return array{r: float, g: float, b: float}
      */
     protected function convertHslToRgb(): array
     {
@@ -755,21 +759,21 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         $g = ($g + $m) * 255;
         $b = ($b + $m) * 255;
 
-        $r = max(0, min(255, $r));
-        $g = max(0, min(255, $g));
-        $b = max(0, min(255, $b));
+        $r = max(0.0, min(255.0, $r));
+        $g = max(0.0, min(255.0, $g));
+        $b = max(0.0, min(255.0, $b));
 
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => $r,
+            'g' => $g,
+            'b' => $b
         ];
     }
 
     /**
      * Convert HSLA to RGB values.
      * 
-     * @return array{r: int, g: int, b: int}
+     * @return array{r: float, g: float, b: float}
      */
     protected function convertHslaToRgb(): array
     {
@@ -810,16 +814,16 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         $b = ($b + $m) * 255;
         
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => max(0.0, min(255.0, $r)),
+            'g' => max(0.0, min(255.0, $g)),
+            'b' => max(0.0, min(255.0, $b))
         ];
     }
 
     /**
      * Convert HSV to RGB values.
      * 
-     * @return array{r: int, g: int, b: int}
+     * @return array{r: float, g: float, b: float}
      */
     protected function convertHsvToRgb(): array
     {
@@ -847,21 +851,21 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             $r = $c; $g = 0; $b = $x;
         }
 
-        $r = max(0, min(255, ($r + $m) * 255));
-        $g = max(0, min(255, ($g + $m) * 255));
-        $b = max(0, min(255, ($b + $m) * 255));
+        $r = max(0.0, min(255.0, ($r + $m) * 255));
+        $g = max(0.0, min(255.0, ($g + $m) * 255));
+        $b = max(0.0, min(255.0, ($b + $m) * 255));
 
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => $r,
+            'g' => $g,
+            'b' => $b
         ];
     }
 
     /**
      * Convert XYZ to RGB values (with gamma correction).
      * 
-     * @return array{r: int, g: int, b: int}
+     * @return array{r: float, g: float, b: float}
      */
     protected function convertXyzToRgb(): array
     {
@@ -894,9 +898,9 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
 
         // Clamp RGB values to 0-255 (XYZ has wider gamut than sRGB)
         return [
-            'r' => (int) round(max(0, min(255, $rgb[0]))),
-            'g' => (int) round(max(0, min(255, $rgb[1]))),
-            'b' => (int) round(max(0, min(255, $rgb[2])))
+            'r' => max(0.0, min(255.0, $rgb[0])),
+            'g' => max(0.0, min(255.0, $rgb[1])),
+            'b' => max(0.0, min(255.0, $rgb[2]))
         ];
     }
 
@@ -905,7 +909,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * 
      * @param CIEIlluminant|null $illuminant Optional illuminant (uses instance illuminant if null)
      * @param CIEObserver|null $observer Optional observer (uses instance observer if null)
-     * @return array{r: int, g: int, b: int}
+     * @return array{r: float, g: float, b: float}
      */
     protected function convertLabToRgb(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array
     {
@@ -964,16 +968,16 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
 
         // Clamp RGB values to 0-255 (Lab has wider gamut than sRGB)
         return [
-            'r' => (int) round(max(0, min(255, $rgb[0]))),
-            'g' => (int) round(max(0, min(255, $rgb[1]))),
-            'b' => (int) round(max(0, min(255, $rgb[2])))
+            'r' => max(0.0, min(255.0, $rgb[0])),
+            'g' => max(0.0, min(255.0, $rgb[1])),
+            'b' => max(0.0, min(255.0, $rgb[2]))
         ];
     }
 
     /**
      * Convert LCh to RGB values (via Lab and XYZ).
      * 
-     * @return array{r: int, g: int, b: int}
+     * @return array{r: float, g: float, b: float}
      */
     protected function convertLchToRgb(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array
     {
@@ -1017,16 +1021,16 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
 
         // Clamp RGB values to 0-255 (LCh has wider gamut than sRGB)
         return [
-            'r' => (int) round(max(0, min(255, $rgb[0]))),
-            'g' => (int) round(max(0, min(255, $rgb[1]))),
-            'b' => (int) round(max(0, min(255, $rgb[2])))
+            'r' => max(0.0, min(255.0, $rgb[0])),
+            'g' => max(0.0, min(255.0, $rgb[1])),
+            'b' => max(0.0, min(255.0, $rgb[2]))
         ];
     }
 
     /**
      * Convert YCbCr to RGB values.
      * 
-     * @return array{r: int, g: int, b: int}
+     * @return array{r: float, g: float, b: float}
      */
     protected function convertYcbcrToRgb(): array
     {
@@ -1044,21 +1048,21 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
 
         // Clamp RGB values to 0-255
         return [
-            'r' => (int) round(max(0, min(255, $r))),
-            'g' => (int) round(max(0, min(255, $g))),
-            'b' => (int) round(max(0, min(255, $b)))
+            'r' => max(0.0, min(255.0, $r)),
+            'g' => max(0.0, min(255.0, $g)),
+            'b' => max(0.0, min(255.0, $b))
         ];
     }
 
     /**
      * Convert RGB to CMYK values.
      * 
-     * @param int $r Red channel (0-255)
-     * @param int $g Green channel (0-255)
-     * @param int $b Blue channel (0-255)
-     * @return array{c: int, m: int, y: int, k: int}
+     * @param float $r Red channel (0-255)
+     * @param float $g Green channel (0-255)
+     * @param float $b Blue channel (0-255)
+     * @return array{c: float, m: float, y: float, k: float}
      */
-    protected function convertRgbToCmyk(int $r, int $g, int $b): array
+    protected function convertRgbToCmyk(float $r, float $g, float $b): array
     {
         $r = $r / 255;
         $g = $g / 255;
@@ -1066,7 +1070,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
 
         $k = 1 - max($r, $g, $b);
         if ($k == 1) {
-            return ['c' => 0, 'm' => 0, 'y' => 0, 'k' => 100];
+            return ['c' => 0.0, 'm' => 0.0, 'y' => 0.0, 'k' => 100.0];
         }
 
         $c = max(0, min(1, (1 - $r - $k) / (1 - $k)));
@@ -1074,22 +1078,22 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         $y = max(0, min(1, (1 - $b - $k) / (1 - $k)));
 
         return [
-            'c' => (int) round($c * 100),
-            'm' => (int) round($m * 100),
-            'y' => (int) round($y * 100),
-            'k' => (int) round($k * 100)
+            'c' => $c * 100,
+            'm' => $m * 100,
+            'y' => $y * 100,
+            'k' => $k * 100
         ];
     }
 
     /**
      * Convert RGB to HSL values.
      * 
-     * @param int $r Red channel (0-255)
-     * @param int $g Green channel (0-255)
-     * @param int $b Blue channel (0-255)
-     * @return array{h: int, s: int, l: int}
+     * @param float $r Red channel (0-255)
+     * @param float $g Green channel (0-255)
+     * @param float $b Blue channel (0-255)
+     * @return array{h: float, s: float, l: float}
      */
-    protected function convertRgbToHsl(int $r, int $g, int $b): array
+    protected function convertRgbToHsl(float $r, float $g, float $b): array
     {
         $r = $r / 255;
         $g = $g / 255;
@@ -1120,25 +1124,25 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         }
         
         $h = fmod($h * 360, 360);
-        $s = max(0, min(100, $s * 100));
-        $l = max(0, min(100, $l * 100));
+        $s = max(0.0, min(100.0, $s * 100));
+        $l = max(0.0, min(100.0, $l * 100));
         
         return [
-            'h' => (int) round($h),
-            's' => (int) round($s),
-            'l' => (int) round($l)
+            'h' => $h,
+            's' => $s,
+            'l' => $l
         ];
     }
 
     /**
      * Convert RGB to HSV values.
      * 
-     * @param int $r Red channel (0-255)
-     * @param int $g Green channel (0-255)
-     * @param int $b Blue channel (0-255)
-     * @return array{h: int, s: int, v: int}
+     * @param float $r Red channel (0-255)
+     * @param float $g Green channel (0-255)
+     * @param float $b Blue channel (0-255)
+     * @return array{h: float, s: float, v: float}
      */
-    protected function convertRgbToHsv(int $r, int $g, int $b): array
+    protected function convertRgbToHsv(float $r, float $g, float $b): array
     {
         $r = $r / 255;
         $g = $g / 255;
@@ -1165,13 +1169,13 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         }
         
         $h = fmod($h * 360, 360);
-        $s = max(0, min(100, $s * 100));
-        $v = max(0, min(100, $v * 100));
+        $s = max(0.0, min(100.0, $s * 100));
+        $v = max(0.0, min(100.0, $v * 100));
         
         return [
-            'h' => (int) round($h),
-            's' => (int) round($s),
-            'v' => (int) round($v)
+            'h' => $h,
+            's' => $s,
+            'v' => $v
         ];
     }
 
@@ -1291,12 +1295,12 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     /**
      * Convert RGB to YCbCr values.
      * 
-     * @param int $r Red channel (0-255)
-     * @param int $g Green channel (0-255)
-     * @param int $b Blue channel (0-255)
-     * @return array{y: int, cb: int, cr: int}
+     * @param float $r Red channel (0-255)
+     * @param float $g Green channel (0-255)
+     * @param float $b Blue channel (0-255)
+     * @return array{y: float, cb: float, cr: float}
      */
-    protected function convertRgbToYcbcr(int $r, int $g, int $b): array
+    protected function convertRgbToYcbcr(float $r, float $g, float $b): array
     {
         // Compute Y, Cb, Cr using standard linear formula
         // Using 8-bit RGB (0-255)
@@ -1309,14 +1313,14 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         // Cb/Cr are already centered at 0, no +128 offset
 
         // Clamp values to valid ranges
-        $y  = max(0, min(100, $y));
-        $cb = max(-128, min(127, $cb));
-        $cr = max(-128, min(127, $cr));
+        $y  = max(0.0, min(100.0, $y));
+        $cb = max(-128.0, min(127.0, $cb));
+        $cr = max(-128.0, min(127.0, $cr));
 
         return [
-            'y' => (int) round($y),
-            'cb' => (int) round($cb),
-            'cr' => (int) round($cr)
+            'y' => $y,
+            'cb' => $cb,
+            'cr' => $cr
         ];
     }
 

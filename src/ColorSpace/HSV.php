@@ -22,10 +22,10 @@ final class HSV extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function getChannelDefaultValue(string $name): int
+    public static function getChannelDefaultValue(string $name): float
     {
         return match ($name) {
-            'h', 's', 'v' => 0,
+            'h', 's', 'v' => 0.0,
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSV color space.', $name)),
         };
     }
@@ -37,11 +37,11 @@ final class HSV extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function validateValue(string $channel, int|float $value): void
+    public static function validateValue(string $channel, float $value): void
     {
         match ($channel) {
-            'h' => static::assertRange((int)$value, 0, 360, $channel),
-            's', 'v' => static::assertRange((int)$value, 0, 100, $channel),
+            'h' => static::assertRange($value, 0.0, 360.0, $channel),
+            's', 'v' => static::assertRange($value, 0.0, 100.0, $channel),
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSV color space.', $channel)),
         };
     }
@@ -52,7 +52,7 @@ final class HSV extends AbstractColorSpace
      * @param array<string, float|int> $values HSV values: ['h' => int, 's' => int, 'v' => int]
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSV)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSV)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function toRGB(
         array $values,
@@ -84,14 +84,14 @@ final class HSV extends AbstractColorSpace
             $r = $c; $g = 0; $b = $x;
         }
 
-        $r = max(0, min(255, ($r + $m) * 255));
-        $g = max(0, min(255, ($g + $m) * 255));
-        $b = max(0, min(255, ($b + $m) * 255));
+        $r = max(0.0, min(255.0, ($r + $m) * 255));
+        $g = max(0.0, min(255.0, ($g + $m) * 255));
+        $b = max(0.0, min(255.0, ($b + $m) * 255));
 
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => $r,
+            'g' => $g,
+            'b' => $b
         ];
     }
 
@@ -230,7 +230,7 @@ final class HSV extends AbstractColorSpace
      * @param int $alpha Optional alpha channel (ignored for HSV)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSV)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSV)
-     * @return array<string, int> HSV values: ['h' => int, 's' => int, 'v' => int]
+     * @return array<string, float> HSV values: ['h' => float, 's' => float, 'v' => float]
      */
     public static function fromRGB(
         array $values,
@@ -264,13 +264,13 @@ final class HSV extends AbstractColorSpace
         }
         
         $h = fmod($h * 360, 360);
-        $s = max(0, min(100, $s * 100));
-        $v = max(0, min(100, $v * 100));
+        $s = max(0.0, min(100.0, $s * 100));
+        $v = max(0.0, min(100.0, $v * 100));
         
         return [
-            'h' => (int) round($h),
-            's' => (int) round($s),
-            'v' => (int) round($v)
+            'h' => $h,
+            's' => $s,
+            'v' => $v
         ];
     }
 }

@@ -23,20 +23,20 @@ interface ColorInterface
     /**
      * Get all color channels as an associative array.
      * 
-     * @return array<string, float|int>
+     * @return array<string, float>
      */
     public function getChannels(): array;
     /**
      * Get a specific color channel by name.
      * 
      * @param string $name
-     * @return float|int
+     * @return float
      */
-    public function getChannel(string $name): float|int;
+    public function getChannel(string $name): float;
     /**
      * Get all color channels as a numeric array.
      * 
-     * @return array<int, float|int>
+     * @return array<string, mixed>
      */
     public function toArray(): array;
     /**
@@ -49,7 +49,7 @@ interface ColorInterface
     /**
      * Create a new color instance with the specified channels.
      * 
-     * @param array<string, float|int> $channels
+     * @param array<string, float|int> $channels Accepts int|float for convenience, stores as float
      * @return static
      */
     public function with(array $channels): static;

@@ -69,7 +69,8 @@ final class Color extends AbstractColor
             if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
                 throw new \InvalidArgumentException("Channel '{$channel}' must be of type int or float.");
             }
-            $values[$channel] = $value;
+            // Convert to float and store
+            $values[$channel] = (float)$value;
         }
 
         return new self($this->colorSpace, $values, $this->illuminant, $this->observer);

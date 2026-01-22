@@ -22,11 +22,11 @@ final class HSLA extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function getChannelDefaultValue(string $name): int
+    public static function getChannelDefaultValue(string $name): float
     {
         return match ($name) {
-            'h', 's', 'l' => 0,
-            'a' => 255,
+            'h', 's', 'l' => 0.0,
+            'a' => 255.0,
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSLA color space.', $name)),
         };
     }
@@ -38,12 +38,12 @@ final class HSLA extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function validateValue(string $channel, int|float $value): void
+    public static function validateValue(string $channel, float $value): void
     {
         match ($channel) {
-            'h' => static::assertRange((int)$value, 0, 360, $channel),
-            's', 'l' => static::assertRange((int)$value, 0, 100, $channel),
-            'a' => static::assertRange((int)$value, 0, 255, $channel),
+            'h' => static::assertRange($value, 0.0, 360.0, $channel),
+            's', 'l' => static::assertRange($value, 0.0, 100.0, $channel),
+            'a' => static::assertRange($value, 0.0, 255.0, $channel),
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSLA color space.', $channel)),
         };
     }
@@ -54,7 +54,7 @@ final class HSLA extends AbstractColorSpace
      * @param array<string, float|int> $values HSLA values: ['h' => int, 's' => int, 'l' => int, 'a' => int]
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSLA)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSLA)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function toRGB(
         array $values,
@@ -70,14 +70,14 @@ final class HSLA extends AbstractColorSpace
      * Convert from HSLA to HSL (removes alpha channel).
      * 
      * @param array<string, float|int> $values HSLA values
-     * @return array<string, int> HSL values
+     * @return array<string, float> HSL values
      */
     public static function toHSL(array $values): array
     {
         return [
-            'h' => (int) ($values['h'] ?? 0),
-            's' => (int) ($values['s'] ?? 0),
-            'l' => (int) ($values['l'] ?? 0)
+            'h' => (float) ($values['h'] ?? 0),
+            's' => (float) ($values['s'] ?? 0),
+            'l' => (float) ($values['l'] ?? 0)
         ];
     }
 
@@ -187,7 +187,7 @@ final class HSLA extends AbstractColorSpace
      * @param int $alpha Alpha channel value (0-255, default: 255)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSLA)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSLA)
-     * @return array<string, int> HSLA values: ['h' => int, 's' => int, 'l' => int, 'a' => int]
+     * @return array<string, float> HSLA values: ['h' => float, 's' => float, 'l' => float, 'a' => float]
      */
     public static function fromRGB(
         array $values,
@@ -201,7 +201,7 @@ final class HSLA extends AbstractColorSpace
             'h' => $hsl['h'],
             's' => $hsl['s'],
             'l' => $hsl['l'],
-            'a' => $alpha
+            'a' => (float) $alpha
         ];
     }
 }

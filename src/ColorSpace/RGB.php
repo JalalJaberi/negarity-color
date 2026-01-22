@@ -25,10 +25,10 @@ final class RGB extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function getChannelDefaultValue(string $name): int
+    public static function getChannelDefaultValue(string $name): float
     {
         return match ($name) {
-            'r', 'g', 'b' => 0,
+            'r', 'g', 'b' => 0.0,
             default => throw new InvalidColorValueException("Channel '{$name}' does not exist in RGB color space."),
         };
     }
@@ -40,10 +40,10 @@ final class RGB extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function validateValue(string $channel, int|float $value): void
+    public static function validateValue(string $channel, float $value): void
     {
         match ($channel) {
-            'r', 'g', 'b' => static::assertRange((int)$value, 0, 255, $channel),
+            'r', 'g', 'b' => static::assertRange($value, 0.0, 255.0, $channel),
             default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in RGB color space."),
         };
     }
@@ -66,9 +66,9 @@ final class RGB extends AbstractColorSpace
         $b = 255 * (1 - $y) * (1 - $k);
         
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => max(0.0, min(255.0, $r)),
+            'g' => max(0.0, min(255.0, $g)),
+            'b' => max(0.0, min(255.0, $b))
         ];
     }
 
@@ -119,9 +119,9 @@ final class RGB extends AbstractColorSpace
         $b = max(0, min(255, $b));
 
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => max(0.0, min(255.0, $r)),
+            'g' => max(0.0, min(255.0, $g)),
+            'b' => max(0.0, min(255.0, $b))
         ];
     }
 
@@ -174,9 +174,9 @@ final class RGB extends AbstractColorSpace
         $b = max(0, min(255, ($b + $m) * 255));
 
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => max(0.0, min(255.0, $r)),
+            'g' => max(0.0, min(255.0, $g)),
+            'b' => max(0.0, min(255.0, $b))
         ];
     }
 
@@ -222,9 +222,9 @@ final class RGB extends AbstractColorSpace
 
         // Clamp RGB values to 0-255 (XYZ has wider gamut than sRGB)
         return [
-            'r' => (int) round(max(0, min(255, $rgb[0]))),
-            'g' => (int) round(max(0, min(255, $rgb[1]))),
-            'b' => (int) round(max(0, min(255, $rgb[2])))
+            'r' => max(0.0, min(255.0, $rgb[0])),
+            'g' => max(0.0, min(255.0, $rgb[1])),
+            'b' => max(0.0, min(255.0, $rgb[2]))
         ];
     }
 
@@ -317,9 +317,9 @@ final class RGB extends AbstractColorSpace
 
         // Clamp RGB values to 0-255
         return [
-            'r' => (int) round(max(0, min(255, $r))),
-            'g' => (int) round(max(0, min(255, $g))),
-            'b' => (int) round(max(0, min(255, $b)))
+            'r' => max(0.0, min(255.0, $r)),
+            'g' => max(0.0, min(255.0, $g)),
+            'b' => max(0.0, min(255.0, $b))
         ];
     }
 
@@ -329,7 +329,7 @@ final class RGB extends AbstractColorSpace
      * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for RGB)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for RGB)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function toRGB(
         array $values,
@@ -337,9 +337,9 @@ final class RGB extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         return [
-            'r' => (int) ($values['r'] ?? 0),
-            'g' => (int) ($values['g'] ?? 0),
-            'b' => (int) ($values['b'] ?? 0)
+            'r' => (float) ($values['r'] ?? 0),
+            'g' => (float) ($values['g'] ?? 0),
+            'b' => (float) ($values['b'] ?? 0)
         ];
     }
 
@@ -350,7 +350,7 @@ final class RGB extends AbstractColorSpace
      * @param int $alpha Optional alpha channel (ignored for RGB)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for RGB)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for RGB)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function fromRGB(
         array $values,
@@ -359,9 +359,9 @@ final class RGB extends AbstractColorSpace
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array {
         return [
-            'r' => (int) ($values['r'] ?? 0),
-            'g' => (int) ($values['g'] ?? 0),
-            'b' => (int) ($values['b'] ?? 0)
+            'r' => (float) ($values['r'] ?? 0),
+            'g' => (float) ($values['g'] ?? 0),
+            'b' => (float) ($values['b'] ?? 0)
         ];
     }
 
@@ -374,9 +374,9 @@ final class RGB extends AbstractColorSpace
     public static function fromRGBA(array $values): array
     {
         return [
-            'r' => (int) ($values['r'] ?? 0),
-            'g' => (int) ($values['g'] ?? 0),
-            'b' => (int) ($values['b'] ?? 0)
+            'r' => (float) ($values['r'] ?? 0),
+            'g' => (float) ($values['g'] ?? 0),
+            'b' => (float) ($values['b'] ?? 0)
         ];
     }
 

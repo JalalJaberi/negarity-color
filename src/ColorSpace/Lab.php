@@ -22,10 +22,10 @@ final class Lab extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function getChannelDefaultValue(string $name): int
+    public static function getChannelDefaultValue(string $name): float
     {
         return match ($name) {
-            'l', 'a', 'b' => 0,
+            'l', 'a', 'b' => 0.0,
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in Lab color space.', $name)),
         };
     }
@@ -37,10 +37,10 @@ final class Lab extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function validateValue(string $channel, int|float $value): void
+    public static function validateValue(string $channel, float $value): void
     {
         match ($channel) {
-            'l' => static::assertRange((int)$value, 0, 100, $channel),
+            'l' => static::assertRange($value, 0.0, 100.0, $channel),
             'a', 'b' => is_numeric($value) ? null : throw new InvalidColorValueException("Channel '{$channel}' must be numeric."),
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in Lab color space.', $channel)),
         };

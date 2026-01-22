@@ -37,7 +37,7 @@ final class MixFilter implements BinaryColorFilterInterface
 
             foreach ($baseChannels as $channel => $value) {
                 $blendValue = $blendChannels[$channel] ?? 0;
-                $resultChannels[$channel] = (int)((1 - $this->weight) * $value + $this->weight * $blendValue);
+                $resultChannels[$channel] = (1 - $this->weight) * $value + $this->weight * $blendValue;
             }
 
             return $base->with($resultChannels);
@@ -51,9 +51,9 @@ final class MixFilter implements BinaryColorFilterInterface
         $blendRgbValues = $blendRgb->toArray()['values'];
         
         $resultRgb = [
-            'r' => (int)((1 - $this->weight) * $baseRgbValues['r'] + $this->weight * $blendRgbValues['r']),
-            'g' => (int)((1 - $this->weight) * $baseRgbValues['g'] + $this->weight * $blendRgbValues['g']),
-            'b' => (int)((1 - $this->weight) * $baseRgbValues['b'] + $this->weight * $blendRgbValues['b']),
+            'r' => (1 - $this->weight) * $baseRgbValues['r'] + $this->weight * $blendRgbValues['r'],
+            'g' => (1 - $this->weight) * $baseRgbValues['g'] + $this->weight * $blendRgbValues['g'],
+            'b' => (1 - $this->weight) * $baseRgbValues['b'] + $this->weight * $blendRgbValues['b'],
         ];
         
         // Convert back to base color space

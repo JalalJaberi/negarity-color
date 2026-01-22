@@ -25,7 +25,7 @@ final class BlendFilter implements BinaryColorFilterInterface
 
             foreach ($baseChannels as $channel => $value) {
                 $blendValue = $blendChannels[$channel] ?? 0;
-                $resultChannels[$channel] = (int)((1 - 0.5) * $value + 0.5 * $blendValue);
+                $resultChannels[$channel] = (1 - 0.5) * $value + 0.5 * $blendValue;
             }
 
             return $base->with($resultChannels);
@@ -39,9 +39,9 @@ final class BlendFilter implements BinaryColorFilterInterface
         $blendRgbValues = $blendRgb->toArray()['values'];
         
         $resultRgb = [
-            'r' => (int)((1 - 0.5) * $baseRgbValues['r'] + 0.5 * $blendRgbValues['r']),
-            'g' => (int)((1 - 0.5) * $baseRgbValues['g'] + 0.5 * $blendRgbValues['g']),
-            'b' => (int)((1 - 0.5) * $baseRgbValues['b'] + 0.5 * $blendRgbValues['b']),
+            'r' => (1 - 0.5) * $baseRgbValues['r'] + 0.5 * $blendRgbValues['r'],
+            'g' => (1 - 0.5) * $baseRgbValues['g'] + 0.5 * $blendRgbValues['g'],
+            'b' => (1 - 0.5) * $baseRgbValues['b'] + 0.5 * $blendRgbValues['b'],
         ];
         
         // Convert back to base color space

@@ -22,11 +22,11 @@ final class RGBA extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function getChannelDefaultValue(string $name): int
+    public static function getChannelDefaultValue(string $name): float
     {
         return match ($name) {
-            'r', 'g', 'b' => 0,
-            'a' => 255,
+            'r', 'g', 'b' => 0.0,
+            'a' => 255.0,
             default => throw new InvalidColorValueException("Channel '{$name}' does not exist in RGBA color space."),
         };
     }
@@ -38,11 +38,11 @@ final class RGBA extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function validateValue(string $channel, int|float $value): void
+    public static function validateValue(string $channel, float $value): void
     {
         match ($channel) {
-            'r', 'g', 'b' => static::assertRange((int)$value, 0, 255, $channel),
-            'a' => static::assertRange((int)$value, 0, 255, $channel),
+            'r', 'g', 'b' => static::assertRange($value, 0.0, 255.0, $channel),
+            'a' => static::assertRange($value, 0.0, 255.0, $channel),
             default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in RGBA color space."),
         };
     }
@@ -53,7 +53,7 @@ final class RGBA extends AbstractColorSpace
      * @param array<string, float|int> $values RGBA values: ['r' => int, 'g' => int, 'b' => int, 'a' => int]
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for RGBA)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for RGBA)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function toRGB(
         array $values,
@@ -62,9 +62,9 @@ final class RGBA extends AbstractColorSpace
     ): array
     {
         return [
-            'r' => (int) ($values['r'] ?? 0),
-            'g' => (int) ($values['g'] ?? 0),
-            'b' => (int) ($values['b'] ?? 0)
+            'r' => (float) ($values['r'] ?? 0),
+            'g' => (float) ($values['g'] ?? 0),
+            'b' => (float) ($values['b'] ?? 0)
         ];
     }
 
@@ -191,7 +191,7 @@ final class RGBA extends AbstractColorSpace
      * @param int $alpha Alpha channel value (0-255, default: 255)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for RGBA)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for RGBA)
-     * @return array<string, int> RGBA values: ['r' => int, 'g' => int, 'b' => int, 'a' => int]
+     * @return array<string, float> RGBA values: ['r' => float, 'g' => float, 'b' => float, 'a' => float]
      */
     public static function fromRGB(
         array $values,
@@ -201,10 +201,10 @@ final class RGBA extends AbstractColorSpace
     ): array
     {
         return [
-            'r' => (int) ($values['r'] ?? 0),
-            'g' => (int) ($values['g'] ?? 0),
-            'b' => (int) ($values['b'] ?? 0),
-            'a' => $alpha
+            'r' => (float) ($values['r'] ?? 0),
+            'g' => (float) ($values['g'] ?? 0),
+            'b' => (float) ($values['b'] ?? 0),
+            'a' => (float) $alpha
         ];
     }
 }

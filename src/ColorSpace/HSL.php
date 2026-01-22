@@ -22,10 +22,10 @@ final class HSL extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function getChannelDefaultValue(string $name): int
+    public static function getChannelDefaultValue(string $name): float
     {
         return match ($name) {
-            'h', 's', 'l' => 0,
+            'h', 's', 'l' => 0.0,
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSL color space.', $name)),
         };
     }
@@ -37,11 +37,11 @@ final class HSL extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function validateValue(string $channel, int|float $value): void
+    public static function validateValue(string $channel, float $value): void
     {
         match ($channel) {
-            'h' => static::assertRange((int)$value, 0, 360, $channel),
-            's', 'l' => static::assertRange((int)$value, 0, 100, $channel),
+            'h' => static::assertRange($value, 0.0, 360.0, $channel),
+            's', 'l' => static::assertRange($value, 0.0, 100.0, $channel),
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in HSL color space.', $channel)),
         };
     }
@@ -52,7 +52,7 @@ final class HSL extends AbstractColorSpace
      * @param array<string, float|int> $values HSL values: ['h' => int, 's' => int, 'l' => int]
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSL)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSL)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function toRGB(
         array $values,
@@ -94,14 +94,14 @@ final class HSL extends AbstractColorSpace
         $g = ($g + $m) * 255;
         $b = ($b + $m) * 255;
 
-        $r = max(0, min(255, $r));
-        $g = max(0, min(255, $g));
-        $b = max(0, min(255, $b));
+        $r = max(0.0, min(255.0, $r));
+        $g = max(0.0, min(255.0, $g));
+        $b = max(0.0, min(255.0, $b));
 
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => $r,
+            'g' => $g,
+            'b' => $b
         ];
     }
 
@@ -239,7 +239,7 @@ final class HSL extends AbstractColorSpace
      * @param int $alpha Optional alpha channel (ignored for HSL)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for HSL)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for HSL)
-     * @return array<string, int> HSL values: ['h' => int, 's' => int, 'l' => int]
+     * @return array<string, float> HSL values: ['h' => float, 's' => float, 'l' => float]
      */
     public static function fromRGB(
         array $values,
@@ -272,18 +272,18 @@ final class HSL extends AbstractColorSpace
             } else {
                 $h = ($r - $g) / $d + 4;
             }
-        
+            
             $h /= 6;
         }
         
         $h = fmod($h * 360, 360);
-        $s = max(0, min(100, $s * 100));
-        $l = max(0, min(100, $l * 100));
+        $s = max(0.0, min(100.0, $s * 100));
+        $l = max(0.0, min(100.0, $l * 100));
         
         return [
-            'h' => (int) round($h),
-            's' => (int) round($s),
-            'l' => (int) round($l)
+            'h' => $h,
+            's' => $s,
+            'l' => $l
         ];
     }
 }

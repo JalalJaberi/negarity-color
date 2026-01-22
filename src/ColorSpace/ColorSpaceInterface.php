@@ -29,31 +29,31 @@ interface ColorSpaceInterface
     public static function hasChannel(string $name): bool;
 
     /**
-     * Returns the default channel value by name (normalized float or int).
+     * Returns the default channel value by name.
      * 
      * @param string $name The name of the channel.
-     * @return float|int
+     * @return float
      * @throws \Negarity\Color\Exception\InvalidColorValueException
      */
-    public static function getChannelDefaultValue(string $name): float|int;
+    public static function getChannelDefaultValue(string $name): float;
 
     /**
      * Validates a channel value for a given channel name.
      * 
      * @param string $channel The name of the channel.
-     * @param int|float $value The value to validate.
+     * @param float $value The value to validate.
      * @return void
      * @throws \Negarity\Color\Exception\InvalidColorValueException
      */
-    public static function validateValue(string $channel, int|float $value): void;
+    public static function validateValue(string $channel, float $value): void;
 
     /**
      * Convert from this color space to RGB.
      * 
-     * @param array<string, float|int> $values Color space values
+     * @param array<string, float> $values Color space values
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (for color spaces that support it)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (for color spaces that support it)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function toRGB(
         array $values,
@@ -64,11 +64,11 @@ interface ColorSpaceInterface
     /**
      * Convert from RGB to this color space.
      * 
-     * @param array<string, float|int> $values RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @param array<string, float> $values RGB values: ['r' => float, 'g' => float, 'b' => float]
      * @param int $alpha Optional alpha channel (for color spaces that support it, e.g., RGBA, HSLA)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (for color spaces that support it)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (for color spaces that support it)
-     * @return array<string, float|int> Color space values
+     * @return array<string, float> Color space values
      */
     public static function fromRGB(
         array $values,

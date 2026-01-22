@@ -22,10 +22,10 @@ final class CMYK extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function getChannelDefaultValue(string $name): int
+    public static function getChannelDefaultValue(string $name): float
     {
         return match ($name) {
-            'c', 'm', 'y', 'k' => 0,
+            'c', 'm', 'y', 'k' => 0.0,
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in CMYK color space.', $name)),
         };
     }
@@ -37,10 +37,10 @@ final class CMYK extends AbstractColorSpace
     }
 
     #[\Override]
-    public static function validateValue(string $channel, int|float $value): void
+    public static function validateValue(string $channel, float $value): void
     {
         match ($channel) {
-            'c', 'm', 'y', 'k' => static::assertRange((int)$value, 0, 100, $channel),
+            'c', 'm', 'y', 'k' => static::assertRange($value, 0.0, 100.0, $channel),
             default => throw new InvalidColorValueException(sprintf('Channel "%s" does not exist in CMYK color space.', $channel)),
         };
     }
@@ -51,7 +51,7 @@ final class CMYK extends AbstractColorSpace
      * @param array<string, float|int> $values CMYK values: ['c' => int, 'm' => int, 'y' => int, 'k' => int]
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for CMYK)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for CMYK)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function toRGB(
         array $values,
@@ -69,9 +69,9 @@ final class CMYK extends AbstractColorSpace
         $b = 255 * (1 - $y) * (1 - $k);
         
         return [
-            'r' => (int) round($r),
-            'g' => (int) round($g),
-            'b' => (int) round($b)
+            'r' => max(0.0, min(255.0, $r)),
+            'g' => max(0.0, min(255.0, $g)),
+            'b' => max(0.0, min(255.0, $b))
         ];
     }
 
@@ -195,7 +195,7 @@ final class CMYK extends AbstractColorSpace
      * @param int $alpha Optional alpha channel (ignored for CMYK)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for CMYK)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for CMYK)
-     * @return array<string, int> CMYK values: ['c' => int, 'm' => int, 'y' => int, 'k' => int]
+     * @return array<string, float> CMYK values: ['c' => float, 'm' => float, 'y' => float, 'k' => float]
      */
     public static function fromRGB(
         array $values,
@@ -210,7 +210,7 @@ final class CMYK extends AbstractColorSpace
 
         $k = 1 - max($r, $g, $b);
         if ($k == 1) {
-            return ['c' => 0, 'm' => 0, 'y' => 0, 'k' => 100];
+            return ['c' => 0.0, 'm' => 0.0, 'y' => 0.0, 'k' => 100.0];
         }
 
         $c = max(0, min(1, (1 - $r - $k) / (1 - $k)));
@@ -218,10 +218,10 @@ final class CMYK extends AbstractColorSpace
         $y = max(0, min(1, (1 - $b - $k) / (1 - $k)));
 
         return [
-            'c' => (int) round($c * 100),
-            'm' => (int) round($m * 100),
-            'y' => (int) round($y * 100),
-            'k' => (int) round($k * 100)
+            'c' => $c * 100,
+            'm' => $m * 100,
+            'y' => $y * 100,
+            'k' => $k * 100
         ];
     }
 }

@@ -19,10 +19,10 @@ final class XYZ extends AbstractColorSpace
         return ['x', 'y', 'z'];
     }
 
-    public static function getChannelDefaultValue(string $name): float|int
+    public static function getChannelDefaultValue(string $name): float
     {
         return match ($name) {
-            'x', 'y', 'z' => 0,
+            'x', 'y', 'z' => 0.0,
             default => throw new InvalidColorValueException("Channel '{$name}' does not exist in color space 'xyz'."),
         };
     }
@@ -32,7 +32,7 @@ final class XYZ extends AbstractColorSpace
         return in_array($name, ['x', 'y', 'z'], true);
     }
 
-    public static function validateValue(string $channel, int|float $value): void
+    public static function validateValue(string $channel, float $value): void
     {
         if (!is_numeric($value)) {
             throw new InvalidColorValueException("Channel '{$channel}' must be numeric.");
@@ -57,7 +57,7 @@ final class XYZ extends AbstractColorSpace
      * @param array<string, float|int> $values XYZ values: ['x' => float, 'y' => float, 'z' => float]
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional illuminant (default: D65)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional observer (default: TwoDegree)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function toRGB(
         array $values,
@@ -93,9 +93,9 @@ final class XYZ extends AbstractColorSpace
 
         // Clamp RGB values to 0-255 (XYZ has wider gamut than sRGB)
         return [
-            'r' => (int) round(max(0, min(255, $rgb[0]))),
-            'g' => (int) round(max(0, min(255, $rgb[1]))),
-            'b' => (int) round(max(0, min(255, $rgb[2])))
+            'r' => max(0.0, min(255.0, $rgb[0])),
+            'g' => max(0.0, min(255.0, $rgb[1])),
+            'b' => max(0.0, min(255.0, $rgb[2]))
         ];
     }
 

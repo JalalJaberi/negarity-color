@@ -107,7 +107,8 @@ final class MutableColor extends AbstractColor
             if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
                 throw new \InvalidArgumentException("Channel '{$channel}' must be of type int or float.");
             }
-            $this->values[$channel] = $value;
+            // Convert to float and store
+            $this->values[$channel] = (float)$value;
         }
 
         return $this;

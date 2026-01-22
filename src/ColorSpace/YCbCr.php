@@ -19,10 +19,10 @@ final class YCbCr extends AbstractColorSpace
         return ['y', 'cb', 'cr'];
     }
 
-    public static function getChannelDefaultValue(string $name): float|int
+    public static function getChannelDefaultValue(string $name): float
     {
         return match ($name) {
-            'y', 'cb', 'cr' => 0,
+            'y', 'cb', 'cr' => 0.0,
             default => throw new InvalidColorValueException("Channel '{$name}' does not exist in color space 'ycbcr'."),
         };
     }
@@ -32,11 +32,11 @@ final class YCbCr extends AbstractColorSpace
         return in_array($name, ['y', 'cb', 'cr'], true);
     }
 
-    public static function validateValue(string $channel, int|float $value): void
+    public static function validateValue(string $channel, float $value): void
     {
         match ($channel) {
-            'y' => static::assertRange((float)$value, 0.0, 100.0, $channel),
-            'cb', 'cr' => static::assertRange((int)$value, -128, 127, $channel),
+            'y' => static::assertRange($value, 0.0, 100.0, $channel),
+            'cb', 'cr' => static::assertRange($value, -128.0, 127.0, $channel),
             default => throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space 'ycbcr'."),
         };
     }
@@ -47,7 +47,7 @@ final class YCbCr extends AbstractColorSpace
      * @param array<string, float|int> $values YCbCr values: ['y' => float, 'cb' => int, 'cr' => int]
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for YCbCr)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for YCbCr)
-     * @return array<string, int> RGB values: ['r' => int, 'g' => int, 'b' => int]
+     * @return array<string, float> RGB values: ['r' => float, 'g' => float, 'b' => float]
      */
     public static function toRGB(
         array $values,
@@ -69,9 +69,9 @@ final class YCbCr extends AbstractColorSpace
 
         // Clamp RGB values to 0-255
         return [
-            'r' => (int) round(max(0, min(255, $r))),
-            'g' => (int) round(max(0, min(255, $g))),
-            'b' => (int) round(max(0, min(255, $b)))
+            'r' => max(0.0, min(255.0, $r)),
+            'g' => max(0.0, min(255.0, $g)),
+            'b' => max(0.0, min(255.0, $b))
         ];
     }
 
@@ -200,7 +200,7 @@ final class YCbCr extends AbstractColorSpace
      * @param int $alpha Optional alpha channel (ignored for YCbCr)
      * @param \Negarity\Color\CIE\CIEIlluminant|null $illuminant Optional CIE illuminant (ignored for YCbCr)
      * @param \Negarity\Color\CIE\CIEObserver|null $observer Optional CIE observer (ignored for YCbCr)
-     * @return array<string, float|int> YCbCr values: ['y' => float, 'cb' => int, 'cr' => int]
+     * @return array<string, float> YCbCr values: ['y' => float, 'cb' => float, 'cr' => float]
      */
     public static function fromRGB(
         array $values,
@@ -224,9 +224,9 @@ final class YCbCr extends AbstractColorSpace
         // Cb/Cr are already centered at 0, no +128 offset
 
         return [
-            'y' => round($y, 1),
-            'cb' => (int) round(max(-128, min(127, $cb))),
-            'cr' => (int) round(max(-128, min(127, $cr)))
+            'y' => max(0.0, min(100.0, $y)),
+            'cb' => max(-128.0, min(127.0, $cb)),
+            'cr' => max(-128.0, min(127.0, $cr))
         ];
     }
 }
