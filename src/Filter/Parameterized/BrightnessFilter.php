@@ -88,8 +88,42 @@ final class BrightnessFilter implements ParameterizedColorFilterInterface
                 $cr = $color->getChannel('cr');
                 return $color->with(['y' => $y, 'cb' => $cb, 'cr' => $cr]);
             default:
-                throw new \InvalidArgumentException('Brightness filter not supported for color space: ' . $color->getColorSpaceName());
-                break;
+                // Fallback: Convert to RGB, apply filter, convert back
+                $originalColorSpace = $color->getColorSpace();
+                $rgb = $color->toRGB();
+                $r = max(0, min(255, $rgb->getChannel('r') + $factor));
+                $g = max(0, min(255, $rgb->getChannel('g') + $factor));
+                $b = max(0, min(255, $rgb->getChannel('b') + $factor));
+                $rgbModified = $rgb->with(['r' => $r, 'g' => $g, 'b' => $b]);
+                
+                // Convert back to original color space
+                $rgbValues = $rgbModified->toArray()['values'];
+                
+                // Get alpha if present
+                $alpha = 255;
+                $colorArray = $color->toArray();
+                if (isset($colorArray['values']['a'])) {
+                    $alpha = (int)$colorArray['values']['a'];
+                }
+                
+                // Get CIE parameters if available
+                $illuminant = null;
+                $observer = null;
+                if (method_exists($color, 'getIlluminant')) {
+                    $illuminant = $color->getIlluminant();
+                }
+                if (method_exists($color, 'getObserver')) {
+                    $observer = $color->getObserver();
+                }
+                
+                $originalValues = $originalColorSpace::fromRGB(
+                    $rgbValues,
+                    $alpha,
+                    $illuminant,
+                    $observer
+                );
+                
+                return $color->with($originalValues);
         }
     }
 }
