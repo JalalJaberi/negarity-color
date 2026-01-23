@@ -37,9 +37,10 @@ final class MutableColor extends AbstractColor
         string $colorSpace, 
         array $values = [],
         ?CIEIlluminant $illuminant = null,
-        ?CIEObserver $observer = null
+        ?CIEObserver $observer = null,
+        ?bool $strictClamping = null
     ) {
-        parent::__construct($colorSpace, $values, $illuminant, $observer);
+        parent::__construct($colorSpace, $values, $illuminant, $observer, $strictClamping);
     }
 
     /**
@@ -52,11 +53,20 @@ final class MutableColor extends AbstractColor
      */
     public function setChannel(string $name, float|int $value)
     {
-        if (in_array($name, $this->getChannels(), true)) {
-            $this->values[$name] = $value;
-        } else {
-            throw new InvalidColorValueException("Channel '{$name}' does not exist in color space '{$this->getName()}'.");
+        if (!in_array($name, $this->getChannels(), true)) {
+            throw new InvalidColorValueException("Channel '{$name}' does not exist in color space '{$this->getColorSpaceName()}'.");
         }
+        
+        $type = gettype($value);
+        if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
+            throw new \InvalidArgumentException("Channel '{$name}' must be of type int or float. It's type is '{$type}'.");
+        }
+        
+        // Convert to float and always store original value (never clamp in storage)
+        // Type validation done above (int/float check)
+        // Range validation: In strict mode we clamp on-the-fly, in non-strict we allow out-of-range
+        $floatValue = (float)$value;
+        $this->values[$name] = $floatValue;
     }
 
     /**
@@ -107,18 +117,9 @@ final class MutableColor extends AbstractColor
             if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
                 throw new \InvalidArgumentException("Channel '{$channel}' must be of type int or float.");
             }
-            // Convert to float
+            // Convert to float and always store original value (never clamp in storage)
             $floatValue = (float)$value;
-            
-            // In strict mode: clamp immediately and store original
-            // In non-strict mode: allow out-of-range values (no validation), store as-is
-            if (static::STRICT_CLAMPING) {
-                $this->originalValues[$channel] = $floatValue;
-                $this->values[$channel] = $this->colorSpace::clampValue($channel, $floatValue);
-            } else {
-                // Non-strict: store original value, clamp only on output
-                $this->values[$channel] = $floatValue;
-            }
+            $this->values[$channel] = $floatValue;
         }
 
         return $this;

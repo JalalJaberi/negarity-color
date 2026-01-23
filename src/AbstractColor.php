@@ -35,20 +35,20 @@ use Negarity\Color\Exception\ConversionNotSupportedException;
 abstract class AbstractColor implements \JsonSerializable, ColorInterface
 {
     /**
-     * Strict clamping mode.
-     * When true, values are clamped on assignment/operations.
-     * When false (default), original values are kept and clamped only on output.
+     * Strict clamping mode (class default).
+     * When true (default), values are clamped on assignment/operations.
+     * When false, original values are kept and clamped only on output.
      */
-    public const bool STRICT_CLAMPING = false;
+    public const bool STRICT_CLAMPING = true;
 
     /** @var NamedColorRegistryInterface[] */
     private static array $registries = [];
     /** @var class-string<ColorSpaceInterface> */
     protected string $colorSpace;
-    /** @var array<string, float> */
+    /** @var array<string, float> Always stores original values (never clamped) */
     protected array $values = [];
-    /** @var array<string, float> Original values before clamping (only used in strict mode) */
-    protected array $originalValues = [];
+    /** @var bool Instance-level strict clamping mode (overrides class constant) */
+    protected bool $strictClamping;
     /** @var CIEIlluminant */
     protected CIEIlluminant $illuminant;
     /** @var CIEObserver */
@@ -61,13 +61,15 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * @param array<string, float|int> $values Accepts int|float for convenience, stores as float
      * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
      * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
+     * @param bool|null $strictClamping Override strict clamping mode (null = use class constant)
      * @throws \InvalidArgumentException
      */
     public function __construct(
         string $colorSpace, 
         array $values = [],
         ?CIEIlluminant $illuminant = null,
-        ?CIEObserver $observer = null
+        ?CIEObserver $observer = null,
+        ?bool $strictClamping = null
     ) {
         if (!is_subclass_of($colorSpace, ColorSpaceInterface::class)) {
             throw new \InvalidArgumentException(
@@ -78,34 +80,26 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         $this->colorSpace = $colorSpace;
         $this->illuminant = $illuminant ?? CIEIlluminant::D65;
         $this->observer = $observer ?? CIEObserver::TwoDegree;
+        $this->strictClamping = $strictClamping ?? static::STRICT_CLAMPING;
 
         $colorSpaceChannels = $colorSpace::getChannels();
 
         foreach ($colorSpaceChannels as $name) {
             if (!isset($values[$name])) {
                 $defaultValue = $colorSpace::getChannelDefaultValue($name);
+                // Always store original values (defaults are already in valid range)
                 $this->values[$name] = $defaultValue;
-                if (static::STRICT_CLAMPING) {
-                    $this->originalValues[$name] = $defaultValue;
-                }
             } else {
                 $value = $values[$name];
                 $type = gettype($value);
                 if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
                     throw new \InvalidArgumentException("Channel '{$name}' must be of type int or float. It's type is '{$type}'.");
                 }
-                // Convert to float
+                // Convert to float and always store original value (never clamp in storage)
+                // Type validation already done above (int/float check)
+                // Range validation: In strict mode we clamp on-the-fly, in non-strict we allow out-of-range
                 $floatValue = (float)$value;
-                
-                // In strict mode: clamp immediately and store original
-                // In non-strict mode: allow out-of-range values (no validation), store as-is
-                if (static::STRICT_CLAMPING) {
-                    $this->originalValues[$name] = $floatValue;
-                    $this->values[$name] = $colorSpace::clampValue($name, $floatValue);
-                } else {
-                    // Non-strict: store original value, clamp only on output
-                    $this->values[$name] = $floatValue;
-                }
+                $this->values[$name] = $floatValue;
             }
         }
     }
@@ -161,13 +155,14 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             throw new \InvalidArgumentException("Channel '{$name}' does not exist in color space '{$this->getColorSpaceName()}'.");
         }
         
-        // Always return clamped value for safety
-        $value = $this->values[$name];
-        return $this->colorSpace::clampValue($name, $value);
+        // Always return clamped value for safety (for display/output)
+        // $values always contains original values, so we clamp them on-the-fly
+        return $this->colorSpace::clampValue($name, $this->values[$name]);
     }
 
     /**
      * Get the raw (original) channel value without clamping.
+     * Always returns the original value as it was set, regardless of clamping mode.
      * 
      * @param string $name The channel name.
      * @return float The raw channel value.
@@ -178,37 +173,26 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             throw new \InvalidArgumentException("Channel '{$name}' does not exist in color space '{$this->getColorSpaceName()}'.");
         }
         
-        // In strict mode, return original value; otherwise return stored value (which is original)
-        if (static::STRICT_CLAMPING && isset($this->originalValues[$name])) {
-            return $this->originalValues[$name];
-        }
+        // $values always contains original values
         return $this->values[$name];
     }
 
     /**
-     * Get channel value for internal operations.
-     * In strict mode: returns raw (original) value (because stored values are already clamped).
-     * In non-strict mode: returns clamped value (for safety).
-     * 
-     * @param string $name The channel name.
-     * @return float The channel value appropriate for operations.
-     */
-    final protected function getChannelForOperation(string $name): float
-    {
-        return static::STRICT_CLAMPING ? $this->getChannelRaw($name) : $this->getChannel($name);
-    }
-
-    /**
-     * Get channel value for operations (public method for filters and external code).
-     * In strict mode: returns raw (original) value (because stored values are already clamped).
-     * In non-strict mode: returns clamped value (for safety).
+     * Get channel value for operations (used by filters and internal conversions).
+     * In strict mode: returns clamped value (clamps on-the-fly from original).
+     * In non-strict mode: returns original value (from $values).
      * 
      * @param string $name The channel name.
      * @return float The channel value appropriate for operations.
      */
     final public function getChannelForCalculation(string $name): float
     {
-        return static::STRICT_CLAMPING ? $this->getChannelRaw($name) : $this->getChannel($name);
+        if ($this->strictClamping) {
+            // Strict mode: clamp on-the-fly for operations
+            return $this->colorSpace::clampValue($name, $this->values[$name]);
+        }
+        // Non-strict mode: use original values for operations
+        return $this->values[$name];
     }
 
     /**
@@ -896,10 +880,10 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      */
     protected function convertCmykToRgb(): array
     {
-        $c = $this->getChannelForOperation('c') / 100;
-        $m = $this->getChannelForOperation('m') / 100;
-        $y = $this->getChannelForOperation('y') / 100;
-        $k = $this->getChannelForOperation('k') / 100;
+        $c = $this->getChannelForCalculation('c') / 100;
+        $m = $this->getChannelForCalculation('m') / 100;
+        $y = $this->getChannelForCalculation('y') / 100;
+        $k = $this->getChannelForCalculation('k') / 100;
         
         $r = 255 * (1 - $c) * (1 - $k);
         $g = 255 * (1 - $m) * (1 - $k);
@@ -919,10 +903,10 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      */
     protected function convertHslToRgb(): array
     {
-        $c = (1 - abs(2 * ($this->getChannelForOperation('l') / 100) - 1)) * ($this->getChannelForOperation('s') / 100);
-        $h = fmod($this->getChannelForOperation('h'), 360) / 60;
+        $c = (1 - abs(2 * ($this->getChannelForCalculation('l') / 100) - 1)) * ($this->getChannelForCalculation('s') / 100);
+        $h = fmod($this->getChannelForCalculation('h'), 360) / 60;
         $x = $c * (1 - abs(fmod($h, 2) - 1));
-        $m = ($this->getChannelForOperation('l') / 100) - $c / 2;
+        $m = ($this->getChannelForCalculation('l') / 100) - $c / 2;
 
         $r = $g = $b = 0;
 
@@ -968,12 +952,12 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      */
     protected function convertHslaToRgb(): array
     {
-        $c = (1 - abs(2 * ($this->getChannelForOperation('l') / 100) - 1)) * ($this->getChannelForOperation('s') / 100);
-        $x = $c * (1 - abs(fmod($this->getChannelForOperation('h') / 60, 2) - 1));
-        $m = ($this->getChannelForOperation('l') / 100) - $c / 2;
+        $c = (1 - abs(2 * ($this->getChannelForCalculation('l') / 100) - 1)) * ($this->getChannelForCalculation('s') / 100);
+        $x = $c * (1 - abs(fmod($this->getChannelForCalculation('h') / 60, 2) - 1));
+        $m = ($this->getChannelForCalculation('l') / 100) - $c / 2;
         $r = $g = $b = 0;
         
-        $h = $this->getChannelForOperation('h') / 60;
+        $h = $this->getChannelForCalculation('h') / 60;
         if ($h < 1) {
             $r = $c;
             $g = $x;
@@ -1018,9 +1002,9 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      */
     protected function convertHsvToRgb(): array
     {
-        $h = fmod($this->getChannelForOperation('h'), 360);
-        $s = $this->getChannelForOperation('s') / 100;
-        $v = $this->getChannelForOperation('v') / 100;
+        $h = fmod($this->getChannelForCalculation('h'), 360);
+        $s = $this->getChannelForCalculation('s') / 100;
+        $v = $this->getChannelForCalculation('v') / 100;
 
         $c = $v * $s;
         $x = $c * (1 - abs(fmod($h / 60, 2) - 1));
@@ -1060,9 +1044,9 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      */
     protected function convertXyzToRgb(): array
     {
-        $x = $this->getChannelForOperation('x') / 100;
-        $y = $this->getChannelForOperation('y') / 100;
-        $z = $this->getChannelForOperation('z') / 100;
+        $x = $this->getChannelForCalculation('x') / 100;
+        $y = $this->getChannelForCalculation('y') / 100;
+        $z = $this->getChannelForCalculation('z') / 100;
 
         // sRGB D65 conversion matrix (linear)
         $matrix = [
@@ -1104,9 +1088,9 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      */
     protected function convertLabToRgb(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array
     {
-        $l = $this->getChannelForOperation('l');
-        $a = $this->getChannelForOperation('a');
-        $b = $this->getChannelForOperation('b');
+        $l = $this->getChannelForCalculation('l');
+        $a = $this->getChannelForCalculation('a');
+        $b = $this->getChannelForCalculation('b');
 
         // Get reference white from illuminant/observer
         $illuminant = $illuminant ?? $this->illuminant;
@@ -1172,9 +1156,9 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      */
     protected function convertLchToRgb(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): array
     {
-        $l = $this->getChannelForOperation('l');
-        $c = $this->getChannelForOperation('c');
-        $h = deg2rad($this->getChannelForOperation('h'));
+        $l = $this->getChannelForCalculation('l');
+        $c = $this->getChannelForCalculation('c');
+        $h = deg2rad($this->getChannelForCalculation('h'));
 
         // LCh -> Lab
         $a = cos($h) * $c;
@@ -1225,9 +1209,9 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      */
     protected function convertYcbcrToRgb(): array
     {
-        $y = $this->getChannelForOperation('y');
-        $cb = $this->getChannelForOperation('cb');
-        $cr = $this->getChannelForOperation('cr');
+        $y = $this->getChannelForCalculation('y');
+        $cb = $this->getChannelForCalculation('cb');
+        $cr = $this->getChannelForCalculation('cr');
 
         // Scale Y to 0-255
         $yScaled = $y * 255 / 100;

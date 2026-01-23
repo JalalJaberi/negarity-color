@@ -38,9 +38,10 @@ final class Color extends AbstractColor
         string $colorSpace, 
         array $values = [],
         ?CIEIlluminant $illuminant = null,
-        ?CIEObserver $observer = null
+        ?CIEObserver $observer = null,
+        ?bool $strictClamping = null
     ) {
-        parent::__construct($colorSpace, $values, $illuminant, $observer);
+        parent::__construct($colorSpace, $values, $illuminant, $observer, $strictClamping);
     }
 
     #[\Override]
@@ -54,14 +55,13 @@ final class Color extends AbstractColor
             $values[$channel] = $this->colorSpace::getChannelDefaultValue($channel);
         }
 
-        return new self($this->colorSpace, $values, $this->illuminant, $this->observer);
+        return new self($this->colorSpace, $values, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
     public function with(array $channels): static
     {
         $values = $this->values;
-        $originalValues = $this->originalValues;
         
         foreach ($channels as $channel => $value) {
             if (!in_array($channel, $this->getChannels(), true)) {
@@ -71,32 +71,22 @@ final class Color extends AbstractColor
             if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
                 throw new \InvalidArgumentException("Channel '{$channel}' must be of type int or float.");
             }
-            // Convert to float
+            // Convert to float and always store original value (never clamp in storage)
+            // Type validation already done above (int/float check)
+            // Range validation: In strict mode we clamp on-the-fly, in non-strict we allow out-of-range
             $floatValue = (float)$value;
-            
-            // In strict mode: clamp immediately and store original
-            // In non-strict mode: allow out-of-range values (no validation), store as-is
-            if (static::STRICT_CLAMPING) {
-                $originalValues[$channel] = $floatValue;
-                $values[$channel] = $this->colorSpace::clampValue($channel, $floatValue);
-            } else {
-                // Non-strict: store original value, clamp only on output
-                $values[$channel] = $floatValue;
-            }
+            $values[$channel] = $floatValue;
         }
 
-        $newColor = new self($this->colorSpace, $values, $this->illuminant, $this->observer);
-        if (static::STRICT_CLAMPING) {
-            $newColor->originalValues = $originalValues;
-        }
-        return $newColor;
+        // Create new instance with same strict clamping mode
+        return new self($this->colorSpace, $values, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
     public function toRGB(): static
     {
         $rgbValues = $this->convertToColorSpace('rgb');
-        return new self(RGB::class, $rgbValues, $this->illuminant, $this->observer);
+        return new self(RGB::class, $rgbValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -109,12 +99,12 @@ final class Color extends AbstractColor
         // If already RGBA, return self (or update alpha if different)
         if ($this->colorSpace === RGBA::class) {
             if ($this->getA() === $alpha) {
-                return new self($this->colorSpace, $this->values, $this->illuminant, $this->observer);
+                return new self($this->colorSpace, $this->values, $this->illuminant, $this->observer, $this->strictClamping);
             }
             // Update alpha
             $values = $this->values;
             $values['a'] = $alpha;
-            return new self($this->colorSpace, $values, $this->illuminant, $this->observer);
+            return new self($this->colorSpace, $values, $this->illuminant, $this->observer, $this->strictClamping);
         }
 
         // If HSLA, preserve alpha
@@ -126,7 +116,7 @@ final class Color extends AbstractColor
         $rgb = $this->toRGB();
         $rgbaValues = RGBA::fromRGB($rgb->values, $alpha);
         $rgbaClass = ColorSpaceRegistry::get('rgba');
-        return new self($rgbaClass, $rgbaValues, $this->illuminant, $this->observer);
+        return new self($rgbaClass, $rgbaValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -134,7 +124,7 @@ final class Color extends AbstractColor
     {
         $cmykValues = $this->convertToColorSpace('cmyk');
         $cmykClass = ColorSpaceRegistry::get('cmyk');
-        return new self($cmykClass, $cmykValues, $this->illuminant, $this->observer);
+        return new self($cmykClass, $cmykValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -142,7 +132,7 @@ final class Color extends AbstractColor
     {
         $hslValues = $this->convertToColorSpace('hsl');
         $hslClass = ColorSpaceRegistry::get('hsl');
-        return new self($hslClass, $hslValues, $this->illuminant, $this->observer);
+        return new self($hslClass, $hslValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -155,12 +145,12 @@ final class Color extends AbstractColor
         // If already HSLA, return self (or update alpha if different)
         if ($this->colorSpace === HSLA::class) {
             if ($this->getA() === $alpha) {
-                return new self($this->colorSpace, $this->values, $this->illuminant, $this->observer);
+                return new self($this->colorSpace, $this->values, $this->illuminant, $this->observer, $this->strictClamping);
             }
             // Update alpha
             $values = $this->values;
             $values['a'] = $alpha;
-            return new self($this->colorSpace, $values, $this->illuminant, $this->observer);
+            return new self($this->colorSpace, $values, $this->illuminant, $this->observer, $this->strictClamping);
         }
 
         // If HSL, convert to HSLA with specified alpha
@@ -168,7 +158,7 @@ final class Color extends AbstractColor
             $values = $this->values;
             $values['a'] = $alpha;
             $hslaClass = ColorSpaceRegistry::get('hsla');
-            return new self($hslaClass, $values, $this->illuminant, $this->observer);
+            return new self($hslaClass, $values, $this->illuminant, $this->observer, $this->strictClamping);
         }
 
         // If RGBA, preserve alpha
@@ -180,7 +170,7 @@ final class Color extends AbstractColor
         $hsl = $this->toHSL();
         $hslaValues = HSLA::fromRGB($hsl->toRGB()->values, $alpha);
         $hslaClass = ColorSpaceRegistry::get('hsla');
-        return new self($hslaClass, $hslaValues, $this->illuminant, $this->observer);
+        return new self($hslaClass, $hslaValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -188,7 +178,7 @@ final class Color extends AbstractColor
     {
         $hsvValues = $this->convertToColorSpace('hsv');
         $hsvClass = ColorSpaceRegistry::get('hsv');
-        return new self($hsvClass, $hsvValues, $this->illuminant, $this->observer);
+        return new self($hsvClass, $hsvValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -198,7 +188,7 @@ final class Color extends AbstractColor
         $observer = $observer ?? $this->observer;
         $labValues = $this->convertToColorSpace('lab', $illuminant, $observer);
         $labClass = ColorSpaceRegistry::get('lab');
-        return new self($labClass, $labValues, $illuminant, $observer);
+        return new self($labClass, $labValues, $illuminant, $observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -208,7 +198,7 @@ final class Color extends AbstractColor
         $observer = $observer ?? $this->observer;
         $lchValues = $this->convertToColorSpace('lch', $illuminant, $observer);
         $lchClass = ColorSpaceRegistry::get('lch');
-        return new self($lchClass, $lchValues, $illuminant, $observer);
+        return new self($lchClass, $lchValues, $illuminant, $observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -218,7 +208,7 @@ final class Color extends AbstractColor
         $observer = $observer ?? $this->observer;
         $xyzValues = $this->convertToColorSpace('xyz', $illuminant, $observer);
         $xyzClass = ColorSpaceRegistry::get('xyz');
-        return new self($xyzClass, $xyzValues, $illuminant, $observer);
+        return new self($xyzClass, $xyzValues, $illuminant, $observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -226,7 +216,7 @@ final class Color extends AbstractColor
     {
         $ycbcrValues = $this->convertToColorSpace('ycbcr');
         $ycbcrClass = ColorSpaceRegistry::get('ycbcr');
-        return new self($ycbcrClass, $ycbcrValues, $this->illuminant, $this->observer);
+        return new self($ycbcrClass, $ycbcrValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -237,7 +227,7 @@ final class Color extends AbstractColor
                 "Color space '{$this->getColorSpaceName()}' does not support illuminants."
             );
         }
-        return new self($this->colorSpace, $this->values, $illuminant, $this->observer);
+        return new self($this->colorSpace, $this->values, $illuminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -274,7 +264,7 @@ final class Color extends AbstractColor
         $rgbValues = \Negarity\Color\ColorSpace\XYZ::toRGB($adaptedXyz, $targetIlluminant, $this->observer);
         $adaptedValues = $originalSpaceClass::fromRGB($rgbValues, 255, $targetIlluminant, $this->observer);
 
-        return new self($originalSpaceClass, $adaptedValues, $targetIlluminant, $this->observer);
+        return new self($originalSpaceClass, $adaptedValues, $targetIlluminant, $this->observer, $this->strictClamping);
     }
 
     #[\Override]
@@ -295,6 +285,6 @@ final class Color extends AbstractColor
         $originalSpaceClass = $this->colorSpace;
         $adaptedValues = $originalSpaceClass::fromRGB($rgbValues, 255, $this->illuminant, $targetObserver);
 
-        return new self($originalSpaceClass, $adaptedValues, $this->illuminant, $targetObserver);
+        return new self($originalSpaceClass, $adaptedValues, $this->illuminant, $targetObserver, $this->strictClamping);
     }
 }
