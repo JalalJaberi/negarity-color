@@ -228,4 +228,73 @@ final class Color extends AbstractColor
         $ycbcrClass = ColorSpaceRegistry::get('ycbcr');
         return new self($ycbcrClass, $ycbcrValues, $this->illuminant, $this->observer);
     }
+
+    #[\Override]
+    public function withIlluminant(CIEIlluminant $illuminant): static
+    {
+        if (!$this->colorSpace::supportsIlluminant()) {
+            throw new \RuntimeException(
+                "Color space '{$this->getColorSpaceName()}' does not support illuminants."
+            );
+        }
+        return new self($this->colorSpace, $this->values, $illuminant, $this->observer);
+    }
+
+    #[\Override]
+    public function adaptIlluminant(
+        CIEIlluminant $targetIlluminant,
+        ?\Negarity\Color\CIE\AdaptationMethod $method = null
+    ): static {
+        if (!$this->colorSpace::supportsIlluminant()) {
+            throw new \RuntimeException(
+                "Color space '{$this->getColorSpaceName()}' does not support illuminants."
+            );
+        }
+
+        $method = $method ?? \Negarity\Color\CIE\AdaptationMethod::Bradford;
+
+        // Convert to XYZ with current illuminant
+        $xyz = $this->toXYZ();
+        $xyzValues = ['x' => $xyz->getX(), 'y' => $xyz->getY(), 'z' => $xyz->getZ()];
+
+        // Perform chromatic adaptation
+        $adaptedXyz = $this->performChromaticAdaptation(
+            $xyzValues,
+            $this->illuminant,
+            $targetIlluminant,
+            $this->observer,
+            $method
+        );
+
+        // Convert adapted XYZ back to original color space with new illuminant
+        $originalSpaceClass = $this->colorSpace;
+        $originalSpaceName = $this->getColorSpaceName();
+        
+        // Convert XYZ to RGB first, then to original space
+        $rgbValues = \Negarity\Color\ColorSpace\XYZ::toRGB($adaptedXyz, $targetIlluminant, $this->observer);
+        $adaptedValues = $originalSpaceClass::fromRGB($rgbValues, 255, $targetIlluminant, $this->observer);
+
+        return new self($originalSpaceClass, $adaptedValues, $targetIlluminant, $this->observer);
+    }
+
+    #[\Override]
+    public function adaptObserver(CIEObserver $targetObserver): static
+    {
+        if (!$this->colorSpace::supportsObserver()) {
+            throw new \RuntimeException(
+                "Color space '{$this->getColorSpaceName()}' does not support observers."
+            );
+        }
+
+        // Convert to RGB (observer-independent intermediate space)
+        $rgb = $this->toRGB();
+        $rgbValues = ['r' => $rgb->getR(), 'g' => $rgb->getG(), 'b' => $rgb->getB()];
+
+        // Convert RGB back to original color space with new observer
+        // This will use the new observer's reference white for Lab/XYZ conversions
+        $originalSpaceClass = $this->colorSpace;
+        $adaptedValues = $originalSpaceClass::fromRGB($rgbValues, 255, $this->illuminant, $targetObserver);
+
+        return new self($originalSpaceClass, $adaptedValues, $this->illuminant, $targetObserver);
+    }
 }

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Negarity\Color;
 
 use Negarity\Color\ColorSpace\ColorSpaceInterface;
+use Negarity\Color\CIE\CIEIlluminant;
+use Negarity\Color\CIE\CIEObserver;
+use Negarity\Color\CIE\AdaptationMethod;
 
 interface ColorInterface
 {
@@ -59,4 +62,41 @@ interface ColorInterface
      * @return string
      */
     public function __toString(): string;
+
+    /**
+     * Create a new color instance with a different illuminant (metadata only, no conversion).
+     * 
+     * @param CIEIlluminant $illuminant The new illuminant
+     * @return static
+     * @throws \RuntimeException If the color space does not support illuminants
+     */
+    public function withIlluminant(CIEIlluminant $illuminant): static;
+
+    /**
+     * Adapt the color to a different illuminant using chromatic adaptation.
+     * 
+     * This method performs chromatic adaptation to make the color appear the same
+     * under a different illuminant. The color values are converted accordingly.
+     * 
+     * @param CIEIlluminant $targetIlluminant The target illuminant
+     * @param AdaptationMethod|null $method The adaptation method (default: Bradford)
+     * @return static
+     * @throws \RuntimeException If the color space does not support illuminants
+     */
+    public function adaptIlluminant(
+        CIEIlluminant $targetIlluminant,
+        ?AdaptationMethod $method = null
+    ): static;
+
+    /**
+     * Adapt the color to a different observer.
+     * 
+     * This method converts the color values to account for the different observer's
+     * color matching functions (2° vs 10°).
+     * 
+     * @param CIEObserver $targetObserver The target observer
+     * @return static
+     * @throws \RuntimeException If the color space does not support observers
+     */
+    public function adaptObserver(CIEObserver $targetObserver): static;
 }

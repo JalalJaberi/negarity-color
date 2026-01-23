@@ -28,6 +28,7 @@ use Negarity\Color\Filter\{
 use Negarity\Color\CIE\CIEIlluminant;
 use Negarity\Color\CIE\CIEObserver;
 use Negarity\Color\CIE\CIEIlluminantData;
+use Negarity\Color\CIE\AdaptationMethod;
 use Negarity\Color\Exception\ColorSpaceNotFoundException;
 use Negarity\Color\Exception\ConversionNotSupportedException;
 
@@ -231,70 +232,173 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
     }
 
     /**
-     * Create a new color instance with a different illuminant.
+     * Create a new color instance with a different illuminant (metadata only, no conversion).
      * 
      * @param CIEIlluminant $illuminant The new illuminant
      * @return static
+     * @throws \RuntimeException If the color space does not support illuminants
      */
-    final public function withIlluminant(CIEIlluminant $illuminant): static
-    {
-        return new static($this->colorSpace, $this->values, $illuminant, $this->observer);
-    }
-
-    /**
-     * Create a new color instance with a different observer.
-     * 
-     * @param CIEObserver $observer The new observer
-     * @return static
-     */
-    final public function withObserver(CIEObserver $observer): static
-    {
-        return new static($this->colorSpace, $this->values, $this->illuminant, $observer);
-    }
+    abstract public function withIlluminant(CIEIlluminant $illuminant): static;
 
     /**
      * Adapt the color to a different illuminant using chromatic adaptation.
      * 
-     * This method converts the color to XYZ, performs chromatic adaptation,
-     * and returns a new color instance with the target illuminant.
+     * This method performs chromatic adaptation to make the color appear the same
+     * under a different illuminant. The color values are converted accordingly.
      * 
      * @param CIEIlluminant $targetIlluminant The target illuminant
      * @param \Negarity\Color\CIE\AdaptationMethod|null $method The adaptation method (default: Bradford)
      * @return static
+     * @throws \RuntimeException If the color space does not support illuminants
      */
-    public function adaptIlluminant(
+    abstract public function adaptIlluminant(
         CIEIlluminant $targetIlluminant,
         ?\Negarity\Color\CIE\AdaptationMethod $method = null
-    ): static {
-        // For now, convert to XYZ with current illuminant, then create new color with target illuminant
-        // Full chromatic adaptation will be implemented later
-        $xyz = $this->toXYZ();
-        return new static(
-            \Negarity\Color\ColorSpace\XYZ::class,
-            ['x' => $xyz->getX(), 'y' => $xyz->getY(), 'z' => $xyz->getZ()],
-            $targetIlluminant,
-            $this->observer
-        );
-    }
+    ): static;
 
     /**
      * Adapt the color to a different observer.
      * 
-     * This method converts the color to XYZ, then creates a new color instance
-     * with the target observer.
+     * This method converts the color values to account for the different observer's
+     * color matching functions (2° vs 10°).
      * 
      * @param CIEObserver $targetObserver The target observer
      * @return static
+     * @throws \RuntimeException If the color space does not support observers
      */
-    public function adaptObserver(CIEObserver $targetObserver): static
+    abstract public function adaptObserver(CIEObserver $targetObserver): static;
+
+    /**
+     * Perform chromatic adaptation on XYZ values.
+     * 
+     * This is a helper method that performs the actual chromatic adaptation math.
+     * It converts XYZ values from one illuminant to another using the specified method.
+     * 
+     * @param array{x: float, y: float, z: float} $xyz Source XYZ values
+     * @param CIEIlluminant $sourceIlluminant Source illuminant
+     * @param CIEIlluminant $targetIlluminant Target illuminant
+     * @param CIEObserver $observer Observer (for getting reference white)
+     * @param AdaptationMethod $method Adaptation method to use
+     * @return array{x: float, y: float, z: float} Adapted XYZ values
+     */
+    protected function performChromaticAdaptation(
+        array $xyz,
+        CIEIlluminant $sourceIlluminant,
+        CIEIlluminant $targetIlluminant,
+        CIEObserver $observer,
+        AdaptationMethod $method
+    ): array {
+        // Get reference white (XYZ tristimulus) for both illuminants
+        $sourceWhite = CIEIlluminantData::getXYZ($sourceIlluminant, $observer);
+        $targetWhite = CIEIlluminantData::getXYZ($targetIlluminant, $observer);
+
+        // If same illuminant, no adaptation needed
+        if ($sourceIlluminant === $targetIlluminant) {
+            return $xyz;
+        }
+
+        // Perform adaptation based on method
+        return match ($method) {
+            AdaptationMethod::Bradford => $this->bradfordAdaptation($xyz, $sourceWhite, $targetWhite),
+            AdaptationMethod::VonKries => $this->vonKriesAdaptation($xyz, $sourceWhite, $targetWhite),
+            AdaptationMethod::XYZScaling => $this->xyzScalingAdaptation($xyz, $sourceWhite, $targetWhite),
+        };
+    }
+
+    /**
+     * Bradford chromatic adaptation transform.
+     * 
+     * @param array{x: float, y: float, z: float} $xyz Source XYZ
+     * @param array{x: float, y: float, z: float} $sourceWhite Source reference white
+     * @param array{x: float, y: float, z: float} $targetWhite Target reference white
+     * @return array{x: float, y: float, z: float} Adapted XYZ
+     */
+    private function bradfordAdaptation(array $xyz, array $sourceWhite, array $targetWhite): array
     {
-        $xyz = $this->toXYZ();
-        return new static(
-            \Negarity\Color\ColorSpace\XYZ::class,
-            ['x' => $xyz->getX(), 'y' => $xyz->getY(), 'z' => $xyz->getZ()],
-            $this->illuminant,
-            $targetObserver
-        );
+        // Bradford transformation matrix
+        $M = [
+            [0.8951, 0.2664, -0.1614],
+            [-0.7502, 1.7135, 0.0367],
+            [0.0389, -0.0685, 1.0296]
+        ];
+
+        // Convert source XYZ to cone response domain (RGB)
+        $sourceRgb = [
+            $M[0][0] * $xyz['x'] + $M[0][1] * $xyz['y'] + $M[0][2] * $xyz['z'],
+            $M[1][0] * $xyz['x'] + $M[1][1] * $xyz['y'] + $M[1][2] * $xyz['z'],
+            $M[2][0] * $xyz['x'] + $M[2][1] * $xyz['y'] + $M[2][2] * $xyz['z']
+        ];
+
+        // Convert reference whites to cone response domain
+        $sourceWhiteRgb = [
+            $M[0][0] * $sourceWhite['x'] + $M[0][1] * $sourceWhite['y'] + $M[0][2] * $sourceWhite['z'],
+            $M[1][0] * $sourceWhite['x'] + $M[1][1] * $sourceWhite['y'] + $M[1][2] * $sourceWhite['z'],
+            $M[2][0] * $sourceWhite['x'] + $M[2][1] * $sourceWhite['y'] + $M[2][2] * $sourceWhite['z']
+        ];
+
+        $targetWhiteRgb = [
+            $M[0][0] * $targetWhite['x'] + $M[0][1] * $targetWhite['y'] + $M[0][2] * $targetWhite['z'],
+            $M[1][0] * $targetWhite['x'] + $M[1][1] * $targetWhite['y'] + $M[1][2] * $targetWhite['z'],
+            $M[2][0] * $targetWhite['x'] + $M[2][1] * $targetWhite['y'] + $M[2][2] * $targetWhite['z']
+        ];
+
+        // Calculate adaptation ratios
+        $ratios = [
+            $targetWhiteRgb[0] / $sourceWhiteRgb[0],
+            $targetWhiteRgb[1] / $sourceWhiteRgb[1],
+            $targetWhiteRgb[2] / $sourceWhiteRgb[2]
+        ];
+
+        // Apply adaptation
+        $adaptedRgb = [
+            $sourceRgb[0] * $ratios[0],
+            $sourceRgb[1] * $ratios[1],
+            $sourceRgb[2] * $ratios[2]
+        ];
+
+        // Convert back to XYZ using inverse Bradford matrix
+        $MInv = [
+            [0.9869929, -0.1470543, 0.1599627],
+            [0.4323053, 0.5183603, 0.0492912],
+            [-0.0085287, 0.0400428, 0.9684867]
+        ];
+
+        return [
+            'x' => $MInv[0][0] * $adaptedRgb[0] + $MInv[0][1] * $adaptedRgb[1] + $MInv[0][2] * $adaptedRgb[2],
+            'y' => $MInv[1][0] * $adaptedRgb[0] + $MInv[1][1] * $adaptedRgb[1] + $MInv[1][2] * $adaptedRgb[2],
+            'z' => $MInv[2][0] * $adaptedRgb[0] + $MInv[2][1] * $adaptedRgb[1] + $MInv[2][2] * $adaptedRgb[2]
+        ];
+    }
+
+    /**
+     * Von Kries chromatic adaptation transform.
+     * 
+     * @param array{x: float, y: float, z: float} $xyz Source XYZ
+     * @param array{x: float, y: float, z: float} $sourceWhite Source reference white
+     * @param array{x: float, y: float, z: float} $targetWhite Target reference white
+     * @return array{x: float, y: float, z: float} Adapted XYZ
+     */
+    private function vonKriesAdaptation(array $xyz, array $sourceWhite, array $targetWhite): array
+    {
+        // Von Kries uses simple scaling
+        return $this->xyzScalingAdaptation($xyz, $sourceWhite, $targetWhite);
+    }
+
+    /**
+     * XYZ Scaling chromatic adaptation.
+     * 
+     * @param array{x: float, y: float, z: float} $xyz Source XYZ
+     * @param array{x: float, y: float, z: float} $sourceWhite Source reference white
+     * @param array{x: float, y: float, z: float} $targetWhite Target reference white
+     * @return array{x: float, y: float, z: float} Adapted XYZ
+     */
+    private function xyzScalingAdaptation(array $xyz, array $sourceWhite, array $targetWhite): array
+    {
+        return [
+            'x' => $xyz['x'] * ($targetWhite['x'] / $sourceWhite['x']),
+            'y' => $xyz['y'] * ($targetWhite['y'] / $sourceWhite['y']),
+            'z' => $xyz['z'] * ($targetWhite['z'] / $sourceWhite['z'])
+        ];
     }
 
     #[\Override]
