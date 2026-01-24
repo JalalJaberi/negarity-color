@@ -6,6 +6,7 @@ namespace Negarity\Color\Registry;
 
 use Negarity\Color\ColorSpace\ColorSpaceInterface;
 use Negarity\Color\Exception\ColorSpaceNotFoundException;
+use Negarity\Color\Exception\InvalidColorValueException;
 
 final class ColorSpaceRegistry
 {
@@ -24,7 +25,7 @@ final class ColorSpaceRegistry
     public static function register(string $colorSpace): void
     {
         if (!is_subclass_of($colorSpace, ColorSpaceInterface::class)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidColorValueException(
                 "Color space '{$colorSpace}' must implement " . ColorSpaceInterface::class
             );
         }

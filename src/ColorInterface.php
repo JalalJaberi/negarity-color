@@ -8,6 +8,7 @@ use Negarity\Color\ColorSpace\ColorSpaceInterface;
 use Negarity\Color\CIE\CIEIlluminant;
 use Negarity\Color\CIE\CIEObserver;
 use Negarity\Color\CIE\AdaptationMethod;
+use Negarity\Color\Exception\UnsupportedColorSpaceException;
 
 interface ColorInterface
 {
@@ -68,7 +69,7 @@ interface ColorInterface
      * 
      * @param CIEIlluminant $illuminant The new illuminant
      * @return static
-     * @throws \RuntimeException If the color space does not support illuminants
+     * @throws UnsupportedColorSpaceException If the color space does not support illuminants
      */
     public function withIlluminant(CIEIlluminant $illuminant): static;
 
@@ -81,7 +82,7 @@ interface ColorInterface
      * @param CIEIlluminant $targetIlluminant The target illuminant
      * @param AdaptationMethod|null $method The adaptation method (default: Bradford)
      * @return static
-     * @throws \RuntimeException If the color space does not support illuminants
+     * @throws UnsupportedColorSpaceException If the color space does not support illuminants
      */
     public function adaptIlluminant(
         CIEIlluminant $targetIlluminant,
@@ -96,7 +97,7 @@ interface ColorInterface
      * 
      * @param CIEObserver $targetObserver The target observer
      * @return static
-     * @throws \RuntimeException If the color space does not support observers
+     * @throws UnsupportedColorSpaceException If the color space does not support observers
      */
     public function adaptObserver(CIEObserver $targetObserver): static;
 }

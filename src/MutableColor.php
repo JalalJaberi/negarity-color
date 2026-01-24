@@ -20,6 +20,9 @@ use Negarity\Color\ColorSpace\{
 use Negarity\Color\Registry\ColorSpaceRegistry;
 use Negarity\Color\CIE\CIEIlluminant;
 use Negarity\Color\CIE\CIEObserver;
+use Negarity\Color\Exception\UnsupportedColorSpaceException;
+use Negarity\Color\Exception\ColorSpaceNotFoundException;
+use Negarity\Color\Exception\InvalidColorValueException;
 
 final class MutableColor extends AbstractColor
 {
@@ -31,7 +34,7 @@ final class MutableColor extends AbstractColor
      * @param CIEIlluminant|null $illuminant CIE standard illuminant (default: D65)
      * @param CIEObserver|null $observer CIE standard observer (default: TwoDegree)
      * @return void
-     * @throws \InvalidArgumentException
+     * @throws InvalidColorValueException
      */
     public function __construct(
         string $colorSpace, 
@@ -59,7 +62,7 @@ final class MutableColor extends AbstractColor
         
         $type = gettype($value);
         if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
-            throw new \InvalidArgumentException("Channel '{$name}' must be of type int or float. It's type is '{$type}'.");
+            throw new InvalidColorValueException("Channel '{$name}' must be of type int or float. It's type is '{$type}'.");
         }
         
         // Convert to float and always store original value (never clamp in storage)
@@ -98,7 +101,7 @@ final class MutableColor extends AbstractColor
     {
         foreach ($channels as $channel) {
             if (!in_array($channel, $this->getChannels(), true)) {
-                throw new \InvalidArgumentException("Channel '{$channel}' does not exist in color space '{$this->getColorSpaceName()}'.");
+                throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space '{$this->getColorSpaceName()}'.");
             }
             $this->values[$channel] = $this->colorSpace::getChannelDefaultValue($channel);
         }
@@ -111,11 +114,11 @@ final class MutableColor extends AbstractColor
     {
         foreach ($channels as $channel => $value) {
             if (!in_array($channel, $this->getChannels(), true)) {
-                throw new \InvalidArgumentException("Channel '{$channel}' does not exist in color space '{$this->getColorSpaceName()}'.");
+                throw new InvalidColorValueException("Channel '{$channel}' does not exist in color space '{$this->getColorSpaceName()}'.");
             }
             $type = gettype($value);
             if ($type !== 'integer' && $type !== 'double' && $type !== 'float') {
-                throw new \InvalidArgumentException("Channel '{$channel}' must be of type int or float.");
+                throw new InvalidColorValueException("Channel '{$channel}' must be of type int or float.");
             }
             // Convert to float and always store original value (never clamp in storage)
             $floatValue = (float)$value;
@@ -138,7 +141,7 @@ final class MutableColor extends AbstractColor
     public function toRGBA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
-            throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
+            throw new InvalidColorValueException('Alpha value must be between 0 and 255');
         }
 
         $r = $g = $b = 0;
@@ -178,7 +181,15 @@ final class MutableColor extends AbstractColor
     public function toCMYK(): static
     {
         $cmykValues = $this->convertToColorSpace('cmyk');
-        $cmykClass = ColorSpaceRegistry::get('cmyk');
+        try {
+            $cmykClass = ColorSpaceRegistry::get('cmyk');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "CMYK color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         $this->colorSpace = $cmykClass;
         $this->values = $cmykValues;
         return $this;
@@ -188,7 +199,15 @@ final class MutableColor extends AbstractColor
     public function toHSL(): static
     {
         $hslValues = $this->convertToColorSpace('hsl');
-        $hslClass = ColorSpaceRegistry::get('hsl');
+        try {
+            $hslClass = ColorSpaceRegistry::get('hsl');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "HSL color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         $this->colorSpace = $hslClass;
         $this->values = $hslValues;
         return $this;
@@ -198,7 +217,7 @@ final class MutableColor extends AbstractColor
     public function toHSLA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
-            throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
+            throw new InvalidColorValueException('Alpha value must be between 0 and 255');
         }
 
         // If already HSLA, update alpha if different
@@ -212,7 +231,15 @@ final class MutableColor extends AbstractColor
         // If HSL, convert to HSLA with specified alpha
         if ($this->colorSpace === HSL::class) {
             $this->values['a'] = $alpha;
-            $hslaClass = ColorSpaceRegistry::get('hsla');
+            try {
+                $hslaClass = ColorSpaceRegistry::get('hsla');
+            } catch (ColorSpaceNotFoundException $e) {
+                throw new ColorSpaceNotFoundException(
+                    "HSLA color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                    0,
+                    $e
+                );
+            }
             $this->colorSpace = $hslaClass;
             return $this;
         }
@@ -225,7 +252,15 @@ final class MutableColor extends AbstractColor
         // Convert to HSL first, then to HSLA
         $hsl = $this->toHSL();
         $hslaValues = HSLA::fromRGB($hsl->toRGB()->values, $alpha);
-        $hslaClass = ColorSpaceRegistry::get('hsla');
+        try {
+            $hslaClass = ColorSpaceRegistry::get('hsla');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "HSLA color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         $this->colorSpace = $hslaClass;
         $this->values = $hslaValues;
         return $this;
@@ -235,7 +270,15 @@ final class MutableColor extends AbstractColor
     public function toHSV(): static
     {
         $hsvValues = $this->convertToColorSpace('hsv');
-        $hsvClass = ColorSpaceRegistry::get('hsv');
+        try {
+            $hsvClass = ColorSpaceRegistry::get('hsv');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "HSV color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         $this->colorSpace = $hsvClass;
         $this->values = $hsvValues;
         return $this;
@@ -247,7 +290,15 @@ final class MutableColor extends AbstractColor
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
         $labValues = $this->convertToColorSpace('lab', $illuminant, $observer);
-        $labClass = ColorSpaceRegistry::get('lab');
+        try {
+            $labClass = ColorSpaceRegistry::get('lab');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "Lab color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         $this->colorSpace = $labClass;
         $this->values = $labValues;
         $this->illuminant = $illuminant;
@@ -261,7 +312,15 @@ final class MutableColor extends AbstractColor
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
         $lchValues = $this->convertToColorSpace('lch', $illuminant, $observer);
-        $lchClass = ColorSpaceRegistry::get('lch');
+        try {
+            $lchClass = ColorSpaceRegistry::get('lch');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "LCh color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         $this->colorSpace = $lchClass;
         $this->values = $lchValues;
         $this->illuminant = $illuminant;
@@ -275,7 +334,15 @@ final class MutableColor extends AbstractColor
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
         $xyzValues = $this->convertToColorSpace('xyz', $illuminant, $observer);
-        $xyzClass = ColorSpaceRegistry::get('xyz');
+        try {
+            $xyzClass = ColorSpaceRegistry::get('xyz');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "XYZ color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         $this->colorSpace = $xyzClass;
         $this->values = $xyzValues;
         $this->illuminant = $illuminant;
@@ -287,7 +354,15 @@ final class MutableColor extends AbstractColor
     public function toYCbCr(): static
     {
         $ycbcrValues = $this->convertToColorSpace('ycbcr');
-        $ycbcrClass = ColorSpaceRegistry::get('ycbcr');
+        try {
+            $ycbcrClass = ColorSpaceRegistry::get('ycbcr');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "YCbCr color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         $this->colorSpace = $ycbcrClass;
         $this->values = $ycbcrValues;
         return $this;
@@ -297,7 +372,7 @@ final class MutableColor extends AbstractColor
     public function withIlluminant(CIEIlluminant $illuminant): static
     {
         if (!$this->colorSpace::supportsIlluminant()) {
-            throw new \RuntimeException(
+            throw new UnsupportedColorSpaceException(
                 "Color space '{$this->getColorSpaceName()}' does not support illuminants."
             );
         }
@@ -311,7 +386,7 @@ final class MutableColor extends AbstractColor
         ?\Negarity\Color\CIE\AdaptationMethod $method = null
     ): static {
         if (!$this->colorSpace::supportsIlluminant()) {
-            throw new \RuntimeException(
+            throw new UnsupportedColorSpaceException(
                 "Color space '{$this->getColorSpaceName()}' does not support illuminants."
             );
         }
@@ -348,7 +423,7 @@ final class MutableColor extends AbstractColor
     public function adaptObserver(CIEObserver $targetObserver): static
     {
         if (!$this->colorSpace::supportsObserver()) {
-            throw new \RuntimeException(
+            throw new UnsupportedColorSpaceException(
                 "Color space '{$this->getColorSpaceName()}' does not support observers."
             );
         }

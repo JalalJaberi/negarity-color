@@ -17,6 +17,7 @@ use Negarity\Color\ColorSpace\{
     XYZ,
     YCBCR
 };
+use Negarity\Color\Exception\NamedColorNotFoundException;
 
 class VGANamedColors implements NamedColorRegistryInterface
 {
@@ -227,6 +228,18 @@ class VGANamedColors implements NamedColorRegistryInterface
     #[\Override]
     public function getColorValuesByName(string $colorName, string $colorSpace): array
     {
+        if (!isset($this->colors[$colorName])) {
+            throw new NamedColorNotFoundException(
+                "Named color '{$colorName}' not found in registry."
+            );
+        }
+        
+        if (!isset($this->colors[$colorName][$colorSpace])) {
+            throw new NamedColorNotFoundException(
+                "Named color '{$colorName}' does not have values for color space '{$colorSpace}'."
+            );
+        }
+        
         return $this->colors[$colorName][$colorSpace];
     }
 }

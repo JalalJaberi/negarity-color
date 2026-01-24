@@ -1,4 +1,12 @@
 {
   "label": "References",
-  "position": 7
+  "position": 7,
+  "collapsed": false,
+  "items": [
+    "references/color-spaces",
+    "references/filters",
+    "references/extractors",
+    "references/methods",
+    "references/exceptions"
+  ]
 }

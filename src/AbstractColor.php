@@ -31,6 +31,10 @@ use Negarity\Color\CIE\CIEIlluminantData;
 use Negarity\Color\CIE\AdaptationMethod;
 use Negarity\Color\Exception\ColorSpaceNotFoundException;
 use Negarity\Color\Exception\ConversionNotSupportedException;
+use Negarity\Color\Exception\InvalidFormatException;
+use Negarity\Color\Exception\UnsupportedColorSpaceException;
+use Negarity\Color\Exception\FilterNotFoundException;
+use Negarity\Color\Exception\InvalidColorValueException;
 
 abstract class AbstractColor implements \JsonSerializable, ColorInterface
 {
@@ -220,7 +224,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * 
      * @param CIEIlluminant $illuminant The new illuminant
      * @return static
-     * @throws \RuntimeException If the color space does not support illuminants
+     * @throws UnsupportedColorSpaceException If the color space does not support illuminants
      */
     abstract public function withIlluminant(CIEIlluminant $illuminant): static;
 
@@ -248,7 +252,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * 
      * @param CIEObserver $targetObserver The target observer
      * @return static
-     * @throws \RuntimeException If the color space does not support observers
+     * @throws UnsupportedColorSpaceException If the color space does not support observers
      */
     abstract public function adaptObserver(CIEObserver $targetObserver): static;
 
@@ -449,6 +453,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         }
 
         // Try method 1: Current color space's to{TargetSpace}() method
+        $conversionAttempts = [];
         try {
             $methodName = 'to' . ucfirst($targetSpaceName);
             if (method_exists($this->colorSpace, $methodName)) {
@@ -465,6 +470,18 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             }
         } catch (\BadMethodCallException $e) {
             // Method doesn't exist, try fallback
+            $conversionAttempts[] = "Direct method '{$methodName}' not found";
+        } catch (\Exception $e) {
+            // Log conversion failure but continue trying other methods
+            $conversionAttempts[] = "Direct conversion failed: " . $e->getMessage();
+            error_log(
+                sprintf(
+                    "[Negarity Color] Conversion attempt failed: %s -> %s via direct method. Error: %s",
+                    $currentSpaceName,
+                    $targetSpaceName,
+                    $e->getMessage()
+                )
+            );
         }
 
         // Try method 2: Target color space's from{CurrentSpace}() method
@@ -488,8 +505,23 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                     return $targetSpaceClass::$methodName($this->values);
                 }
             }
+        } catch (ColorSpaceNotFoundException $e) {
+            // Re-throw color space not found exceptions immediately
+            throw $e;
         } catch (\BadMethodCallException $e) {
-            // Method doesn't exist
+            // Method doesn't exist, try fallback
+            $conversionAttempts[] = "Reverse method '{$methodName}' not found";
+        } catch (\Exception $e) {
+            // Log conversion failure but continue trying other methods
+            $conversionAttempts[] = "Reverse conversion failed: " . $e->getMessage();
+            error_log(
+                sprintf(
+                    "[Negarity Color] Conversion attempt failed: %s -> %s via reverse method. Error: %s",
+                    $currentSpaceName,
+                    $targetSpaceName,
+                    $e->getMessage()
+                )
+            );
         }
 
         // Try method 3: Conversion chain through RGB (A → RGB → B)
@@ -569,15 +601,36 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                         return $targetSpaceClass::$fromRgbMethod($rgbValues, $alphaValue);
                     }
                 }
+            } catch (ColorSpaceNotFoundException $e) {
+                // Re-throw color space not found exceptions immediately
+                throw $e;
             } catch (\Exception $e) {
-                // If RGB conversion chain fails, fall through to exception
+                // Log RGB conversion chain failure
+                $conversionAttempts[] = "RGB conversion chain failed: " . $e->getMessage();
+                error_log(
+                    sprintf(
+                        "[Negarity Color] Conversion attempt failed: %s -> %s via RGB chain. Error: %s",
+                        $currentSpaceName,
+                        $targetSpaceName,
+                        $e->getMessage()
+                    )
+                );
             }
         }
 
-        throw new ConversionNotSupportedException(
-            "Conversion from '{$currentSpaceName}' to '{$targetSpaceName}' is not supported. " .
-            "Neither direct conversion methods nor RGB conversion chain are available."
+        // Build detailed error message with conversion attempts
+        $errorMessage = sprintf(
+            "Conversion from '%s' to '%s' is not supported. " .
+            "Neither direct conversion methods nor RGB conversion chain are available.",
+            $currentSpaceName,
+            $targetSpaceName
         );
+        
+        if (!empty($conversionAttempts)) {
+            $errorMessage .= " Attempted methods: " . implode('; ', $conversionAttempts);
+        }
+
+        throw new ConversionNotSupportedException($errorMessage);
     }
 
     /**
@@ -614,7 +667,12 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             $b = hexdec(str_repeat(substr($value, 2, 1), 2));
             $a = 255;
         } else {
-            throw new \InvalidArgumentException('Hex value must be 3 (rgb), 4 (rgba), 6 (rrggbb), or 8 (rrggbbaa) characters long.');
+            throw new InvalidFormatException(
+                sprintf(
+                    'Hex value must be 3 (rgb), 4 (rgba), 6 (rrggbb), or 8 (rrggbbaa) characters long. Got %d characters.',
+                    strlen($value)
+                )
+            );
         }
 
         // First, create RGB color using the registry via __callStatic
@@ -700,50 +758,79 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         if (is_string($colorSpace) && class_exists($colorSpace)) {
             foreach (static::$registries as $registry) {
                 if ($registry->has($colorName, $colorSpace)) {
-                    // registry gives back an array of channel values
-                    $values = $registry->getColorValuesByName($colorName, $colorSpace);
-                    // you just wrap that into a Color object
-                    return new static($colorSpace, $values);
+                    try {
+                        // registry gives back an array of channel values
+                        $values = $registry->getColorValuesByName($colorName, $colorSpace);
+                        // you just wrap that into a Color object
+                        return new static($colorSpace, $values);
+                    } catch (\Exception $e) {
+                        // Log registry error but continue to try color space registry
+                        error_log(
+                            sprintf(
+                                "[Negarity Color] Named color registry error for '{$colorName}' in '{$colorSpace}': %s",
+                                $e->getMessage()
+                            )
+                        );
+                    }
                 }
             }
         }
 
         // Then, check color space registry
         if ($hasColorSpace) {
-            $colorSpaceClass = ColorSpaceRegistry::get($colorName);
-            $channels = $colorSpaceClass::getChannels();
-            
-            // Build values array from arguments
-            $values = [];
-            $argIndex = 0;
-            foreach ($channels as $channel) {
-                if (isset($arguments[$argIndex])) {
-                    $values[$channel] = $arguments[$argIndex];
-                    $argIndex++;
-                } else {
-                    $values[$channel] = $colorSpaceClass::getChannelDefaultValue($channel);
+            try {
+                $colorSpaceClass = ColorSpaceRegistry::get($colorName);
+                $channels = $colorSpaceClass::getChannels();
+                
+                // Build values array from arguments
+                $values = [];
+                $argIndex = 0;
+                foreach ($channels as $channel) {
+                    if (isset($arguments[$argIndex])) {
+                        $values[$channel] = $arguments[$argIndex];
+                        $argIndex++;
+                    } else {
+                        $values[$channel] = $colorSpaceClass::getChannelDefaultValue($channel);
+                    }
                 }
+                
+                // Handle CIE parameters for color spaces that support them
+                $illuminant = null;
+                $observer = null;
+                if ($colorSpaceClass::supportsIlluminant() || $colorSpaceClass::supportsObserver()) {
+                    // Check if illuminant/observer are provided after channel arguments
+                    if (isset($arguments[$argIndex]) && $arguments[$argIndex] instanceof CIEIlluminant) {
+                        $illuminant = $arguments[$argIndex];
+                        $argIndex++;
+                    }
+                    if (isset($arguments[$argIndex]) && $arguments[$argIndex] instanceof CIEObserver) {
+                        $observer = $arguments[$argIndex];
+                    }
+                }
+                
+                return new static($colorSpaceClass, $values, $illuminant, $observer);
+            } catch (ColorSpaceNotFoundException $e) {
+                // Re-throw color space not found exceptions
+                throw $e;
+            } catch (\Exception $e) {
+                // Log unexpected errors but re-throw as ColorSpaceNotFoundException
+                error_log(
+                    sprintf(
+                        "[Negarity Color] Unexpected error accessing color space '{$colorName}': %s",
+                        $e->getMessage()
+                    )
+                );
+                throw new ColorSpaceNotFoundException(
+                    "Color space '{$colorName}' not found or cannot be accessed: " . $e->getMessage(),
+                    0,
+                    $e
+                );
             }
-            
-            // Handle CIE parameters for color spaces that support them
-            $illuminant = null;
-            $observer = null;
-            if ($colorSpaceClass::supportsIlluminant() || $colorSpaceClass::supportsObserver()) {
-                // Check if illuminant/observer are provided after channel arguments
-                if (isset($arguments[$argIndex]) && $arguments[$argIndex] instanceof CIEIlluminant) {
-                    $illuminant = $arguments[$argIndex];
-                    $argIndex++;
-                }
-                if (isset($arguments[$argIndex]) && $arguments[$argIndex] instanceof CIEObserver) {
-                    $observer = $arguments[$argIndex];
-                }
-            }
-            
-            return new static($colorSpaceClass, $values, $illuminant, $observer);
         }
 
-        throw new \InvalidArgumentException(
-            "Named color or color space '{$colorName}' not found."
+        throw new ColorSpaceNotFoundException(
+            "Named color or color space '{$colorName}' not found. " .
+            "Make sure the color space is registered using ColorSpaceRegistry::registerBuiltIn() or ColorSpaceRegistry::register()."
         );
     }
 
@@ -778,15 +865,33 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                 // But for public API, always return clamped
                 return $this->getChannel($channelName);
             } else {
-                throw new \BadMethodCallException("Channel '{$channelName}' does not exist in color space '{$this->getColorSpaceName()}'.");
+                throw new InvalidColorValueException("Channel '{$channelName}' does not exist in color space '{$this->getColorSpaceName()}'.");
             }
         }
 
         if (!FilterRegistry::has($name)) {
-            throw new \BadMethodCallException("Filter '{$name}' not found.");
+            throw new FilterNotFoundException("Filter '{$name}' not found.");
         }
     
-        $filter = FilterRegistry::get($name);
+        try {
+            $filter = FilterRegistry::get($name);
+        } catch (FilterNotFoundException $e) {
+            // Re-throw filter not found exceptions
+            throw $e;
+        } catch (\Exception $e) {
+            // Log unexpected errors but re-throw as FilterNotFoundException
+            error_log(
+                sprintf(
+                    "[Negarity Color] Unexpected error accessing filter '{$name}': %s",
+                    $e->getMessage()
+                )
+            );
+            throw new FilterNotFoundException(
+                "Filter '{$name}' not found or cannot be accessed: " . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     
         // Unary
         if ($filter instanceof UnaryColorFilterInterface) {

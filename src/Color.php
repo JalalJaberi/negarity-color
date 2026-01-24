@@ -21,6 +21,7 @@ use Negarity\Color\Registry\NamedColorRegistryInterface;
 use Negarity\Color\Registry\ColorSpaceRegistry;
 use Negarity\Color\CIE\CIEIlluminant;
 use Negarity\Color\CIE\CIEObserver;
+use Negarity\Color\Exception\UnsupportedColorSpaceException;
 
 final class Color extends AbstractColor
 {
@@ -93,7 +94,7 @@ final class Color extends AbstractColor
     public function toRGBA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
-            throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
+            throw new InvalidColorValueException('Alpha value must be between 0 and 255');
         }
 
         // If already RGBA, return self (or update alpha if different)
@@ -115,7 +116,15 @@ final class Color extends AbstractColor
         // Convert to RGB first, then to RGBA
         $rgb = $this->toRGB();
         $rgbaValues = RGBA::fromRGB($rgb->values, $alpha);
-        $rgbaClass = ColorSpaceRegistry::get('rgba');
+        try {
+            $rgbaClass = ColorSpaceRegistry::get('rgba');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "RGBA color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         return new self($rgbaClass, $rgbaValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
@@ -123,7 +132,15 @@ final class Color extends AbstractColor
     public function toCMYK(): static
     {
         $cmykValues = $this->convertToColorSpace('cmyk');
-        $cmykClass = ColorSpaceRegistry::get('cmyk');
+        try {
+            $cmykClass = ColorSpaceRegistry::get('cmyk');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "CMYK color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         return new self($cmykClass, $cmykValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
@@ -131,7 +148,15 @@ final class Color extends AbstractColor
     public function toHSL(): static
     {
         $hslValues = $this->convertToColorSpace('hsl');
-        $hslClass = ColorSpaceRegistry::get('hsl');
+        try {
+            $hslClass = ColorSpaceRegistry::get('hsl');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "HSL color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         return new self($hslClass, $hslValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
@@ -139,7 +164,7 @@ final class Color extends AbstractColor
     public function toHSLA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
-            throw new \InvalidArgumentException('Alpha value must be between 0 and 255');
+            throw new InvalidColorValueException('Alpha value must be between 0 and 255');
         }
 
         // If already HSLA, return self (or update alpha if different)
@@ -157,7 +182,15 @@ final class Color extends AbstractColor
         if ($this->colorSpace === HSL::class) {
             $values = $this->values;
             $values['a'] = $alpha;
-            $hslaClass = ColorSpaceRegistry::get('hsla');
+            try {
+                $hslaClass = ColorSpaceRegistry::get('hsla');
+            } catch (ColorSpaceNotFoundException $e) {
+                throw new ColorSpaceNotFoundException(
+                    "HSLA color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                    0,
+                    $e
+                );
+            }
             return new self($hslaClass, $values, $this->illuminant, $this->observer, $this->strictClamping);
         }
 
@@ -169,7 +202,15 @@ final class Color extends AbstractColor
         // Convert to HSL first, then to HSLA
         $hsl = $this->toHSL();
         $hslaValues = HSLA::fromRGB($hsl->toRGB()->values, $alpha);
-        $hslaClass = ColorSpaceRegistry::get('hsla');
+        try {
+            $hslaClass = ColorSpaceRegistry::get('hsla');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "HSLA color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         return new self($hslaClass, $hslaValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
@@ -177,7 +218,15 @@ final class Color extends AbstractColor
     public function toHSV(): static
     {
         $hsvValues = $this->convertToColorSpace('hsv');
-        $hsvClass = ColorSpaceRegistry::get('hsv');
+        try {
+            $hsvClass = ColorSpaceRegistry::get('hsv');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "HSV color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         return new self($hsvClass, $hsvValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
@@ -187,7 +236,15 @@ final class Color extends AbstractColor
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
         $labValues = $this->convertToColorSpace('lab', $illuminant, $observer);
-        $labClass = ColorSpaceRegistry::get('lab');
+        try {
+            $labClass = ColorSpaceRegistry::get('lab');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "Lab color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         return new self($labClass, $labValues, $illuminant, $observer, $this->strictClamping);
     }
 
@@ -197,7 +254,15 @@ final class Color extends AbstractColor
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
         $lchValues = $this->convertToColorSpace('lch', $illuminant, $observer);
-        $lchClass = ColorSpaceRegistry::get('lch');
+        try {
+            $lchClass = ColorSpaceRegistry::get('lch');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "LCh color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         return new self($lchClass, $lchValues, $illuminant, $observer, $this->strictClamping);
     }
 
@@ -207,7 +272,15 @@ final class Color extends AbstractColor
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
         $xyzValues = $this->convertToColorSpace('xyz', $illuminant, $observer);
-        $xyzClass = ColorSpaceRegistry::get('xyz');
+        try {
+            $xyzClass = ColorSpaceRegistry::get('xyz');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "XYZ color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         return new self($xyzClass, $xyzValues, $illuminant, $observer, $this->strictClamping);
     }
 
@@ -215,7 +288,15 @@ final class Color extends AbstractColor
     public function toYCbCr(): static
     {
         $ycbcrValues = $this->convertToColorSpace('ycbcr');
-        $ycbcrClass = ColorSpaceRegistry::get('ycbcr');
+        try {
+            $ycbcrClass = ColorSpaceRegistry::get('ycbcr');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "YCbCr color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
         return new self($ycbcrClass, $ycbcrValues, $this->illuminant, $this->observer, $this->strictClamping);
     }
 
@@ -223,7 +304,7 @@ final class Color extends AbstractColor
     public function withIlluminant(CIEIlluminant $illuminant): static
     {
         if (!$this->colorSpace::supportsIlluminant()) {
-            throw new \RuntimeException(
+            throw new UnsupportedColorSpaceException(
                 "Color space '{$this->getColorSpaceName()}' does not support illuminants."
             );
         }
@@ -236,7 +317,7 @@ final class Color extends AbstractColor
         ?\Negarity\Color\CIE\AdaptationMethod $method = null
     ): static {
         if (!$this->colorSpace::supportsIlluminant()) {
-            throw new \RuntimeException(
+            throw new UnsupportedColorSpaceException(
                 "Color space '{$this->getColorSpaceName()}' does not support illuminants."
             );
         }
@@ -271,7 +352,7 @@ final class Color extends AbstractColor
     public function adaptObserver(CIEObserver $targetObserver): static
     {
         if (!$this->colorSpace::supportsObserver()) {
-            throw new \RuntimeException(
+            throw new UnsupportedColorSpaceException(
                 "Color space '{$this->getColorSpaceName()}' does not support observers."
             );
         }

@@ -39,3 +39,10 @@
 ### We can also consider creating Positive XYZ color space
 ### RGB has a model ACEScg / ACES2065-1
 ### consider CIELAB and CIELUV color spaces
+
+
+
+##Libraries to look inside for inspiration
+### spatie/color
+### matthieumastadenis/couleur
+### ramazancetinkaya/color-code-converter
