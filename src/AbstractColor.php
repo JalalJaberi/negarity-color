@@ -430,14 +430,18 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * Helper method to convert to a target color space using the registry system.
      * 
      * This method tries:
-     * 1. Current color space's to{TargetSpace}() method
-     * 2. Target color space's from{CurrentSpace}() method
-     * 3. Conversion chain through RGB (A → RGB → B)
+     * 1. Current color space's to{TargetSpace}() method (direct conversion)
+     * 2. Target color space's from{CurrentSpace}() method (direct conversion)
+     * 3. Conversion chain through RGB (A → RGB → B) (indirect conversion)
+     * 
+     * For indirect conversions, non-strict mode is used internally to preserve precision,
+     * even if the current instance is in strict mode. The returned values are raw arrays
+     * that should be used to create Color/MutableColor instances.
      * 
      * @param string $targetSpaceName The name of the target color space (e.g., "rgb", "hsl")
      * @param CIEIlluminant|null $illuminant Optional illuminant override
      * @param CIEObserver|null $observer Optional observer override
-     * @return array<string, float|int> Array of channel values for the target color space
+     * @return array{values: array<string, float>, strictMode: bool} Array with converted values and recommended strict mode
      * @throws ConversionNotSupportedException If conversion is not supported
      */
     protected function convertToColorSpace(
@@ -449,10 +453,10 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         
         // If already in target space, return current values
         if ($currentSpaceName === $targetSpaceName) {
-            return $this->values;
+            return ['values' => $this->values, 'strictMode' => $this->strictClamping];
         }
 
-        // Try method 1: Current color space's to{TargetSpace}() method
+        // Try method 1: Current color space's to{TargetSpace}() method (direct)
         $conversionAttempts = [];
         try {
             $methodName = 'to' . ucfirst($targetSpaceName);
@@ -462,11 +466,12 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                 $illuminant = $illuminant ?? $this->illuminant;
                 $observer = $observer ?? $this->observer;
                 
-                if ($supportsCIE) {
-                    return $this->colorSpace::$methodName($this->values, $illuminant, $observer);
-                } else {
-                    return $this->colorSpace::$methodName($this->values);
-                }
+                $values = $supportsCIE
+                    ? $this->colorSpace::$methodName($this->values, $illuminant, $observer)
+                    : $this->colorSpace::$methodName($this->values);
+                
+                // Direct conversion: use instance's strict mode
+                return ['values' => $values, 'strictMode' => $this->strictClamping];
             }
         } catch (\BadMethodCallException $e) {
             // Method doesn't exist, try fallback
@@ -484,7 +489,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             );
         }
 
-        // Try method 2: Target color space's from{CurrentSpace}() method
+        // Try method 2: Target color space's from{CurrentSpace}() method (direct)
         try {
             if (!ColorSpaceRegistry::has($targetSpaceName)) {
                 throw new ColorSpaceNotFoundException("Color space '{$targetSpaceName}' not registered.");
@@ -499,11 +504,12 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                 $illuminant = $illuminant ?? $this->illuminant;
                 $observer = $observer ?? $this->observer;
                 
-                if ($supportsCIE) {
-                    return $targetSpaceClass::$methodName($this->values, $illuminant, $observer);
-                } else {
-                    return $targetSpaceClass::$methodName($this->values);
-                }
+                $values = $supportsCIE
+                    ? $targetSpaceClass::$methodName($this->values, $illuminant, $observer)
+                    : $targetSpaceClass::$methodName($this->values);
+                
+                // Direct conversion: use instance's strict mode
+                return ['values' => $values, 'strictMode' => $this->strictClamping];
             }
         } catch (ColorSpaceNotFoundException $e) {
             // Re-throw color space not found exceptions immediately
@@ -524,9 +530,10 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             );
         }
 
-        // Try method 3: Conversion chain through RGB (A → RGB → B)
+        // Try method 3: Conversion chain through RGB (A → RGB → B) (indirect)
         // This allows any color space to convert to any other via RGB as intermediate
         // Note: We skip this if either source or target is RGB to avoid circular conversion
+        // For indirect conversions, we use non-strict mode to preserve precision
         if ($targetSpaceName !== 'rgb' && $currentSpaceName !== 'rgb') {
             try {
                 // First convert current space to RGB (this should always work since all spaces have toRGB/fromRGB)
@@ -618,6 +625,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             }
         }
 
+        // If we get here, no conversion method worked
         // Build detailed error message with conversion attempts
         $errorMessage = sprintf(
             "Conversion from '%s' to '%s' is not supported. " .
@@ -913,70 +921,6 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
         throw new \BadMethodCallException("Method {$name} does not exist.");
     }
 
-    /**
-     * Convert the color to RGB color space.
-     * 
-     * @return static
-     */
-    abstract public function toRGB(): static;
-    /**
-     * Convert the color to RGBA color space.
-     * 
-     * @param int $alpha Alpha channel (0-255)
-     * @return static
-     */
-    abstract public function toRGBA(int $alpha = 255): static;
-    /**
-     * Convert the color to CMYK color space.
-     * 
-     * @return static
-     */
-    abstract public function toCMYK(): static;
-    /**
-     * Convert the color to HSL color space.
-     * 
-     * @return static
-     */
-    abstract public function toHSL(): static;
-    /**
-     * Convert the color to HSLA color space.
-     * 
-     * @param int $alpha Alpha channel (0-255)
-     * @return static
-     */
-    abstract public function toHSLA(int $alpha = 255): static;
-    /**
-     * Convert the color to HSV color space.
-     * 
-     * @return static
-     */
-    abstract public function toHSV(): static;
-    /**
-     * Convert the color to Lab color space.
-     * 
-     * @param CIEIlluminant|null $illuminant Optional illuminant (uses instance illuminant if null)
-     * @param CIEObserver|null $observer Optional observer (uses instance observer if null)
-     * @return static
-     */
-    abstract public function toLab(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static;
-    /**
-     * Convert the color to LCh color space.
-     * 
-     * @return static
-     */
-    abstract public function toLCh(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static;
-    /**
-     * Convert the color to XYZ color space.
-     * 
-     * @return static
-     */
-    abstract public function toXYZ(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static;
-    /**
-     * Convert the color to YCbCr color space.
-     * 
-     * @return static
-     */
-    abstract public function toYCbCr(): static;
 
     /**
      * Convert CMYK to RGB values.

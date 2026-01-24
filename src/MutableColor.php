@@ -128,59 +128,52 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
-    #[\Override]
     public function toRGB(): static
     {
-        $rgbValues = $this->convertToColorSpace('rgb');
+        $result = $this->convertToColorSpace('rgb');
         $this->colorSpace = RGB::class;
-        $this->values = $rgbValues;
+        $this->values = $result['values'];
+        // Use strict mode from conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $result['strictMode'];
         return $this;
     }
 
-    #[\Override]
     public function toRGBA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
             throw new InvalidColorValueException('Alpha value must be between 0 and 255');
         }
 
-        $r = $g = $b = 0;
-
-        switch ($this->colorSpace) {
-            case RGBA::class:
-                $r = $this->getR();
-                $g = $this->getG();
-                $b = $this->getB();
-                $alpha = $this->getA();
-                break;
-            case RGB::class:
-                $r = $rgb->getR();
-                $g = $rgb->getG();
-                $b = $rgb->getB();
-                break;
-            case HSLA::class:
-            default:
-                $rgb = $hsla->toRGB();
-                $r = $rgb->getR();
-                $g = $rgb->getG();
-                $b = $rgb->getB();
-                $alpha = $hsla->getA();
+        // If already RGBA, update alpha if different
+        if ($this->colorSpace === RGBA::class) {
+            if ($this->getA() !== $alpha) {
+                $this->values['a'] = (float)$alpha;
+            }
+            return $this;
         }
 
-        $this->colorSpace = RGBA::class;
-        $this->values = [];
-        $this->values['r'] = max(0, min(255, (int)round($r)));
-        $this->values['g'] = max(0, min(255, (int)round($g)));
-        $this->values['b'] = max(0, min(255, (int)round($b)));
-        $this->values['a'] = $alpha;
-
+        // Convert to RGB first, then to RGBA
+        $rgb = $this->toRGB();
+        $rgbaValues = RGBA::fromRGB($rgb->values, $alpha);
+        try {
+            $rgbaClass = ColorSpaceRegistry::get('rgba');
+        } catch (ColorSpaceNotFoundException $e) {
+            throw new ColorSpaceNotFoundException(
+                "RGBA color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
+                0,
+                $e
+            );
+        }
+        $this->colorSpace = $rgbaClass;
+        $this->values = $rgbaValues;
+        // Use strict mode from RGB conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $rgb->strictClamping;
         return $this;
     }
 
-    #[\Override]
     public function toCMYK(): static
     {
-        $cmykValues = $this->convertToColorSpace('cmyk');
+        $result = $this->convertToColorSpace('cmyk');
         try {
             $cmykClass = ColorSpaceRegistry::get('cmyk');
         } catch (ColorSpaceNotFoundException $e) {
@@ -191,14 +184,15 @@ final class MutableColor extends AbstractColor
             );
         }
         $this->colorSpace = $cmykClass;
-        $this->values = $cmykValues;
+        $this->values = $result['values'];
+        // Use strict mode from conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $result['strictMode'];
         return $this;
     }
 
-    #[\Override]
     public function toHSL(): static
     {
-        $hslValues = $this->convertToColorSpace('hsl');
+        $result = $this->convertToColorSpace('hsl');
         try {
             $hslClass = ColorSpaceRegistry::get('hsl');
         } catch (ColorSpaceNotFoundException $e) {
@@ -209,11 +203,12 @@ final class MutableColor extends AbstractColor
             );
         }
         $this->colorSpace = $hslClass;
-        $this->values = $hslValues;
+        $this->values = $result['values'];
+        // Use strict mode from conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $result['strictMode'];
         return $this;
     }
 
-    #[\Override]
     public function toHSLA(int $alpha = 255): static
     {
         if ($alpha < 0 || $alpha > 255) {
@@ -263,13 +258,14 @@ final class MutableColor extends AbstractColor
         }
         $this->colorSpace = $hslaClass;
         $this->values = $hslaValues;
+        // Use strict mode from HSL conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $hsl->strictClamping;
         return $this;
     }
 
-    #[\Override]
     public function toHSV(): static
     {
-        $hsvValues = $this->convertToColorSpace('hsv');
+        $result = $this->convertToColorSpace('hsv');
         try {
             $hsvClass = ColorSpaceRegistry::get('hsv');
         } catch (ColorSpaceNotFoundException $e) {
@@ -280,16 +276,17 @@ final class MutableColor extends AbstractColor
             );
         }
         $this->colorSpace = $hsvClass;
-        $this->values = $hsvValues;
+        $this->values = $result['values'];
+        // Use strict mode from conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $result['strictMode'];
         return $this;
     }
 
-    #[\Override]
     public function toLab(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
-        $labValues = $this->convertToColorSpace('lab', $illuminant, $observer);
+        $result = $this->convertToColorSpace('lab', $illuminant, $observer);
         try {
             $labClass = ColorSpaceRegistry::get('lab');
         } catch (ColorSpaceNotFoundException $e) {
@@ -300,18 +297,19 @@ final class MutableColor extends AbstractColor
             );
         }
         $this->colorSpace = $labClass;
-        $this->values = $labValues;
+        $this->values = $result['values'];
         $this->illuminant = $illuminant;
         $this->observer = $observer;
+        // Use strict mode from conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $result['strictMode'];
         return $this;
     }
 
-    #[\Override]
     public function toLCh(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
-        $lchValues = $this->convertToColorSpace('lch', $illuminant, $observer);
+        $result = $this->convertToColorSpace('lch', $illuminant, $observer);
         try {
             $lchClass = ColorSpaceRegistry::get('lch');
         } catch (ColorSpaceNotFoundException $e) {
@@ -322,18 +320,19 @@ final class MutableColor extends AbstractColor
             );
         }
         $this->colorSpace = $lchClass;
-        $this->values = $lchValues;
+        $this->values = $result['values'];
         $this->illuminant = $illuminant;
         $this->observer = $observer;
+        // Use strict mode from conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $result['strictMode'];
         return $this;
     }
 
-    #[\Override]
     public function toXYZ(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
     {
         $illuminant = $illuminant ?? $this->illuminant;
         $observer = $observer ?? $this->observer;
-        $xyzValues = $this->convertToColorSpace('xyz', $illuminant, $observer);
+        $result = $this->convertToColorSpace('xyz', $illuminant, $observer);
         try {
             $xyzClass = ColorSpaceRegistry::get('xyz');
         } catch (ColorSpaceNotFoundException $e) {
@@ -344,16 +343,17 @@ final class MutableColor extends AbstractColor
             );
         }
         $this->colorSpace = $xyzClass;
-        $this->values = $xyzValues;
+        $this->values = $result['values'];
         $this->illuminant = $illuminant;
         $this->observer = $observer;
+        // Use strict mode from conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $result['strictMode'];
         return $this;
     }
 
-    #[\Override]
     public function toYCbCr(): static
     {
-        $ycbcrValues = $this->convertToColorSpace('ycbcr');
+        $result = $this->convertToColorSpace('ycbcr');
         try {
             $ycbcrClass = ColorSpaceRegistry::get('ycbcr');
         } catch (ColorSpaceNotFoundException $e) {
@@ -364,7 +364,9 @@ final class MutableColor extends AbstractColor
             );
         }
         $this->colorSpace = $ycbcrClass;
-        $this->values = $ycbcrValues;
+        $this->values = $result['values'];
+        // Use strict mode from conversion (non-strict if indirect to preserve precision)
+        $this->strictClamping = $result['strictMode'];
         return $this;
     }
 
