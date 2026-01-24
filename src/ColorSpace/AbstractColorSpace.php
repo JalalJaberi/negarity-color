@@ -25,6 +25,9 @@ abstract class AbstractColorSpace implements ColorSpaceInterface
         ?\Negarity\Color\CIE\CIEObserver $observer = null
     ): array;
 
+    abstract public static function supportAlphaChannel(): bool;
+    abstract public static function getAlphaChannelName(): string;
+
     /**
      * Check if this color space supports CIE standard illuminants.
      * 

@@ -54,6 +54,18 @@ final class CMYK extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function supportAlphaChannel(): bool
+    {
+        return false;
+    }
+
+    #[\Override]
+    public static function getAlphaChannelName(): string
+    {
+        return '';
+    }
+
     /**
      * Convert from CMYK to RGB.
      * 

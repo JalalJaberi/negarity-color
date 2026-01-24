@@ -51,6 +51,18 @@ final class YCbCr extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function supportAlphaChannel(): bool
+    {
+        return false;
+    }
+
+    #[\Override]
+    public static function getAlphaChannelName(): string
+    {
+        return '';
+    }
+
     /**
      * Convert from YCbCr to RGB.
      * 

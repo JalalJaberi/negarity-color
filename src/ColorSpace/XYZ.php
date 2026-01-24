@@ -50,6 +50,18 @@ final class XYZ extends AbstractColorSpace
     }
 
     #[\Override]
+    public static function supportAlphaChannel(): bool
+    {
+        return false;
+    }
+
+    #[\Override]
+    public static function getAlphaChannelName(): string
+    {
+        return '';
+    }
+
+    #[\Override]
     public static function supportsIlluminant(): bool
     {
         return true;

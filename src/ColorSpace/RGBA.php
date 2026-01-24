@@ -56,6 +56,18 @@ final class RGBA extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function supportAlphaChannel(): bool
+    {
+        return true;
+    }
+
+    #[\Override]
+    public static function getAlphaChannelName(): string
+    {
+        return 'a';
+    }
+
     /**
      * Convert from RGBA to RGB (ignores alpha channel).
      * 

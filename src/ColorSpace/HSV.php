@@ -56,6 +56,18 @@ final class HSV extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function supportAlphaChannel(): bool
+    {
+        return false;
+    }
+
+    #[\Override]
+    public static function getAlphaChannelName(): string
+    {
+        return '';
+    }
+
     /**
      * Convert from HSV to RGB.
      * 

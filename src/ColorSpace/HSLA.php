@@ -59,6 +59,18 @@ final class HSLA extends AbstractColorSpace
         };
     }
 
+    #[\Override]
+    public static function supportAlphaChannel(): bool
+    {
+        return true;
+    }
+
+    #[\Override]
+    public static function getAlphaChannelName(): string
+    {
+        return 'a';
+    }
+
     /**
      * Convert from HSLA to RGB (ignores alpha channel).
      * 

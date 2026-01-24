@@ -128,246 +128,125 @@ final class MutableColor extends AbstractColor
         return $this;
     }
 
-    public function toRGB(): static
+    /**
+     * Dynamically handle to{ColorSpace}() method calls.
+     * 
+     * @param string $name Method name (e.g., "toRGB", "toRGBA")
+     * @param array<int, mixed> $arguments Method arguments (alpha, illuminant, observer)
+     * @return static
+     * @throws ColorSpaceNotFoundException
+     * @throws InvalidColorValueException
+     * @throws ConversionNotSupportedException
+     */
+    #[\Override]
+    public function __call(string $name, array $arguments): mixed
     {
-        $result = $this->convertToColorSpace('rgb');
-        $this->colorSpace = RGB::class;
-        $this->values = $result['values'];
-        // Use strict mode from conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $result['strictMode'];
-        return $this;
-    }
-
-    public function toRGBA(int $alpha = 255): static
-    {
-        if ($alpha < 0 || $alpha > 255) {
-            throw new InvalidColorValueException('Alpha value must be between 0 and 255');
-        }
-
-        // If already RGBA, update alpha if different
-        if ($this->colorSpace === RGBA::class) {
-            if ($this->getA() !== $alpha) {
-                $this->values['a'] = (float)$alpha;
+        // Check if this is a to{ColorSpace}() call
+        if (str_starts_with($name, 'to') && strlen($name) > 2) {
+            $colorSpaceName = strtolower(substr($name, 2));
+            
+            // Check if color space is registered
+            if (!ColorSpaceRegistry::has($colorSpaceName)) {
+                // Not a registered color space, fall back to parent (getters, filters)
+                return parent::__call($name, $arguments);
             }
-            return $this;
-        }
-
-        // Convert to RGB first, then to RGBA
-        $rgb = $this->toRGB();
-        $rgbaValues = RGBA::fromRGB($rgb->values, $alpha);
-        try {
-            $rgbaClass = ColorSpaceRegistry::get('rgba');
-        } catch (ColorSpaceNotFoundException $e) {
-            throw new ColorSpaceNotFoundException(
-                "RGBA color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                0,
-                $e
-            );
-        }
-        $this->colorSpace = $rgbaClass;
-        $this->values = $rgbaValues;
-        // Use strict mode from RGB conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $rgb->strictClamping;
-        return $this;
-    }
-
-    public function toCMYK(): static
-    {
-        $result = $this->convertToColorSpace('cmyk');
-        try {
-            $cmykClass = ColorSpaceRegistry::get('cmyk');
-        } catch (ColorSpaceNotFoundException $e) {
-            throw new ColorSpaceNotFoundException(
-                "CMYK color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                0,
-                $e
-            );
-        }
-        $this->colorSpace = $cmykClass;
-        $this->values = $result['values'];
-        // Use strict mode from conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $result['strictMode'];
-        return $this;
-    }
-
-    public function toHSL(): static
-    {
-        $result = $this->convertToColorSpace('hsl');
-        try {
-            $hslClass = ColorSpaceRegistry::get('hsl');
-        } catch (ColorSpaceNotFoundException $e) {
-            throw new ColorSpaceNotFoundException(
-                "HSL color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                0,
-                $e
-            );
-        }
-        $this->colorSpace = $hslClass;
-        $this->values = $result['values'];
-        // Use strict mode from conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $result['strictMode'];
-        return $this;
-    }
-
-    public function toHSLA(int $alpha = 255): static
-    {
-        if ($alpha < 0 || $alpha > 255) {
-            throw new InvalidColorValueException('Alpha value must be between 0 and 255');
-        }
-
-        // If already HSLA, update alpha if different
-        if ($this->colorSpace === HSLA::class) {
-            if ($this->getA() !== $alpha) {
-                $this->values['a'] = $alpha;
-            }
-            return $this;
-        }
-
-        // If HSL, convert to HSLA with specified alpha
-        if ($this->colorSpace === HSL::class) {
-            $this->values['a'] = $alpha;
+            
             try {
-                $hslaClass = ColorSpaceRegistry::get('hsla');
+                $targetSpaceClass = ColorSpaceRegistry::get($colorSpaceName);
             } catch (ColorSpaceNotFoundException $e) {
-                throw new ColorSpaceNotFoundException(
-                    "HSLA color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                    0,
-                    $e
+                throw $e;
+            }
+            
+            // Extract parameters from arguments
+            $alpha = null;
+            $illuminant = null;
+            $observer = null;
+            
+            // Check first argument for alpha (int between 0-255)
+            if (!empty($arguments) && is_int($arguments[0]) && $arguments[0] >= 0 && $arguments[0] <= 255) {
+                $alpha = $arguments[0];
+            }
+            
+            // Scan all arguments for CIE parameters
+            foreach ($arguments as $arg) {
+                if ($arg instanceof CIEIlluminant) {
+                    $illuminant = $arg;
+                } elseif ($arg instanceof CIEObserver) {
+                    $observer = $arg;
+                }
+            }
+            
+            // Validate and log warnings for unsupported parameters
+            if ($illuminant !== null && !$targetSpaceClass::supportsIlluminant()) {
+                error_log(
+                    sprintf(
+                        "[Negarity Color] Warning: Illuminant parameter provided but color space '%s' does not support it. Ignoring.",
+                        $colorSpaceName
+                    )
+                );
+                $illuminant = null;
+            }
+            
+            if ($observer !== null && !$targetSpaceClass::supportsObserver()) {
+                error_log(
+                    sprintf(
+                        "[Negarity Color] Warning: Observer parameter provided but color space '%s' does not support it. Ignoring.",
+                        $colorSpaceName
+                    )
+                );
+                $observer = null;
+            }
+            
+            // Use instance values if not provided
+            $illuminant = $illuminant ?? $this->illuminant;
+            $observer = $observer ?? $this->observer;
+            
+            // Convert to target color space
+            $result = $this->convertToColorSpace($colorSpaceName, $illuminant, $observer);
+            $values = $result['values'];
+            
+            // Handle alpha channel
+            if ($targetSpaceClass::supportAlphaChannel()) {
+                $alphaChannelName = $targetSpaceClass::getAlphaChannelName();
+                
+                if ($alpha !== null) {
+                    // Validate alpha range
+                    if ($alpha < 0 || $alpha > 255) {
+                        throw new InvalidColorValueException('Alpha value must be between 0 and 255');
+                    }
+                    $values[$alphaChannelName] = (float)$alpha;
+                } elseif (!isset($values[$alphaChannelName])) {
+                    // If alpha not provided and not in result, preserve from source if available
+                    $currentAlphaChannel = $this->colorSpace::getAlphaChannelName();
+                    if ($currentAlphaChannel !== '' && isset($this->values[$currentAlphaChannel])) {
+                        $values[$alphaChannelName] = $this->values[$currentAlphaChannel];
+                    } else {
+                        // Default to 255 (fully opaque)
+                        $values[$alphaChannelName] = 255.0;
+                    }
+                }
+            } elseif ($alpha !== null) {
+                // Alpha provided but target doesn't support it
+                error_log(
+                    sprintf(
+                        "[Negarity Color] Warning: Alpha parameter provided but color space '%s' does not support alpha channel. Ignoring.",
+                        $colorSpaceName
+                    )
                 );
             }
-            $this->colorSpace = $hslaClass;
+            
+            // Modify current instance
+            $this->colorSpace = $targetSpaceClass;
+            $this->values = $values;
+            $this->illuminant = $illuminant;
+            $this->observer = $observer;
+            $this->strictClamping = $result['strictMode'];
+            
             return $this;
         }
-
-        // If RGBA, preserve alpha
-        if ($this->colorSpace === RGBA::class) {
-            $alpha = $this->getA();
-        }
-
-        // Convert to HSL first, then to HSLA
-        $hsl = $this->toHSL();
-        $hslaValues = HSLA::fromRGB($hsl->toRGB()->values, $alpha);
-        try {
-            $hslaClass = ColorSpaceRegistry::get('hsla');
-        } catch (ColorSpaceNotFoundException $e) {
-            throw new ColorSpaceNotFoundException(
-                "HSLA color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                0,
-                $e
-            );
-        }
-        $this->colorSpace = $hslaClass;
-        $this->values = $hslaValues;
-        // Use strict mode from HSL conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $hsl->strictClamping;
-        return $this;
-    }
-
-    public function toHSV(): static
-    {
-        $result = $this->convertToColorSpace('hsv');
-        try {
-            $hsvClass = ColorSpaceRegistry::get('hsv');
-        } catch (ColorSpaceNotFoundException $e) {
-            throw new ColorSpaceNotFoundException(
-                "HSV color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                0,
-                $e
-            );
-        }
-        $this->colorSpace = $hsvClass;
-        $this->values = $result['values'];
-        // Use strict mode from conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $result['strictMode'];
-        return $this;
-    }
-
-    public function toLab(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
-    {
-        $illuminant = $illuminant ?? $this->illuminant;
-        $observer = $observer ?? $this->observer;
-        $result = $this->convertToColorSpace('lab', $illuminant, $observer);
-        try {
-            $labClass = ColorSpaceRegistry::get('lab');
-        } catch (ColorSpaceNotFoundException $e) {
-            throw new ColorSpaceNotFoundException(
-                "Lab color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                0,
-                $e
-            );
-        }
-        $this->colorSpace = $labClass;
-        $this->values = $result['values'];
-        $this->illuminant = $illuminant;
-        $this->observer = $observer;
-        // Use strict mode from conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $result['strictMode'];
-        return $this;
-    }
-
-    public function toLCh(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
-    {
-        $illuminant = $illuminant ?? $this->illuminant;
-        $observer = $observer ?? $this->observer;
-        $result = $this->convertToColorSpace('lch', $illuminant, $observer);
-        try {
-            $lchClass = ColorSpaceRegistry::get('lch');
-        } catch (ColorSpaceNotFoundException $e) {
-            throw new ColorSpaceNotFoundException(
-                "LCh color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                0,
-                $e
-            );
-        }
-        $this->colorSpace = $lchClass;
-        $this->values = $result['values'];
-        $this->illuminant = $illuminant;
-        $this->observer = $observer;
-        // Use strict mode from conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $result['strictMode'];
-        return $this;
-    }
-
-    public function toXYZ(?CIEIlluminant $illuminant = null, ?CIEObserver $observer = null): static
-    {
-        $illuminant = $illuminant ?? $this->illuminant;
-        $observer = $observer ?? $this->observer;
-        $result = $this->convertToColorSpace('xyz', $illuminant, $observer);
-        try {
-            $xyzClass = ColorSpaceRegistry::get('xyz');
-        } catch (ColorSpaceNotFoundException $e) {
-            throw new ColorSpaceNotFoundException(
-                "XYZ color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                0,
-                $e
-            );
-        }
-        $this->colorSpace = $xyzClass;
-        $this->values = $result['values'];
-        $this->illuminant = $illuminant;
-        $this->observer = $observer;
-        // Use strict mode from conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $result['strictMode'];
-        return $this;
-    }
-
-    public function toYCbCr(): static
-    {
-        $result = $this->convertToColorSpace('ycbcr');
-        try {
-            $ycbcrClass = ColorSpaceRegistry::get('ycbcr');
-        } catch (ColorSpaceNotFoundException $e) {
-            throw new ColorSpaceNotFoundException(
-                "YCbCr color space not registered. Call ColorSpaceRegistry::registerBuiltIn() first.",
-                0,
-                $e
-            );
-        }
-        $this->colorSpace = $ycbcrClass;
-        $this->values = $result['values'];
-        // Use strict mode from conversion (non-strict if indirect to preserve precision)
-        $this->strictClamping = $result['strictMode'];
-        return $this;
+        
+        // Not a to{ColorSpace}() call, delegate to parent (getters, filters)
+        return parent::__call($name, $arguments);
     }
 
     #[\Override]

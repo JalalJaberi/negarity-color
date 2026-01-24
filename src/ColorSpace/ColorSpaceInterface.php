@@ -57,6 +57,20 @@ interface ColorSpaceInterface
     public static function clampValue(string $channel, float $value): float;
 
     /**
+     * Check if this color space supports an alpha channel.
+     * 
+     * @return bool True if the color space has an alpha channel (e.g., RGBA, HSLA), false otherwise
+     */
+    public static function supportAlphaChannel(): bool;
+
+    /**
+     * Get the name of the alpha channel if supported.
+     * 
+     * @return string The alpha channel name (e.g., 'a') or empty string if not supported
+     */
+    public static function getAlphaChannelName(): string;
+
+    /**
      * Convert from this color space to RGB.
      * 
      * @param array<string, float> $values Color space values
