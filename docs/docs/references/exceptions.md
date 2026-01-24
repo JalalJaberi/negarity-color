@@ -285,6 +285,6 @@ These logs help identify which conversion paths were attempted and why they fail
 
 ## Related Documentation
 
-- [Creating Colors](./creating-colors.md) - How to create colors and handle creation errors
-- [Converting Colors](./converting-colors.md) - Color space conversion and conversion errors
+- [Creating Colors](../basics/creating-colors.md) - How to create colors and handle creation errors
+- [Converting Colors](../basics/converting-colors.md) - Color space conversion and conversion errors
 - [Color Spaces Reference](./color-spaces.md) - Supported color spaces and their requirements
