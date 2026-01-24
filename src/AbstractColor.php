@@ -789,11 +789,66 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             try {
                 $colorSpaceClass = ColorSpaceRegistry::get($colorName);
                 $channels = $colorSpaceClass::getChannels();
+                $supportsAlpha = $colorSpaceClass::supportAlphaChannel();
+                $alphaChannelName = $supportsAlpha ? $colorSpaceClass::getAlphaChannelName() : '';
                 
-                // Build values array from arguments
+                // Check if first argument is an array (named arguments-like)
                 $values = [];
                 $argIndex = 0;
-                foreach ($channels as $channel) {
+                
+                if (!empty($arguments) && is_array($arguments[0]) && !isset($arguments[1])) {
+                    // Named arguments-like: Color::rgb(['r' => 255, 'g' => 100, 'b' => 50])
+                    $arrayInput = $arguments[0];
+                    
+                    // Validate all keys exist as channels
+                    foreach (array_keys($arrayInput) as $key) {
+                        if (!in_array($key, $channels, true)) {
+                            throw new InvalidColorValueException(
+                                "Invalid channel '{$key}' for color space '{$colorName}'. " .
+                                "Valid channels are: " . implode(', ', $channels)
+                            );
+                        }
+                    }
+                    
+                    // Build values from array, using defaults for missing channels
+                    foreach ($channels as $channel) {
+                        if (isset($arrayInput[$channel])) {
+                            $values[$channel] = $arrayInput[$channel];
+                        } else {
+                            // For alpha channel, default to 255 if not provided
+                            if ($channel === $alphaChannelName) {
+                                $values[$channel] = 255.0;
+                            } else {
+                                $values[$channel] = $colorSpaceClass::getChannelDefaultValue($channel);
+                            }
+                        }
+                    }
+                    
+                    // Check for CIE parameters in remaining arguments (after array)
+                    $illuminant = null;
+                    $observer = null;
+                    if ($colorSpaceClass::supportsIlluminant() || $colorSpaceClass::supportsObserver()) {
+                        if (isset($arguments[1]) && $arguments[1] instanceof CIEIlluminant) {
+                            $illuminant = $arguments[1];
+                        }
+                        if (isset($arguments[2]) && $arguments[2] instanceof CIEObserver) {
+                            $observer = $arguments[2];
+                        }
+                    }
+                    
+                    return new static($colorSpaceClass, $values, $illuminant, $observer);
+                }
+                
+                // Positional arguments: Color::rgb(255, 100, 50)
+                // Separate color channels from alpha and CIE parameters
+                $colorChannels = $channels;
+                if ($supportsAlpha && $alphaChannelName !== '') {
+                    // Remove alpha from regular channels - it will be handled separately
+                    $colorChannels = array_filter($channels, fn($ch) => $ch !== $alphaChannelName);
+                }
+                
+                // Build values array from positional arguments
+                foreach ($colorChannels as $channel) {
                     if (isset($arguments[$argIndex])) {
                         $values[$channel] = $arguments[$argIndex];
                         $argIndex++;
@@ -801,6 +856,23 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                         $values[$channel] = $colorSpaceClass::getChannelDefaultValue($channel);
                     }
                 }
+                
+                // Handle alpha channel separately (optional, defaults to 255)
+                if ($supportsAlpha && $alphaChannelName !== '') {
+                    if (isset($arguments[$argIndex]) && is_int($arguments[$argIndex])) {
+                        // Explicit alpha provided (accept any int, clamping happens later)
+                        $values[$alphaChannelName] = (float)$arguments[$argIndex];
+                        $argIndex++;
+                    } else {
+                        // Default alpha to 255 (fully opaque)
+                        $values[$alphaChannelName] = 255.0;
+                    }
+                }
+                
+                // Validate argument count (excluding CIE parameters)
+                $expectedArgs = count($colorChannels) + ($supportsAlpha ? 1 : 0);
+                $actualArgs = $argIndex;
+                $cieArgsCount = 0;
                 
                 // Handle CIE parameters for color spaces that support them
                 $illuminant = null;
@@ -810,15 +882,42 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                     if (isset($arguments[$argIndex]) && $arguments[$argIndex] instanceof CIEIlluminant) {
                         $illuminant = $arguments[$argIndex];
                         $argIndex++;
+                        $cieArgsCount++;
                     }
                     if (isset($arguments[$argIndex]) && $arguments[$argIndex] instanceof CIEObserver) {
                         $observer = $arguments[$argIndex];
+                        $argIndex++;
+                        $cieArgsCount++;
                     }
                 }
                 
-                return new static($colorSpaceClass, $values, $illuminant, $observer);
+                // Check for too many arguments (excluding CIE parameters)
+                $totalProvidedArgs = count($arguments);
+                $maxExpectedArgs = $expectedArgs + $cieArgsCount;
+                
+                if ($totalProvidedArgs > $maxExpectedArgs) {
+                    $extraArgs = $totalProvidedArgs - $maxExpectedArgs;
+                    $cieInfo = $cieArgsCount > 0 ? " plus {$cieArgsCount} optional CIE parameter(s)" : "";
+                    throw new InvalidColorValueException(
+                        sprintf(
+                            "Too many arguments provided for color space '%s'. " .
+                            "Expected %d argument(s)%s, got %d. " .
+                            "Extra %d argument(s) will be ignored.",
+                            $colorName,
+                            $expectedArgs,
+                            $cieInfo,
+                            $totalProvidedArgs,
+                            $extraArgs
+                        )
+                    );
+                }
+                
+                    return new static($colorSpaceClass, $values, $illuminant, $observer);
             } catch (ColorSpaceNotFoundException $e) {
                 // Re-throw color space not found exceptions
+                throw $e;
+            } catch (InvalidColorValueException $e) {
+                // Re-throw invalid color value exceptions as-is
                 throw $e;
             } catch (\Exception $e) {
                 // Log unexpected errors but re-throw as ColorSpaceNotFoundException
