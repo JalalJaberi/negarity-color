@@ -1,31 +1,31 @@
 <?php
 
 /**
- * Triadic filter example.
+ * Triadic generator example.
  *
- * Shows how to register the triadic filters and apply them with each method:
+ * Shows how to register the triadic generators and apply them with each method:
  * - Artistic:    triadic in HSL (hue + 120° or + 240°)
  * - Perceptual: triadic in LCh (perceptually uniform)
  * - DisplayAccurate: triadic in HSV (hue + 120° or + 240°), then to RGB
  *
- * Run: php examples/Filter/Triadic.php
+ * Run: php examples/Generator/Triadic.php
  */
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Negarity\Color\Color;
-use Negarity\Color\Filter\TriadicMethod;
+use Negarity\Color\Generator\TriadicMethod;
+use Negarity\Color\Generator\TriadicGenerator;
 use Negarity\Color\Filter\FilterRegistry;
-use Negarity\Color\Filter\Unary\TriadicFilter;
 use Negarity\Color\Registry\ColorSpaceRegistry;
 
 ColorSpaceRegistry::registerBuiltIn();
-FilterRegistry::register(new TriadicFilter(120));  // triadic1: base + 120°
-FilterRegistry::register(new TriadicFilter(240)); // triadic2: base + 240°
+FilterRegistry::register(new TriadicGenerator(120));  // triadic1: base + 120°
+FilterRegistry::register(new TriadicGenerator(240));  // triadic2: base + 240°
 
 $red = Color::rgb(255, 0, 0);
 
-echo "========== Triadic filter ==========" . PHP_EOL;
+echo "========== Triadic generator ==========" . PHP_EOL;
 echo "Original: " . $red . PHP_EOL . PHP_EOL;
 
 echo "-------- Perceptual (default) --------" . PHP_EOL;

@@ -2,30 +2,28 @@
 
 declare(strict_types=1);
 
-namespace Negarity\Color\Filter\Unary;
+namespace Negarity\Color\Generator;
 
 use Negarity\Color\Color;
 use Negarity\Color\ColorInterface;
-use Negarity\Color\Filter\TriadicMethod;
 use Negarity\Color\Filter\Parameterized\ParameterizedColorFilterInterface;
 use Negarity\Color\ColorSpace\HSL;
-use Negarity\Color\ColorSpace\RGB;
 use Negarity\Color\ColorSpace\LCh;
 use Negarity\Color\ColorSpace\HSV;
 
 /**
- * Triadic color filter.
+ * Triadic color generator.
  *
  * Computes one of the two triadic colors (base hue + 120° or + 240°) using the chosen method:
  * - Artistic: HSL hue + 120° or + 240° (common in design tools).
  * - Perceptual: LCh hue + 120° or + 240° (perceptually uniform).
  * - DisplayAccurate: HSV hue + 120° or + 240°, then convert back to RGB.
  *
- * Register two instances for both triadic colors:
- *   FilterRegistry::register(new TriadicFilter(120));  // triadic1
- *   FilterRegistry::register(new TriadicFilter(240)); // triadic2
+ * Register two instances with FilterRegistry for both triadic colors:
+ *   FilterRegistry::register(new TriadicGenerator(120));  // triadic1
+ *   FilterRegistry::register(new TriadicGenerator(240));  // triadic2
  */
-final class TriadicFilter implements ParameterizedColorFilterInterface
+final class TriadicGenerator implements ParameterizedColorFilterInterface
 {
     private const NAME_TRIADIC_1 = 'triadic1';
     private const NAME_TRIADIC_2 = 'triadic2';
@@ -34,7 +32,7 @@ final class TriadicFilter implements ParameterizedColorFilterInterface
         private readonly int $hueOffset
     ) {
         if ($hueOffset !== 120 && $hueOffset !== 240) {
-            throw new \InvalidArgumentException('TriadicFilter hue offset must be 120 or 240.');
+            throw new \InvalidArgumentException('TriadicGenerator hue offset must be 120 or 240.');
         }
     }
 

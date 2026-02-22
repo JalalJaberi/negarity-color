@@ -1,30 +1,30 @@
 <?php
 
 /**
- * Complementary filter example.
+ * Complementary generator example.
  *
- * Shows how to register the filter and apply it with each method:
+ * Shows how to register the generator and apply it with each method:
  * - Artistic:    complement in HSL (hue + 180°)
  * - Perceptual: complement in LCh (perceptually uniform)
  * - DisplayAccurate: complement in RGB (invert R, G, B)
  *
- * Run: php examples/Filter/Complementary.php
+ * Run: php examples/Generator/Complementary.php
  */
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Negarity\Color\Color;
-use Negarity\Color\Filter\ComplementMethod;
+use Negarity\Color\Generator\ComplementMethod;
+use Negarity\Color\Generator\ComplementaryGenerator;
 use Negarity\Color\Filter\FilterRegistry;
-use Negarity\Color\Filter\Unary\ComplementaryFilter;
 use Negarity\Color\Registry\ColorSpaceRegistry;
 
 ColorSpaceRegistry::registerBuiltIn();
-FilterRegistry::register(new ComplementaryFilter());
+FilterRegistry::register(new ComplementaryGenerator());
 
 $red = Color::rgb(255, 0, 0);
 
-echo "========== Complementary filter ==========" . PHP_EOL;
+echo "========== Complementary generator ==========" . PHP_EOL;
 echo "Original: " . $red . PHP_EOL . PHP_EOL;
 
 // Apply with each method (enum)
@@ -45,7 +45,7 @@ echo "Via FilterRegistry::get('complementary')->apply(\$red, 'artistic'): " . $f
 echo "Via string 'perceptual': " . $red->complementary('perceptual') . PHP_EOL;
 echo "Default (no arg):        " . $red->complementary() . PHP_EOL . PHP_EOL;
 
-// Same filter in different color spaces (result is converted back to original space)
+// Same generator in different color spaces (result is converted back to original space)
 $hsl = $red->toHsl();
 echo "-------- HSL (red in HSL) --------" . PHP_EOL;
 echo "Original:   " . $hsl . PHP_EOL;

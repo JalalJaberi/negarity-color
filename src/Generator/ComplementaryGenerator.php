@@ -2,25 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Negarity\Color\Filter\Unary;
+namespace Negarity\Color\Generator;
 
 use Negarity\Color\Color;
 use Negarity\Color\ColorInterface;
-use Negarity\Color\Filter\ComplementMethod;
 use Negarity\Color\Filter\Parameterized\ParameterizedColorFilterInterface;
 use Negarity\Color\ColorSpace\HSL;
 use Negarity\Color\ColorSpace\RGB;
 use Negarity\Color\ColorSpace\LCh;
 
 /**
- * Complementary color filter.
+ * Complementary color generator.
  *
  * Computes the complementary color using the chosen method:
  * - Artistic: HSL hue + 180° (common in design tools).
  * - Perceptual: LCh hue + 180° (perceptually uniform).
  * - DisplayAccurate: RGB invert (255 - r, g, b).
+ *
+ * Register with FilterRegistry so $color->complementary($method) works:
+ *   FilterRegistry::register(new ComplementaryGenerator());
  */
-final class ComplementaryFilter implements ParameterizedColorFilterInterface
+final class ComplementaryGenerator implements ParameterizedColorFilterInterface
 {
     #[\Override]
     public function getName(): string
