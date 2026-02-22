@@ -25,6 +25,7 @@ use Negarity\Color\Filter\{
     Parameterized\ParameterizedColorFilterInterface,
     Binary\BinaryColorFilterInterface
 };
+use Negarity\Color\Generator\GeneratorRegistry;
 use Negarity\Color\CIE\CIEIlluminant;
 use Negarity\Color\CIE\CIEObserver;
 use Negarity\Color\CIE\CIEIlluminantData;
@@ -34,6 +35,7 @@ use Negarity\Color\Exception\ConversionNotSupportedException;
 use Negarity\Color\Exception\InvalidFormatException;
 use Negarity\Color\Exception\UnsupportedColorSpaceException;
 use Negarity\Color\Exception\FilterNotFoundException;
+use Negarity\Color\Exception\GeneratorNotFoundException;
 use Negarity\Color\Exception\InvalidColorValueException;
 
 abstract class AbstractColor implements \JsonSerializable, ColorInterface
@@ -949,6 +951,7 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
      * @return mixed
      * @throws \BadMethodCallException
      * @see FilterRegistry
+     * @see \Negarity\Color\Generator\GeneratorRegistry
      */
     public function __call(string $name, array $arguments): mixed
     {
@@ -976,48 +979,64 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
             }
         }
 
-        if (!FilterRegistry::has($name)) {
-            throw new FilterNotFoundException("Filter '{$name}' not found.");
+        // Resolve by name: try filters first, then generators
+        if (FilterRegistry::has($name)) {
+            try {
+                $filter = FilterRegistry::get($name);
+            } catch (FilterNotFoundException $e) {
+                throw $e;
+            } catch (\Exception $e) {
+                error_log(
+                    sprintf(
+                        "[Negarity Color] Unexpected error accessing filter '{$name}': %s",
+                        $e->getMessage()
+                    )
+                );
+                throw new FilterNotFoundException(
+                    "Filter '{$name}' not found or cannot be accessed: " . $e->getMessage(),
+                    0,
+                    $e
+                );
+            }
+            // Unary
+            if ($filter instanceof UnaryColorFilterInterface) {
+                return $filter->apply($this);
+            }
+            // Parameterized
+            if ($filter instanceof ParameterizedColorFilterInterface) {
+                $value = $arguments[0] ?? null;
+                return $filter->apply($this, $value);
+            }
+            // Binary: $color->blend($otherColor)
+            if ($filter instanceof BinaryColorFilterInterface) {
+                $other = $arguments[0] ?? null;
+                return $filter->apply($this, $other);
+            }
+            throw new \BadMethodCallException("Method {$name} does not exist.");
         }
-    
-        try {
-            $filter = FilterRegistry::get($name);
-        } catch (FilterNotFoundException $e) {
-            // Re-throw filter not found exceptions
-            throw $e;
-        } catch (\Exception $e) {
-            // Log unexpected errors but re-throw as FilterNotFoundException
-            error_log(
-                sprintf(
-                    "[Negarity Color] Unexpected error accessing filter '{$name}': %s",
-                    $e->getMessage()
-                )
-            );
-            throw new FilterNotFoundException(
-                "Filter '{$name}' not found or cannot be accessed: " . $e->getMessage(),
-                0,
-                $e
-            );
+
+        if (GeneratorRegistry::has($name)) {
+            try {
+                $generator = GeneratorRegistry::get($name);
+                return $generator->apply($this, $arguments[0] ?? null);
+            } catch (GeneratorNotFoundException $e) {
+                throw $e;
+            } catch (\Exception $e) {
+                error_log(
+                    sprintf(
+                        "[Negarity Color] Unexpected error accessing generator '{$name}': %s",
+                        $e->getMessage()
+                    )
+                );
+                throw new GeneratorNotFoundException(
+                    "Generator '{$name}' not found or cannot be accessed: " . $e->getMessage(),
+                    0,
+                    $e
+                );
+            }
         }
-    
-        // Unary
-        if ($filter instanceof UnaryColorFilterInterface) {
-            return $filter->apply($this);
-        }
-    
-        // Parameterized
-        if ($filter instanceof ParameterizedColorFilterInterface) {
-            $value = $arguments[0] ?? null;
-            return $filter->apply($this, $value);
-        }
-    
-        // Binary: $color->blend($otherColor)
-        if ($filter instanceof BinaryColorFilterInterface) {
-            $other = $arguments[0] ?? null;
-            return $filter->apply($this, $other);
-        }
-    
-        throw new \BadMethodCallException("Method {$name} does not exist.");
+
+        throw new FilterNotFoundException("Filter '{$name}' not found.");
     }
 
 

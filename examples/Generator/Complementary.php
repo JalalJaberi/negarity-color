@@ -16,11 +16,11 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 use Negarity\Color\Color;
 use Negarity\Color\Generator\ComplementMethod;
 use Negarity\Color\Generator\ComplementaryGenerator;
-use Negarity\Color\Filter\FilterRegistry;
+use Negarity\Color\Generator\GeneratorRegistry;
 use Negarity\Color\Registry\ColorSpaceRegistry;
 
 ColorSpaceRegistry::registerBuiltIn();
-FilterRegistry::register(new ComplementaryGenerator());
+GeneratorRegistry::register(new ComplementaryGenerator());
 
 $red = Color::rgb(255, 0, 0);
 
@@ -37,9 +37,9 @@ echo "Artistic:          " . $artistic . PHP_EOL;
 echo "Perceptual:        " . $perceptual . PHP_EOL;
 echo "Display-accurate:  " . $displayAccurate . PHP_EOL . PHP_EOL;
 
-// Via FilterRegistry (same as $color->complementary($method))
-$filter = FilterRegistry::get('complementary');
-echo "Via FilterRegistry::get('complementary')->apply(\$red, 'artistic'): " . $filter->apply($red, 'artistic') . PHP_EOL . PHP_EOL;
+// Via GeneratorRegistry (same as $color->complementary($method))
+$generator = GeneratorRegistry::get('complementary');
+echo "Via GeneratorRegistry::get('complementary')->apply(\$red, 'artistic'): " . $generator->apply($red, 'artistic') . PHP_EOL . PHP_EOL;
 
 // String method (e.g. from config or API) and default (no arg = perceptual)
 echo "Via string 'perceptual': " . $red->complementary('perceptual') . PHP_EOL;

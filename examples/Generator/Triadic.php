@@ -16,12 +16,12 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 use Negarity\Color\Color;
 use Negarity\Color\Generator\TriadicMethod;
 use Negarity\Color\Generator\TriadicGenerator;
-use Negarity\Color\Filter\FilterRegistry;
+use Negarity\Color\Generator\GeneratorRegistry;
 use Negarity\Color\Registry\ColorSpaceRegistry;
 
 ColorSpaceRegistry::registerBuiltIn();
-FilterRegistry::register(new TriadicGenerator(120));  // triadic1: base + 120°
-FilterRegistry::register(new TriadicGenerator(240));  // triadic2: base + 240°
+GeneratorRegistry::register(new TriadicGenerator(120));  // triadic1: base + 120°
+GeneratorRegistry::register(new TriadicGenerator(240));  // triadic2: base + 240°
 
 $red = Color::rgb(255, 0, 0);
 

@@ -6,7 +6,6 @@ namespace Negarity\Color\Generator;
 
 use Negarity\Color\Color;
 use Negarity\Color\ColorInterface;
-use Negarity\Color\Filter\Parameterized\ParameterizedColorFilterInterface;
 use Negarity\Color\ColorSpace\HSL;
 use Negarity\Color\ColorSpace\LCh;
 use Negarity\Color\ColorSpace\HSV;
@@ -19,11 +18,11 @@ use Negarity\Color\ColorSpace\HSV;
  * - Perceptual: LCh hue + 120° or + 240° (perceptually uniform).
  * - DisplayAccurate: HSV hue + 120° or + 240°, then convert back to RGB.
  *
- * Register two instances with FilterRegistry for both triadic colors:
- *   FilterRegistry::register(new TriadicGenerator(120));  // triadic1
- *   FilterRegistry::register(new TriadicGenerator(240));  // triadic2
+ * Register two instances with GeneratorRegistry for both triadic colors:
+ *   GeneratorRegistry::register(new TriadicGenerator(120));  // triadic1
+ *   GeneratorRegistry::register(new TriadicGenerator(240));  // triadic2
  */
-final class TriadicGenerator implements ParameterizedColorFilterInterface
+final class TriadicGenerator implements GeneratorInterface
 {
     private const NAME_TRIADIC_1 = 'triadic1';
     private const NAME_TRIADIC_2 = 'triadic2';

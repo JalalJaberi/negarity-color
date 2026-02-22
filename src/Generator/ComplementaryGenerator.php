@@ -6,7 +6,6 @@ namespace Negarity\Color\Generator;
 
 use Negarity\Color\Color;
 use Negarity\Color\ColorInterface;
-use Negarity\Color\Filter\Parameterized\ParameterizedColorFilterInterface;
 use Negarity\Color\ColorSpace\HSL;
 use Negarity\Color\ColorSpace\RGB;
 use Negarity\Color\ColorSpace\LCh;
@@ -19,10 +18,10 @@ use Negarity\Color\ColorSpace\LCh;
  * - Perceptual: LCh hue + 180° (perceptually uniform).
  * - DisplayAccurate: RGB invert (255 - r, g, b).
  *
- * Register with FilterRegistry so $color->complementary($method) works:
- *   FilterRegistry::register(new ComplementaryGenerator());
+ * Register with GeneratorRegistry so $color->complementary($method) works:
+ *   GeneratorRegistry::register(new ComplementaryGenerator());
  */
-final class ComplementaryGenerator implements ParameterizedColorFilterInterface
+final class ComplementaryGenerator implements GeneratorInterface
 {
     #[\Override]
     public function getName(): string
