@@ -7,7 +7,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Negarity Color',
   tagline: 'A modern extensible color manipulation library for PHP',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.png',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -77,8 +77,8 @@ const config: Config = {
     navbar: {
       title: 'Negarity Color',
       logo: {
-        alt: 'Negarity Color Logo',
-        src: 'img/logo.svg',
+        alt: 'Negarity Logo',
+        src: 'img/logo.png',
       },
       items: [
         {
@@ -88,6 +88,7 @@ const config: Config = {
           label: 'Tutorial',
         },
         {to: '/blog', label: 'Blog', position: 'left'},
+        { label: 'Negarity', href: 'https://negarity.com', position: 'left' },
         {
           href: 'https://github.com/JalalJaberi/negarity-color',
           label: 'GitHub',

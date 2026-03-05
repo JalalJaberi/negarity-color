@@ -23,6 +23,12 @@
   /* Borders */
   --ifm-color-emphasis-200: #B9B6B1;
 
+  /* Footer – harmonize with palette (style: dark uses dark tones) */
+  --ifm-footer-background-color: #2a2a28;
+  --ifm-footer-color: #F2EFEA;
+  --ifm-footer-link-color: var(--ifm-color-primary-light);
+  --ifm-footer-title-color: #F2EFEA;
+
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.06);
 }
@@ -42,6 +48,9 @@
   --ifm-font-color-base: #F2EFEA;
 
   --ifm-color-emphasis-200: #555550;
+
+  /* Footer – dark mode (slightly deeper) */
+  --ifm-footer-background-color: #222220;
 
   --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.06);
 }

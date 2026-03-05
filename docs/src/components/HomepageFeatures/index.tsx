@@ -5,14 +5,14 @@ import styles from './styles.module.css';
 
 type FeatureItem = {
   title: string;
-  Svg: React.ComponentType<React.ComponentProps<'svg'>>;
+  image: string;
   description: ReactNode;
 };
 
 const FeatureList: FeatureItem[] = [
   {
     title: 'Intuitive',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    image: require('@site/static/img/negarity-color-doc-home-1.png').default,
     description: (
       <>
         negarity color provides a simple and intuitive API for color manipulation and conversion.
@@ -21,7 +21,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: 'Extencible',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    image: require('@site/static/img/negarity-color-doc-home-2.png').default,
     description: (
       <>
         negarity color is built with extensibility in mind. You can easily add new color spaced and color manipulations.
@@ -30,7 +30,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: 'Modern PHP',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    image: require('@site/static/img/negarity-color-doc-home-3.png').default,
     description: (
       <>
         negarity color leverages modern PHP features like type declarations and namespaces to provide a robust and reliable experience.
@@ -39,11 +39,11 @@ const FeatureList: FeatureItem[] = [
   },
 ];
 
-function Feature({title, Svg, description}: FeatureItem) {
+function Feature({title, image, description}: FeatureItem) {
   return (
     <div className={clsx('col col--4')}>
       <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" />
+        <img src={image} alt="" className={styles.featureSvg} role="img" />
       </div>
       <div className="text--center padding-horiz--md">
         <Heading as="h3">{title}</Heading>
