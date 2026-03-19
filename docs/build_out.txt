@@ -1,0 +1,31 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
+
+> docs@0.0.0 build
+> cross-env NODE_ENV=production docusaurus build
+
+[INFO] Website will be built for all these locales: 
+- en
+- sv
+[INFO] [en] Creating an optimized production build...
+[WARNING] Docusaurus found blog posts without truncation markers:
+- "blog/2024-12-19-introducing-negarity-color.md"
+
+We recommend using truncation markers (`<!-- truncate -->` or `{/* truncate */}`) in blog posts to create shorter previews on blog paginated lists.
+Tip: turn this security off with the `onUntruncatedBlogPosts: 'ignore'` blog plugin option.
+[info] [webpackbar] Compiling Client
+[info] [webpackbar] Compiling Server
+[success] [webpackbar] Server: Compiled successfully in 17.51s
+[success] [webpackbar] Client: Compiled successfully in 22.72s
+[SUCCESS] Generated static files in "build".
+[INFO] [sv] Creating an optimized production build...
+[WARNING] Docusaurus found blog posts without truncation markers:
+- "blog/2024-12-19-introducing-negarity-color.md"
+
+We recommend using truncation markers (`<!-- truncate -->` or `{/* truncate */}`) in blog posts to create shorter previews on blog paginated lists.
+Tip: turn this security off with the `onUntruncatedBlogPosts: 'ignore'` blog plugin option.
+[info] [webpackbar] Compiling Client
+[info] [webpackbar] Compiling Server
+[success] [webpackbar] Server: Compiled successfully in 11.46s
+[success] [webpackbar] Client: Compiled successfully in 16.20s
+[SUCCESS] Generated static files in "build/sv".
+[INFO] Use `npm run serve` command to test your build locally.
