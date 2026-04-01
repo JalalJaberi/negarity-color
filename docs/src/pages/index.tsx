@@ -2,11 +2,19 @@ import type {ReactNode} from 'react';
 import {useEffect, useRef, useState} from 'react';
 import type {ChangeEvent} from 'react';
 import Link from '@docusaurus/Link';
+import {useHistory} from '@docusaurus/router';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 import styles from './index.module.css';
 
 const CELL_SIZE = 10;
 const CHANGES_PER_TICK = 25;
+
+/** Auto-advance when average convergence reaches this (same as level 5 in the old scale). */
+const AUTO_NAV_THRESHOLD_PERCENT = 80;
+
+/** Max Euclidean distance in sRGB 0–255 space (black ↔ white diagonal). */
+const MAX_RGB_DISTANCE = Math.sqrt(255 * 255 * 3);
 
 type Rgb = {
   r: number;
@@ -48,12 +56,36 @@ function moveTowardTarget(current: Rgb, target: Rgb): Rgb {
   };
 }
 
+function colorDistance(a: Rgb, b: Rgb): number {
+  return Math.sqrt((a.r - b.r) ** 2 + (a.g - b.g) ** 2 + (a.b - b.b) ** 2);
+}
+
+function cellConversionRatio(cell: Rgb, goal: Rgb): number {
+  const d = colorDistance(cell, goal);
+  const ratio = 1 - d / MAX_RGB_DISTANCE;
+  return Math.max(0, Math.min(1, ratio));
+}
+
+function gridConversionPercent(cells: Rgb[], goal: Rgb): number {
+  if (cells.length === 0) return 0;
+  let sum = 0;
+  for (const c of cells) {
+    sum += cellConversionRatio(c, goal);
+  }
+  return (sum / cells.length) * 100;
+}
+
 export default function Home(): ReactNode {
+  const history = useHistory();
+  const gettingStartedTo = useBaseUrl('/docs/getting-started');
+
   const mainRef = useRef<HTMLDivElement | null>(null);
   const [cellCount, setCellCount] = useState(0);
   const [cellColors, setCellColors] = useState<Rgb[]>([]);
   const [targetColor, setTargetColor] = useState<Rgb>(randomColor());
   const targetColorRef = useRef<Rgb>(targetColor);
+  const [conversionPercent, setConversionPercent] = useState(0);
+  const autoNavigatedForGoalRef = useRef<string>('');
 
   useEffect(() => {
     targetColorRef.current = targetColor;
@@ -63,8 +95,6 @@ export default function Home(): ReactNode {
     const element = mainRef.current;
     if (!element) return;
 
-    // Create the grid once on mount.
-    // After that, we only change colors (as requested).
     const cols = Math.max(1, Math.ceil(element.clientWidth / CELL_SIZE));
     const rows = Math.max(1, Math.ceil(element.clientHeight / CELL_SIZE));
     const nextCount = cols * rows;
@@ -87,8 +117,9 @@ export default function Home(): ReactNode {
           used.add(Math.floor(Math.random() * next.length));
         }
 
+        const goal = targetColorRef.current;
         for (const index of used) {
-          next[index] = moveTowardTarget(next[index], targetColorRef.current);
+          next[index] = moveTowardTarget(next[index], goal);
         }
 
         return next;
@@ -98,10 +129,38 @@ export default function Home(): ReactNode {
     return () => window.clearInterval(timer);
   }, [cellCount]);
 
+  useEffect(() => {
+    if (cellColors.length === 0) return;
+    setConversionPercent(gridConversionPercent(cellColors, targetColor));
+  }, [cellColors, targetColor]);
+
+  const goalKey = `${targetColor.r},${targetColor.g},${targetColor.b}`;
+
+  useEffect(() => {
+    autoNavigatedForGoalRef.current = '';
+  }, [goalKey]);
+
+  useEffect(() => {
+    if (conversionPercent < AUTO_NAV_THRESHOLD_PERCENT) return;
+    if (autoNavigatedForGoalRef.current === goalKey) return;
+    autoNavigatedForGoalRef.current = goalKey;
+    history.push(gettingStartedTo);
+  }, [conversionPercent, goalKey, gettingStartedTo, history]);
+
   const onTargetColorChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const next = fromHex(event.target.value);
     setTargetColor(next);
   };
+
+  const percentLabel =
+    conversionPercent < 10
+      ? conversionPercent.toFixed(1)
+      : conversionPercent.toFixed(0);
+
+  const remainingToThreshold = Math.max(
+    0,
+    AUTO_NAV_THRESHOLD_PERCENT - conversionPercent,
+  );
 
   return (
     <div ref={mainRef} className={styles.main}>
@@ -122,8 +181,42 @@ export default function Home(): ReactNode {
           value={toHex(targetColor)}
           onChange={onTargetColorChange}
         />
-        <Link className="button button--secondary button--lg" to="/docs/getting-started">
-          Get Started
+
+        <div className={styles.readout} aria-live="polite">
+          <span className={styles.readoutLabel}>Converged toward goal</span>
+          <span className={styles.readoutValue}>
+            {conversionPercent < 10
+              ? conversionPercent.toFixed(1)
+              : conversionPercent.toFixed(0)}
+            %
+          </span>
+          <span className={styles.readoutMeta}>
+            <strong className={styles.readoutThreshold}>
+              Threshold: {AUTO_NAV_THRESHOLD_PERCENT}% average convergence
+            </strong>
+            <span className={styles.readoutHint}>
+              Cross that value and this page opens Getting Started automatically.
+            </span>
+            {conversionPercent < AUTO_NAV_THRESHOLD_PERCENT && (
+              <span className={styles.readoutRemaining}>
+                Remaining until threshold:{' '}
+                {remainingToThreshold < 10
+                  ? remainingToThreshold.toFixed(1)
+                  : Math.ceil(remainingToThreshold)}
+                %
+              </span>
+            )}
+          </span>
+        </div>
+
+        <Link
+          className={`button button--secondary button--lg ${styles.ctaButton}`}
+          to={gettingStartedTo}
+          aria-label={`Get Started — ${percentLabel}% converged; ${AUTO_NAV_THRESHOLD_PERCENT}% opens the tutorial automatically`}>
+          Get Started{' '}
+          <span className={styles.buttonPercent} aria-hidden="true">
+            · {percentLabel}%
+          </span>
         </Link>
       </div>
     </div>
