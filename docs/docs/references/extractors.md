@@ -5,104 +5,74 @@ sidebar_position: 4
 
 # Extractors Reference
 
-Extractors are tools for analyzing and extracting information from colors. This reference covers the extractor system in Negarity Color.
+Extractors compute a single **numeric or string value** from a `ColorInterface` instance (and optional parameters). They live in the `Negarity\Color\Extractor` namespace—there is **no** `Extractor\Analysis` sub-namespace in this library.
 
-## Available Extractors
+## Registry
 
-The Negarity Color library includes extractors in the `Extractor/Analysis` namespace:
+Built-in extractors are **not** auto-registered. Register the ones you need on `ExtractorRegistry`, then resolve by name:
 
-### Analysis Extractors
+- `ExtractorRegistry::register(ExtractorInterface $extractor): void`
+- `ExtractorRegistry::get(string $name): ExtractorInterface` — throws `ExtractorNotFoundException` if missing
+- `ExtractorRegistry::has(string $name): bool`
+- `ExtractorRegistry::unregister(string $name): void` — throws `ExtractorNotFoundException` if missing
 
-These extractors provide color analysis capabilities:
-
-| Extractor | Class | Description |
-|-----------|-------|-------------|
-| **Contrast Analyzer** | `ContrastAnalyzer` | Analyzes color contrast ratios |
-| **Delta E Analyzer** | `DeltaEAnalyzer` | Calculates perceptual color difference (ΔE) |
-| **Luminance Analyzer** | `LuminanceAnalyzer` | Calculates relative luminance |
-
-## Using Extractors
-
-Extractors are typically used to analyze color properties:
+You must also register color spaces (e.g. `ColorSpaceRegistry::registerBuiltIn()`) before creating or converting colors.
 
 ```php
-use Negarity\Color\Extractor\Analysis\LuminanceAnalyzer;
 use Negarity\Color\Color;
+use Negarity\Color\Extractor\BrightnessExtractor;
+use Negarity\Color\Extractor\ExtractorRegistry;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+ColorSpaceRegistry::registerBuiltIn();
+ExtractorRegistry::register(new BrightnessExtractor());
 
 $color = Color::rgb(255, 100, 50);
-$analyzer = new LuminanceAnalyzer();
-$luminance = $analyzer->analyze($color);
+$value = ExtractorRegistry::get('brightness')->extract($color);
+$label = BrightnessExtractor::getLabelForValue($value);
 ```
 
-## Extractor Interface
+## Built-in extractors
 
-All extractors implement the `ExtractorInterface`:
+| Registry name | Class | Returns | Notes |
+|---------------|-------|---------|--------|
+| `temperature` | `TemperatureExtractor` | `float` (−1 cold … 1 warm) | From HSL hue |
+| `brightness` | `BrightnessExtractor` | `float` (0–100) | LCh L (perceived lightness) |
+| `saturation` | `SaturationExtractor` | `float` (0–100) | LCh chroma normalized |
+| `chroma` | `ChromaExtractor` | `float` (0–100) | Neutral vs “colory” |
+| `perceived_weight` | `PerceivedWeightExtractor` | `float` (0–100) | Dark + saturated → heavier |
+| `vibrancy` | `VibrancyExtractor` | `float` (0–100) | Mid-light + high chroma peaks |
+| `contrast` | `ContrastExtractor` | `float` (1–21) | WCAG contrast vs another color |
+
+Each built-in class provides **`public static function getLabelForValue(float|string $value): string`** for human-readable labels (WCAG bands for contrast, buckets for brightness, etc.).
+
+### Contrast extractor parameters
+
+`ContrastExtractor::extract($color, $params)`:
+
+- `null` or `'white'` — contrast against white (default)
+- `'black'` — contrast against black
+- Any `ColorInterface` — contrast against that color
+
+## `ExtractorInterface`
 
 ```php
 interface ExtractorInterface
 {
-    public function extract(ColorInterface $color): mixed;
+    public function getName(): string;
+
+    public function extract(ColorInterface $color, mixed $params = null): float|string;
 }
 ```
 
-## Common Use Cases
+Implementations should also expose **`getLabelForValue()`** (static, on the concrete class) so UIs can show labels for extracted values. The return type of `extract()` is **`float|string`** only.
 
-### Color Contrast Analysis
+## Example (all built-ins)
 
-```php
-use Negarity\Color\Extractor\Analysis\ContrastAnalyzer;
+See the library example `examples/Extractor/Extractors.php`—it registers every built-in extractor and prints value + label for sample colors.
 
-$color1 = Color::rgb(255, 255, 255); // White
-$color2 = Color::rgb(0, 0, 0);       // Black
+## See also
 
-$analyzer = new ContrastAnalyzer();
-$contrast = $analyzer->getContrastRatio($color1, $color2);
-// Returns contrast ratio (e.g., 21:1 for black/white)
-```
-
-### Color Difference Analysis
-
-```php
-use Negarity\Color\Extractor\Analysis\DeltaEAnalyzer;
-
-$color1 = Color::rgb(255, 100, 50);
-$color2 = Color::rgb(250, 105, 55);
-
-$analyzer = new DeltaEAnalyzer();
-$deltaE = $analyzer->calculate($color1, $color2);
-// Returns perceptual color difference
-```
-
-### Luminance Analysis
-
-```php
-use Negarity\Color\Extractor\Analysis\LuminanceAnalyzer;
-
-$color = Color::rgb(255, 100, 50);
-$analyzer = new LuminanceAnalyzer();
-$luminance = $analyzer->analyze($color);
-// Returns relative luminance (0.0 to 1.0)
-```
-
-## Creating Custom Extractors
-
-To create a custom extractor, implement the `ExtractorInterface`:
-
-```php
-use Negarity\Color\ColorInterface;
-use Negarity\Color\Extractor\ExtractorInterface;
-
-class MyCustomExtractor implements ExtractorInterface
-{
-    public function extract(ColorInterface $color): mixed
-    {
-        // Your extraction logic
-        return $result;
-    }
-}
-```
-
-## See Also
-
-- [Introduction to Extractors](/docs/extractors-analysis/introduction) - Overview of extractors
-- [Adding Extractors](/docs/extending/extractors) - How to create custom extractors
+- [Introduction to Extractors](/docs/extractors-analysis/introduction)
+- [Adding Extractors](/docs/extending/extractors)
+- [Exceptions Reference](/docs/references/exceptions) — `ExtractorNotFoundException`

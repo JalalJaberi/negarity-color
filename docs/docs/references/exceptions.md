@@ -7,12 +7,14 @@ This library uses a comprehensive exception hierarchy to provide clear error mes
 ```
 \Exception
 ├── \InvalidArgumentException
-│   └── InvalidColorValueException
+│   ├── InvalidColorValueException
 │   └── InvalidFormatException
 └── \RuntimeException
     ├── ColorSpaceNotFoundException
     ├── ConversionNotSupportedException
+    ├── ExtractorNotFoundException
     ├── FilterNotFoundException
+    ├── GeneratorNotFoundException
     ├── NamedColorNotFoundException
     └── UnsupportedColorSpaceException
 ```
@@ -149,9 +151,58 @@ try {
     // Output: Filter 'brightness' not registered.
 }
 
-// Solution: Register filters first
-FilterRegistry::registerBuiltIn();
+// Solution: Register the filter (each filter is registered explicitly; there is no registerBuiltIn)
+use Negarity\Color\Filter\Parameterized\BrightnessFilter;
+
+FilterRegistry::register(new BrightnessFilter());
 ```
+
+---
+
+### ExtractorNotFoundException
+
+**Extends:** `\RuntimeException`  
+**Implements:** `ColorExceptionInterface`
+
+Thrown when a requested extractor is not registered in `ExtractorRegistry` (e.g. `ExtractorRegistry::get('brightness')` or `unregister()` on a missing name).
+
+**Common scenarios:**
+
+- Calling `ExtractorRegistry::get()` before registering that extractor
+- Typo in extractor name
+- Extractor was unregistered
+
+**Example:**
+
+```php
+use Negarity\Color\Extractor\BrightnessExtractor;
+use Negarity\Color\Extractor\ExtractorRegistry;
+use Negarity\Color\Exception\ExtractorNotFoundException;
+
+try {
+    ExtractorRegistry::get('brightness')->extract($color);
+} catch (ExtractorNotFoundException $e) {
+    echo $e->getMessage(); // Extractor 'brightness' not registered.
+}
+
+ExtractorRegistry::register(new BrightnessExtractor());
+```
+
+---
+
+### GeneratorNotFoundException
+
+**Extends:** `\RuntimeException`  
+**Implements:** `ColorExceptionInterface`
+
+Thrown when a requested palette generator is not registered in `GeneratorRegistry`.
+
+**Common scenarios:**
+
+- Using `GeneratorRegistry::get()` for a name that was never registered
+- Generator was unregistered
+
+See the generators documentation and `examples/Generator/` for registering built-in generators.
 
 ---
 
@@ -219,9 +270,12 @@ Always register color spaces and filters before use:
 use Negarity\Color\Registry\ColorSpaceRegistry;
 use Negarity\Color\Filter\FilterRegistry;
 
-// Register built-in components
+// Register built-in color spaces
 ColorSpaceRegistry::registerBuiltIn();
-FilterRegistry::registerBuiltIn();
+
+// Register each filter you use (no bulk registerBuiltIn on FilterRegistry)
+use Negarity\Color\Filter\Parameterized\BrightnessFilter;
+FilterRegistry::register(new BrightnessFilter());
 ```
 
 ### 2. Check Before Converting

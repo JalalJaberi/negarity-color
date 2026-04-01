@@ -11,12 +11,13 @@ Welcome to **Negarity Color** — a modern, extensible color manipulation librar
 Negarity Color is a comprehensive PHP library for working with colors. It provides:
 
 - **Multiple Color Spaces**: Support for RGB, RGBA, CMYK, HSL, HSLA, HSV, Lab, LCh, XYZ, and YCbCr
-- **Pluggable Registry System**: All color spaces, filters, and named colors use a flexible registry system
+- **Pluggable Registry System**: Color spaces, filters, extractors, generators, and named colors use registries where appropriate
 - **Easy Conversions**: Convert between any supported color spaces seamlessly (automatic via RGB hub)
 - **Named Colors**: Use predefined color names from various color registries
 - **Filters**: Apply various color filters and transformations (work with any color space via RGB fallback)
-- **Extractors**: Extract color palettes, histograms, and metadata
-- **Extensible**: Easily extend the library with custom color spaces, names, filters, and extractors
+- **Extractors**: Derive scalar metrics from a color (brightness, contrast, temperature, etc.) via `ExtractorRegistry`
+- **Generators**: Build harmonic palettes (complementary, analogous, etc.) via `GeneratorRegistry`
+- **Extensible**: Easily extend the library with custom color spaces, names, filters, extractors, and generators
 - **Float Precision**: All channel values use floats for maximum precision throughout conversions
 
 ## Documentation Structure
@@ -59,6 +60,7 @@ Learn how to extend Negarity Color:
 - [Adding Color Names](/docs/extending/color-names)
 - [Adding Extractors](/docs/extending/extractors)
 - [Adding Filters](/docs/extending/filters)
+- [Adding Generators](/docs/extending/adding-generators)
 
 ## Quick Start
 

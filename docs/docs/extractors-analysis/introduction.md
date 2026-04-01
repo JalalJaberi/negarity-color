@@ -5,8 +5,56 @@ sidebar_position: 1
 
 # Introduction to Extractors
 
-This page will cover:
-- What are extractors
-- Available extractors (ColorPaletteExtractor, HistogramExtractor, MetadataExtractor)
-- How to use extractors
-- Analysis features
+**Extractors** are small services that read a `ColorInterface` and return one **scalar** result: either a **`float`** or a **`string`** (for example a category slug). They are useful for theming, accessibility checks, UI copy (“warm”, “very dark”), and analytics.
+
+## How they fit in the library
+
+- Classes live under **`Negarity\Color\Extractor`**.
+- They are looked up by name via **`ExtractorRegistry`** (same idea as `FilterRegistry` for filters).
+- The extractor registry has **no** `registerBuiltIn()` helper—you **`register()`** each extractor instance you need.
+
+Always call **`ColorSpaceRegistry::registerBuiltIn()`** (or register spaces yourself) before creating colors, same as elsewhere in the docs.
+
+## Built-in extractors
+
+| Name | What it measures |
+|------|------------------|
+| `temperature` | Warm vs cool (−1 … 1) from hue |
+| `brightness` | Perceived lightness 0–100 (LCh L) |
+| `saturation` | Vivid vs dull 0–100 (LCh-based) |
+| `chroma` | How “colored” vs neutral 0–100 |
+| `perceived_weight` | Visual heaviness 0–100 |
+| `vibrancy` | Dull vs vibrant 0–100 |
+| `contrast` | WCAG contrast ratio vs white, black, or another color |
+
+Each built-in extractor class implements **`ExtractorInterface`** and exposes **`getLabelForValue()`** so you can turn numbers into short labels.
+
+## Quick example
+
+```php
+use Negarity\Color\Color;
+use Negarity\Color\Extractor\ContrastExtractor;
+use Negarity\Color\Extractor\ExtractorRegistry;
+use Negarity\Color\Extractor\TemperatureExtractor;
+use Negarity\Color\Registry\ColorSpaceRegistry;
+
+ColorSpaceRegistry::registerBuiltIn();
+ExtractorRegistry::register(new TemperatureExtractor());
+ExtractorRegistry::register(new ContrastExtractor());
+
+$color = Color::rgb(30, 30, 180);
+
+$temp = ExtractorRegistry::get('temperature')->extract($color);
+echo TemperatureExtractor::getLabelForValue($temp); // e.g. "cool"
+
+$ratio = ExtractorRegistry::get('contrast')->extract($color, 'white');
+echo ContrastExtractor::getLabelForValue($ratio);   // e.g. "AA", "AAA"
+```
+
+## Custom extractors
+
+Implement **`ExtractorInterface`**, add a **`getLabelForValue()`** helper on your class, then **`ExtractorRegistry::register(new YourExtractor())`**. See [Adding Extractors](/docs/extending/extractors).
+
+## Reference
+
+- [Extractors Reference](/docs/references/extractors) — API details and parameter semantics
