@@ -30,6 +30,7 @@
 ### Add these to generators/extractors
 - complement(), triadic(), analogous() color palette helpers.
 - average() / mean() of multiple colors (weighted).
+- also implement different temperature formulas/calculation models
 ### use toInt() / toPackedInt() and fromPackedInt() for fast storage. for performance
 ### toCssVariable() helper
 ### Add more exceptions to the code and complete exception codes
