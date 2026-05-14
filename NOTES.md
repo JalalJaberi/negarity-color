@@ -3,6 +3,7 @@
 ### Extensible: So the developer can add more color spaces, more named color sets, filters, ...
 
 ## todos:
+### add extractors to docs (and later link to them in the website)
 ### more flexibility for channel values (use float and percentage)
 ### more flexibility to convert from string (percentage values, float values, regex)
 ### Add more named colors (web, ...)
