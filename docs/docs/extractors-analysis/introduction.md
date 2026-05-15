@@ -19,7 +19,7 @@ Always call **`ColorSpaceRegistry::registerBuiltIn()`** (or register spaces your
 
 | Name | What it measures |
 |------|------------------|
-| `temperature` | Warm vs cool (−1 … 1) from hue |
+| `temperature` | Warm vs cool (−1 … 1) from chromaticity — see [Temperature](/docs/extractors-analysis/temperature) |
 | `brightness` | Perceived lightness 0–100 (LCh L) |
 | `saturation` | Vivid vs dull 0–100 (LCh-based) |
 | `chroma` | How “colored” vs neutral 0–100 |
@@ -57,4 +57,5 @@ Implement **`ExtractorInterface`**, add a **`getLabelForValue()`** helper on you
 
 ## Reference
 
+- [Temperature](/docs/extractors-analysis/temperature) — how CCT is computed (McCamy vs Planckian UCS search)
 - [Extractors Reference](/docs/references/extractors) — API details and parameter semantics

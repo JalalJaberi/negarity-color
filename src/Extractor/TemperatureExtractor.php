@@ -9,10 +9,12 @@ use Negarity\Color\ColorInterface;
 /**
  * Correlated color temperature (warm vs cold) from chromaticity vs the Planckian locus.
  *
- * Pipeline: sRGB (via library XYZ path = linear sRGB → XYZ) → CIE 1931 (x,y) → CIE 1960 UCS (u,v)
- * → nearest point on the Planckian locus in (u,v) → Kelvin → normalized scalar in [-1, 1] for UI/sliders.
+ * Pipeline: sRGB (via library XYZ path = linear sRGB → XYZ) → CIE 1931 (x,y).
  *
- * Planckian xy(T) follows Kim / Bruce Lindbloom-style polynomials on the black-body locus.
+ * Algorithms (see {@see extract()} `$params['algorithm']`):
+ * - **McCamy** (default): cubic fit from (x,y) to CCT (Kelvin).
+ * - **nearestPlanckianUcs1960**: (x,y) → CIE 1960 UCS (u,v), then brute-force nearest
+ *   point on the Planckian locus (Kim / Lindbloom polynomials) in (u,v).
  */
 final class TemperatureExtractor implements ExtractorInterface
 {
@@ -28,11 +30,26 @@ final class TemperatureExtractor implements ExtractorInterface
     /** Approximately maps ~1500 K … ~11500 K into [-1, 1]. */
     private const float KELVIN_SCALE = 4200.0;
 
+    /** McCamy (x,y) reference for CCT cubic (CIE 1931). */
+    private const float MCCAMY_XE = 0.3320;
+
+    private const float MCCAMY_YE = 0.1858;
+
+    /** Default extractor algorithm key. */
+    public const string ALGORITHM_MCCAMY = 'mccamy';
+
+    /** Brute-force nearest Planckian locus search in CIE 1960 UCS. */
+    public const string ALGORITHM_NEAREST_PLANCKIAN_UCS1960 = 'nearestPlanckianUcs1960';
+
     public function getName(): string
     {
         return 'temperature';
     }
 
+    /**
+     * @param mixed $params Optional associative array:
+     *                      - `algorithm` (string): {@see ALGORITHM_MCCAMY} (default) or {@see ALGORITHM_NEAREST_PLANCKIAN_UCS1960}
+     */
     public function extract(ColorInterface $color, mixed $params = null): float
     {
         $xyz = $color->toXYZ();
@@ -48,11 +65,81 @@ final class TemperatureExtractor implements ExtractorInterface
         $cx = $X / $sum;
         $cy = $Y / $sum;
 
-        [$u, $v] = self::cie1931_xy_to_uv1960($cx, $cy);
+        $algorithm = self::resolveAlgorithm($params);
 
-        $t = self::nearest_planckian_temperature_kelvin_uv($u, $v);
+        $kelvin = match ($algorithm) {
+            self::ALGORITHM_NEAREST_PLANCKIAN_UCS1960 => self::kelvinNearestPlanckianLocusSearchUcs1960($cx, $cy),
+            default => self::kelvinMcCamyApproximation($cx, $cy),
+        };
 
-        return self::kelvin_to_signed_unit($t);
+        return self::kelvinToSignedUnit($kelvin);
+    }
+
+    /**
+     * @param mixed $params
+     */
+    private static function resolveAlgorithm(mixed $params): string
+    {
+        if (!is_array($params)) {
+            return self::ALGORITHM_MCCAMY;
+        }
+
+        if (!array_key_exists('algorithm', $params)) {
+            return self::ALGORITHM_MCCAMY;
+        }
+
+        $key = strtolower(trim((string) $params['algorithm']));
+
+        return match ($key) {
+            'mccamy', 'mccamy1992', 'mccamy1993', '' => self::ALGORITHM_MCCAMY,
+            'nearestplanckianucs1960',
+            'nearest_planckian_ucs1960',
+            'ucs1960',
+            'brute',
+            'bruteforce',
+            'brute_force',
+            'planckian_locus',
+            'planckianlocus' => self::ALGORITHM_NEAREST_PLANCKIAN_UCS1960,
+            default => self::ALGORITHM_MCCAMY,
+        };
+    }
+
+    /**
+     * McCamy cubic correlated color temperature from CIE 1931 chromaticity (x, y).
+     *
+     * @see https://en.wikipedia.org/wiki/Color_temperature#Approximation (McCamy)
+     */
+    private static function kelvinMcCamyApproximation(float $x, float $y): float
+    {
+        $denom = $y - self::MCCAMY_YE;
+        if (abs($denom) < 1e-12) {
+            return self::KELVIN_NEUTRAL;
+        }
+
+        $n = ($x - self::MCCAMY_XE) / $denom;
+
+        $t = -437.0 * $n ** 3
+            + 3601.0 * $n ** 2
+            - 6861.0 * $n
+            + 5514.31;
+
+        return max(1000.0, min(250000.0, $t));
+    }
+
+    /**
+     * Brute-force nearest Planckian locus search in CIE 1960 UCS: minimizes squared distance in (u, v).
+     *
+     * Pipeline: (x,y) → (u,v) → nearest Kelvin on locus → Kelvin.
+     *
+     * Planckian xy(T) follows Kim / Bruce Lindbloom-style polynomials on the black-body locus.
+     *
+     * @see https://www.brucelindbloom.com/Eqn_XYZ_to_xyb_T.html
+     */
+    private static function kelvinNearestPlanckianLocusSearchUcs1960(float $x, float $y): float
+    {
+        [$u, $v] = self::cie1931XyToUv1960($x, $y);
+
+        return self::nearestPlanckianTemperatureKelvinUv($u, $v);
     }
 
     /**
@@ -60,7 +147,7 @@ final class TemperatureExtractor implements ExtractorInterface
      *
      * @return array{0: float, 1: float} u, v
      */
-    private static function cie1931_xy_to_uv1960(float $x, float $y): array
+    private static function cie1931XyToUv1960(float $x, float $y): array
     {
         $denom = -2.0 * $x + 12.0 * $y + 3.0;
         if (abs($denom) < 1e-12) {
@@ -77,10 +164,8 @@ final class TemperatureExtractor implements ExtractorInterface
      * Planckian locus CIE 1931 x,y for absolute temperature T (Kelvin).
      *
      * Polynomials from Kim / Bruce Lindbloom (black-body chromaticity approximation).
-     *
-     * @see https://www.brucelindbloom.com/Eqn_XYZ_to_xyb_T.html
      */
-    private static function planckian_xy_from_kelvin(float $t): array
+    private static function planckianXyFromKelvin(float $t): array
     {
         $t = max(1000.0, min(250000.0, $t));
 
@@ -119,13 +204,13 @@ final class TemperatureExtractor implements ExtractorInterface
     /**
      * Nearest Planckian temperature minimizing squared distance in CIE 1960 (u,v).
      */
-    private static function nearest_planckian_temperature_kelvin_uv(float $u, float $v): float
+    private static function nearestPlanckianTemperatureKelvinUv(float $u, float $v): float
     {
         $bestT = self::KELVIN_NEUTRAL;
         $bestD = PHP_FLOAT_MAX;
 
         for ($t = 1000.0; $t <= 25000.0; $t += self::KELVIN_COARSE_STEP) {
-            [$pu, $pv] = self::planckian_uv1960_from_kelvin($t);
+            [$pu, $pv] = self::planckianUv1960FromKelvin($t);
             $d = ($pu - $u) * ($pu - $u) + ($pv - $v) * ($pv - $v);
             if ($d < $bestD) {
                 $bestD = $d;
@@ -136,7 +221,7 @@ final class TemperatureExtractor implements ExtractorInterface
         $t0 = max(1000.0, $bestT - self::KELVIN_FINE_RADIUS);
         $t1 = min(25000.0, $bestT + self::KELVIN_FINE_RADIUS);
         for ($t = $t0; $t <= $t1; $t += self::KELVIN_FINE_STEP) {
-            [$pu, $pv] = self::planckian_uv1960_from_kelvin($t);
+            [$pu, $pv] = self::planckianUv1960FromKelvin($t);
             $d = ($pu - $u) * ($pu - $u) + ($pv - $v) * ($pv - $v);
             if ($d < $bestD) {
                 $bestD = $d;
@@ -150,17 +235,17 @@ final class TemperatureExtractor implements ExtractorInterface
     /**
      * @return array{0: float, 1: float} u, v (1960 UCS)
      */
-    private static function planckian_uv1960_from_kelvin(float $t): array
+    private static function planckianUv1960FromKelvin(float $t): array
     {
-        [$x, $y] = self::planckian_xy_from_kelvin($t);
+        [$x, $y] = self::planckianXyFromKelvin($t);
 
-        return self::cie1931_xy_to_uv1960($x, $y);
+        return self::cie1931XyToUv1960($x, $y);
     }
 
     /**
      * Map Kelvin to [-1, 1]: lower K (warmer light) → positive; higher K (cooler) → negative.
      */
-    private static function kelvin_to_signed_unit(float $kelvin): float
+    private static function kelvinToSignedUnit(float $kelvin): float
     {
         $kelvin = max(500.0, min(100000.0, $kelvin));
         $signed = (self::KELVIN_NEUTRAL - $kelvin) / self::KELVIN_SCALE;

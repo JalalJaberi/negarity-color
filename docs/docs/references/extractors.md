@@ -36,7 +36,7 @@ $label = BrightnessExtractor::getLabelForValue($value);
 
 | Registry name | Class | Returns | Notes |
 |---------------|-------|---------|--------|
-| `temperature` | `TemperatureExtractor` | `float` (−1 cold … 1 warm) | From HSL hue |
+| `temperature` | `TemperatureExtractor` | `float` (−1 cold … 1 warm) | CCT via McCamy (default) or optional Planckian UCS search — [guide](/docs/extractors-analysis/temperature) and below |
 | `brightness` | `BrightnessExtractor` | `float` (0–100) | LCh L (perceived lightness) |
 | `saturation` | `SaturationExtractor` | `float` (0–100) | LCh chroma normalized |
 | `chroma` | `ChromaExtractor` | `float` (0–100) | Neutral vs “colory” |
@@ -45,6 +45,22 @@ $label = BrightnessExtractor::getLabelForValue($value);
 | `contrast` | `ContrastExtractor` | `float` (1–21) | WCAG contrast vs another color |
 
 Each built-in class provides **`public static function getLabelForValue(float|string $value): string`** for human-readable labels (WCAG bands for contrast, buckets for brightness, etc.).
+
+### Temperature extractor parameters
+
+For a **step-by-step** explanation of chromaticity → Kelvin → signed value and both algorithms, see the **[Temperature](/docs/extractors-analysis/temperature)** guide.
+
+`TemperatureExtractor::extract($color, $params)` accepts an optional array with:
+
+- **`algorithm`** (string, default: `mccamy`):
+  - `mccamy` — McCamy cubic CCT from CIE 1931 (x, y) (`TemperatureExtractor::ALGORITHM_MCCAMY`)
+  - `nearestPlanckianUcs1960` — brute-force nearest point on the Planckian locus in CIE 1960 UCS (`TemperatureExtractor::ALGORITHM_NEAREST_PLANCKIAN_UCS1960`). Aliases: `ucs1960`, `brute`, `planckian_locus`, …
+
+```php
+$signed = ExtractorRegistry::get('temperature')->extract($color, [
+    'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
+]);
+```
 
 ### Contrast extractor parameters
 
@@ -74,5 +90,6 @@ See the library example `examples/Extractor/Extractors.php`—it registers every
 ## See also
 
 - [Introduction to Extractors](/docs/extractors-analysis/introduction)
+- [Temperature](/docs/extractors-analysis/temperature)
 - [Adding Extractors](/docs/extending/extractors)
 - [Exceptions Reference](/docs/references/exceptions) — `ExtractorNotFoundException`
