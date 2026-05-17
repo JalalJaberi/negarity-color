@@ -69,7 +69,9 @@ Reference white for both variants: **x_e = 0.3320**, **y_e = 0.1858**. If *y −
 
 **When it’s useful:** fast, closed form, good for **near-white** and **near-daylight** chromaticities.
 
-**Caveat:** far from the black-body locus (strongly saturated screen colors), CCT becomes less meaningful; the value is still a deterministic function of *(x, y)*.
+**Off-locus fallback:** if the sample’s distance to the Planckian locus in CIE 1960 (u,v) exceeds **0.01**, McCamy is skipped and Kelvin comes from the same **nearest-locus UCS search** as algorithm B (so saturated blue no longer maps to ~1700 K / “hot”).
+
+**Caveat:** for strongly saturated colors, even the UCS nearest-locus CCT is only a geometric summary, not full perceived warmth.
 
 ---
 

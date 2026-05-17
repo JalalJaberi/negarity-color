@@ -59,6 +59,8 @@ For a **step-by-step** explanation of chromaticity → Kelvin → signed value a
   - `original` — canonical 1992 cubic (`TemperatureExtractor::VERSION_ORIGINAL`)
   - `refined` — updated cubic coefficients (`TemperatureExtractor::VERSION_REFINED`)
 
+Both McCamy versions **fall back** to nearest Planckian UCS when chromaticity is farther than **0.01** (u,v) from the locus (saturated primaries).
+
 Use `TemperatureExtractor::getVersionLabel($algorithm, $version)` for display names in UIs.
 
 ```php

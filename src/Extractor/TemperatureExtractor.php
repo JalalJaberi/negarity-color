@@ -35,6 +35,12 @@ final class TemperatureExtractor implements ExtractorInterface
 
     private const float MCCAMY_YE = 0.1858;
 
+    /**
+     * Max Euclidean distance in CIE 1960 (u,v) from the Planckian locus for McCamy to be trusted.
+     * Beyond this, McCamy CCT is off-locus nonsense (e.g. saturated blue → ~1700 K).
+     */
+    private const float MCCAMY_MAX_PLANCKIAN_DISTANCE_UV = 0.01;
+
     /** Default extractor algorithm key. */
     public const string ALGORITHM_MCCAMY = 'mccamy';
 
@@ -149,13 +155,26 @@ final class TemperatureExtractor implements ExtractorInterface
 
     /**
      * McCamy-family CCT (Kelvin) from CIE 1931 (x, y) for the given {@see resolveVersion()} key.
+     *
+     * When chromaticity is far from the Planckian locus, McCamy is unreliable; falls back to
+     * {@see nearestPlanckianMatchUv()} (same search as {@see ALGORITHM_NEAREST_PLANCKIAN_UCS1960}).
      */
     private static function kelvinMcCamy(float $x, float $y, string $version): float
     {
-        return match ($version) {
+        $kelvin = match ($version) {
             self::VERSION_REFINED => self::cctMcCamyRefined($x, $y),
             default => self::cctMcCamyOriginal($x, $y),
         };
+
+        [$u, $v] = self::cie1931XyToUv1960($x, $y);
+        $match = self::nearestPlanckianMatchUv($u, $v);
+        $distanceUv = sqrt($match['distanceSq']);
+
+        if ($distanceUv > self::MCCAMY_MAX_PLANCKIAN_DISTANCE_UV) {
+            return $match['kelvin'];
+        }
+
+        return $kelvin;
     }
 
     /**
@@ -213,7 +232,7 @@ final class TemperatureExtractor implements ExtractorInterface
     {
         [$u, $v] = self::cie1931XyToUv1960($x, $y);
 
-        return self::nearestPlanckianTemperatureKelvinUv($u, $v);
+        return self::nearestPlanckianMatchUv($u, $v)['kelvin'];
     }
 
     /**
@@ -276,9 +295,11 @@ final class TemperatureExtractor implements ExtractorInterface
     }
 
     /**
-     * Nearest Planckian temperature minimizing squared distance in CIE 1960 (u,v).
+     * Nearest point on the Planckian locus in CIE 1960 (u,v).
+     *
+     * @return array{kelvin: float, distanceSq: float}
      */
-    private static function nearestPlanckianTemperatureKelvinUv(float $u, float $v): float
+    private static function nearestPlanckianMatchUv(float $u, float $v): array
     {
         $bestT = self::KELVIN_NEUTRAL;
         $bestD = PHP_FLOAT_MAX;
@@ -303,7 +324,7 @@ final class TemperatureExtractor implements ExtractorInterface
             }
         }
 
-        return $bestT;
+        return ['kelvin' => $bestT, 'distanceSq' => $bestD];
     }
 
     /**
