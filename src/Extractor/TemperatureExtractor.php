@@ -12,7 +12,7 @@ use Negarity\Color\ColorInterface;
  * Pipeline: sRGB (via library XYZ path = linear sRGB → XYZ) → CIE 1931 (x,y).
  *
  * Algorithms (see {@see extract()} `$params['algorithm']`):
- * - **McCamy** (default): cubic fit from (x,y) to CCT (Kelvin).
+ * - **McCamy** (default): cubic fit from (x,y) to CCT (Kelvin); see `$params['version']`.
  * - **nearestPlanckianUcs1960**: (x,y) → CIE 1960 UCS (u,v), then brute-force nearest
  *   point on the Planckian locus (Kim / Lindbloom polynomials) in (u,v).
  */
@@ -41,6 +41,12 @@ final class TemperatureExtractor implements ExtractorInterface
     /** Brute-force nearest Planckian locus search in CIE 1960 UCS. */
     public const string ALGORITHM_NEAREST_PLANCKIAN_UCS1960 = 'nearestPlanckianUcs1960';
 
+    /** McCamy (canonical 1992) cubic from (x,y) — default when `version` is omitted. */
+    public const string VERSION_ORIGINAL = 'original';
+
+    /** McCamy-style cubic with refined coefficients (library default before versioning). */
+    public const string VERSION_REFINED = 'refined';
+
     public function getName(): string
     {
         return 'temperature';
@@ -49,6 +55,7 @@ final class TemperatureExtractor implements ExtractorInterface
     /**
      * @param mixed $params Optional associative array:
      *                      - `algorithm` (string): {@see ALGORITHM_MCCAMY} (default) or {@see ALGORITHM_NEAREST_PLANCKIAN_UCS1960}
+     *                      - `version` (string): for McCamy — {@see VERSION_ORIGINAL} (default) or {@see VERSION_REFINED}
      */
     public function extract(ColorInterface $color, mixed $params = null): float
     {
@@ -66,19 +73,35 @@ final class TemperatureExtractor implements ExtractorInterface
         $cy = $Y / $sum;
 
         $algorithm = self::resolveAlgorithm($params);
+        $version = self::resolveVersion($params);
 
         $kelvin = match ($algorithm) {
             self::ALGORITHM_NEAREST_PLANCKIAN_UCS1960 => self::kelvinNearestPlanckianLocusSearchUcs1960($cx, $cy),
-            default => self::kelvinMcCamyApproximation($cx, $cy),
+            default => self::kelvinMcCamy($cx, $cy, $version),
         };
 
         return self::kelvinToSignedUnit($kelvin);
     }
 
     /**
+     * Human-readable label for an algorithm version (for UI / API responses).
+     */
+    public static function getVersionLabel(string $algorithm, string $version): string
+    {
+        if ($algorithm === self::ALGORITHM_NEAREST_PLANCKIAN_UCS1960) {
+            return 'Original';
+        }
+
+        return match ($version) {
+            self::VERSION_REFINED => 'Refined',
+            default => 'Original (1992)',
+        };
+    }
+
+    /**
      * @param mixed $params
      */
-    private static function resolveAlgorithm(mixed $params): string
+    public static function resolveAlgorithm(mixed $params): string
     {
         if (!is_array($params)) {
             return self::ALGORITHM_MCCAMY;
@@ -105,11 +128,62 @@ final class TemperatureExtractor implements ExtractorInterface
     }
 
     /**
-     * McCamy cubic correlated color temperature from CIE 1931 chromaticity (x, y).
+     * Resolve McCamy (or other) algorithm variant; default is always {@see VERSION_ORIGINAL}.
+     *
+     * @param mixed $params
+     */
+    public static function resolveVersion(mixed $params): string
+    {
+        if (!is_array($params) || !array_key_exists('version', $params)) {
+            return self::VERSION_ORIGINAL;
+        }
+
+        $key = strtolower(trim((string) $params['version']));
+
+        return match ($key) {
+            'original', 'mccamy1992', 'mccamy1993', 'canonical', 'canonical1992', '' => self::VERSION_ORIGINAL,
+            'refined', 'updated', 'current' => self::VERSION_REFINED,
+            default => self::VERSION_ORIGINAL,
+        };
+    }
+
+    /**
+     * McCamy-family CCT (Kelvin) from CIE 1931 (x, y) for the given {@see resolveVersion()} key.
+     */
+    private static function kelvinMcCamy(float $x, float $y, string $version): float
+    {
+        return match ($version) {
+            self::VERSION_REFINED => self::cctMcCamyRefined($x, $y),
+            default => self::cctMcCamyOriginal($x, $y),
+        };
+    }
+
+    /**
+     * McCamy (canonical 1992): cubic correlated color temperature from CIE 1931 (x, y).
      *
      * @see https://en.wikipedia.org/wiki/Color_temperature#Approximation (McCamy)
      */
-    private static function kelvinMcCamyApproximation(float $x, float $y): float
+    private static function cctMcCamyOriginal(float $x, float $y): float
+    {
+        $denom = $y - self::MCCAMY_YE;
+        if (abs($denom) < 1e-12) {
+            return 6500.0;
+        }
+
+        $n = ($x - self::MCCAMY_XE) / $denom;
+
+        $cct = -449.0 * $n ** 3
+            + 3525.0 * $n ** 2
+            - 6823.3 * $n
+            + 5520.33;
+
+        return max(1000.0, min(25000.0, $cct));
+    }
+
+    /**
+     * McCamy-style cubic with refined coefficients (previous library default).
+     */
+    private static function cctMcCamyRefined(float $x, float $y): float
     {
         $denom = $y - self::MCCAMY_YE;
         if (abs($denom) < 1e-12) {
@@ -118,12 +192,12 @@ final class TemperatureExtractor implements ExtractorInterface
 
         $n = ($x - self::MCCAMY_XE) / $denom;
 
-        $t = -437.0 * $n ** 3
+        $cct = -437.0 * $n ** 3
             + 3601.0 * $n ** 2
             - 6861.0 * $n
             + 5514.31;
 
-        return max(1000.0, min(250000.0, $t));
+        return max(1000.0, min(250000.0, $cct));
     }
 
     /**

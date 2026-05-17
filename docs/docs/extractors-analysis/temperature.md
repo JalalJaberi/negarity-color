@@ -56,25 +56,18 @@ What happens when you call `TemperatureExtractor::extract($color, $params)`:
 
 **Registry name / constant:** `mccamy` · `TemperatureExtractor::ALGORITHM_MCCAMY`
 
-This path stays entirely in **(x, y)** chromaticity space and applies the **McCamy cubic** formula, a common engineering approximation from CIE 1931 chromaticity to **CCT (Kelvin)** for colors **near the Planckian locus**.
+This path stays entirely in **(x, y)** chromaticity space. Pass **`version`** in `$params` to select the variant (default **`original`**).
 
-1. Compute  
-   
-   ```text
-   n = (x − x_e) / (y − y_e)
-   ```  
-   with **x_e = 0.3320**, **y_e = 0.1858**.  
-   If *y − y_e* is numerically zero, the implementation falls back to the **neutral Kelvin** (6500 K) for stability.
+### McCamy versions
 
-2. Evaluate the cubic (coefficients as in the implementation):
+| `version` | Constant | Description |
+|-----------|----------|-------------|
+| `original` (default) | `VERSION_ORIGINAL` | **McCamy (canonical 1992)** — cubic in *n* = (x−x_e)/(y−y_e), coefficients −449, +3525, −6823.3, +5520.33; clamp **[1000, 25 000] K** |
+| `refined` | `VERSION_REFINED` | **Refined** cubic — same *n*, coefficients −437, +3601, −6861, +5514.31; clamp **[1000, 250 000] K** (previous library default) |
 
-   ```text
-   T = −437·n³ + 3601·n² − 6861·n + 5514.31
-   ```
+Reference white for both variants: **x_e = 0.3320**, **y_e = 0.1858**. If *y − y_e* is numerically zero, **original** uses **6500 K**; **refined** uses the neutral Kelvin constant.
 
-3. **Clamp** *T* to **[1000, 250 000] K** before the signed clamp/mapping step.
-
-**When it’s useful:** fast, closed form, good for **near-white** and **near-daylight** chromaticities; widely used in imaging pipelines.
+**When it’s useful:** fast, closed form, good for **near-white** and **near-daylight** chromaticities.
 
 **Caveat:** far from the black-body locus (strongly saturated screen colors), CCT becomes less meaningful; the value is still a deterministic function of *(x, y)*.
 
@@ -120,9 +113,12 @@ use Negarity\Color\Extractor\TemperatureExtractor;
 $extractor = new TemperatureExtractor();
 $color = Color::rgb(255, 245, 235);
 
-// Default: McCamy
+// Default: McCamy + version original (1992)
 $a = $extractor->extract($color);
-$b = $extractor->extract($color, ['algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY]);
+$b = $extractor->extract($color, [
+    'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
+    'version' => TemperatureExtractor::VERSION_REFINED,
+]);
 
 // Nearest Planckian locus (UCS 1960)
 $c = $extractor->extract($color, [
@@ -132,7 +128,7 @@ $c = $extractor->extract($color, [
 
 **Aliases** for the UCS algorithm include (case-insensitive): `ucs1960`, `brute`, `brute_force`, `planckian_locus`, … — see [Extractors reference](/docs/references/extractors#temperature-extractor-parameters) for the full list.
 
-If `algorithm` is omitted or unknown, the implementation uses **McCamy**.
+If `algorithm` is omitted or unknown, the implementation uses **McCamy** with **`version` = `original`**.
 
 ---
 

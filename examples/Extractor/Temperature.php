@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Temperature extractor: compare McCamy (default) vs nearest Planckian search in CIE 1960 UCS.
+ * Temperature extractor: McCamy versions + nearest Planckian search in CIE 1960 UCS.
  *
  * Run: php examples/Extractor/Temperature.php
  */
@@ -26,40 +26,57 @@ $samples = [
     'gray50'       => Color::rgb(128, 128, 128),
 ];
 
-echo '========== TemperatureExtractor: McCamy vs nearestPlanckianUcs1960 ==========' . PHP_EOL;
+$mccamyVersions = [
+    TemperatureExtractor::VERSION_ORIGINAL => 'McCamy original (1992)',
+    TemperatureExtractor::VERSION_REFINED => 'McCamy refined',
+];
+
+echo '========== TemperatureExtractor: McCamy versions + UCS1960 ==========' . PHP_EOL;
 echo PHP_EOL;
-echo 'Signed scale: −1 (cold) … +1 (warm). Labels apply to the signed value.' . PHP_EOL;
+echo 'Signed scale: −1 (cold) … +1 (warm). Default version when omitted: original.' . PHP_EOL;
 echo PHP_EOL;
 
 printf(
-    "%-14s | %-18s | %-18s | %-18s | %-18s\n",
+    "%-14s | %-16s | %-16s | %-16s\n",
     'Sample',
-    'McCamy (signed)',
-    'McCamy label',
-    'UCS1960 (signed)',
-    'UCS1960 label'
+    'Original',
+    'Refined',
+    'UCS1960'
 );
-echo str_repeat('-', 100) . PHP_EOL;
+echo str_repeat('-', 70) . PHP_EOL;
 
 foreach ($samples as $name => $color) {
-    $mccamy = $extractor->extract($color, [
+    $original = $extractor->extract($color, [
         'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
+        'version' => TemperatureExtractor::VERSION_ORIGINAL,
+    ]);
+    $refined = $extractor->extract($color, [
+        'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
+        'version' => TemperatureExtractor::VERSION_REFINED,
     ]);
     $ucs = $extractor->extract($color, [
         'algorithm' => TemperatureExtractor::ALGORITHM_NEAREST_PLANCKIAN_UCS1960,
     ]);
 
     printf(
-        "%-14s | %18s | %-18s | %18s | %-18s\n",
+        "%-14s | %16s | %16s | %16s\n",
         $name,
-        number_format($mccamy, 4),
-        TemperatureExtractor::getLabelForValue($mccamy),
-        number_format($ucs, 4),
-        TemperatureExtractor::getLabelForValue($ucs)
+        number_format($original, 4),
+        number_format($refined, 4),
+        number_format($ucs, 4)
     );
 }
 
 echo PHP_EOL;
-echo 'Default parameters (null) use McCamy — same as algorithm => mccamy.' . PHP_EOL;
-$mccamyDefault = $extractor->extract($samples['white'], null);
-echo 'Example: extract(white, null) = ' . number_format($mccamyDefault, 4) . PHP_EOL;
+echo 'Version labels (McCamy):' . PHP_EOL;
+foreach ($mccamyVersions as $version => $title) {
+    echo '  ' . $version . ' → ' . TemperatureExtractor::getVersionLabel(
+        TemperatureExtractor::ALGORITHM_MCCAMY,
+        $version
+    ) . ' (' . $title . ')' . PHP_EOL;
+}
+
+echo PHP_EOL;
+echo 'Default parameters (null) use McCamy + version original.' . PHP_EOL;
+$default = $extractor->extract($samples['white'], null);
+echo 'extract(white, null) = ' . number_format($default, 4) . PHP_EOL;

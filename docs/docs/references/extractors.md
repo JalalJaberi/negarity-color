@@ -55,10 +55,16 @@ For a **step-by-step** explanation of chromaticity → Kelvin → signed value a
 - **`algorithm`** (string, default: `mccamy`):
   - `mccamy` — McCamy cubic CCT from CIE 1931 (x, y) (`TemperatureExtractor::ALGORITHM_MCCAMY`)
   - `nearestPlanckianUcs1960` — brute-force nearest point on the Planckian locus in CIE 1960 UCS (`TemperatureExtractor::ALGORITHM_NEAREST_PLANCKIAN_UCS1960`). Aliases: `ucs1960`, `brute`, `planckian_locus`, …
+- **`version`** (string, default: `original`) — for **McCamy** only:
+  - `original` — canonical 1992 cubic (`TemperatureExtractor::VERSION_ORIGINAL`)
+  - `refined` — updated cubic coefficients (`TemperatureExtractor::VERSION_REFINED`)
+
+Use `TemperatureExtractor::getVersionLabel($algorithm, $version)` for display names in UIs.
 
 ```php
 $signed = ExtractorRegistry::get('temperature')->extract($color, [
     'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
+    'version' => TemperatureExtractor::VERSION_REFINED,
 ]);
 ```
 
