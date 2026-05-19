@@ -15,6 +15,8 @@ use Negarity\Color\ColorInterface;
  * - **McCamy** (default): cubic fit from (x,y) to CCT (Kelvin); see `$params['version']`.
  * - **nearestPlanckianUcs1960**: (x,y) → CIE 1960 UCS (u,v), then brute-force nearest
  *   point on the Planckian locus (Kim / Lindbloom polynomials) in (u,v).
+ * - **krystek1985**: Krystek (1985) rational *u,v(T)* approximation; inverse CCT by
+ *   iterative search minimizing distance in (u,v) on [1000, 15000] K.
  */
 final class TemperatureExtractor implements ExtractorInterface
 {
@@ -23,6 +25,15 @@ final class TemperatureExtractor implements ExtractorInterface
     private const float KELVIN_FINE_RADIUS = 120.0;
 
     private const float KELVIN_FINE_STEP = 1.0;
+
+    /** Krystek (1985) valid CCT domain (Kelvin). */
+    private const float KRYSTEK_T_MIN = 1000.0;
+
+    private const float KRYSTEK_T_MAX = 15000.0;
+
+    private const float KRYSTEK_COARSE_STEP = 50.0;
+
+    private const float KRYSTEK_FINE_RADIUS = 250.0;
 
     /** Centre Kelvin for neutral on the [-1, 1] scale (~equal-energy / daylight). */
     private const float KELVIN_NEUTRAL = 6500.0;
@@ -47,11 +58,17 @@ final class TemperatureExtractor implements ExtractorInterface
     /** Brute-force nearest Planckian locus search in CIE 1960 UCS. */
     public const string ALGORITHM_NEAREST_PLANCKIAN_UCS1960 = 'nearestPlanckianUcs1960';
 
+    /** Krystek (1985) Chebyshev-style rational approximation + iterative inverse. */
+    public const string ALGORITHM_KRYSTEK1985 = 'krystek1985';
+
     /** McCamy (canonical 1992) cubic from (x,y) — default when `version` is omitted. */
     public const string VERSION_ORIGINAL = 'original';
 
     /** McCamy-style cubic with refined coefficients (library default before versioning). */
     public const string VERSION_REFINED = 'refined';
+
+    /** Krystek forward mapping + iterative inverse (default for {@see ALGORITHM_KRYSTEK1985}). */
+    public const string VERSION_CHEBYSHEV = 'chebyshev';
 
     public function getName(): string
     {
@@ -60,8 +77,9 @@ final class TemperatureExtractor implements ExtractorInterface
 
     /**
      * @param mixed $params Optional associative array:
-     *                      - `algorithm` (string): {@see ALGORITHM_MCCAMY} (default) or {@see ALGORITHM_NEAREST_PLANCKIAN_UCS1960}
-     *                      - `version` (string): for McCamy — {@see VERSION_ORIGINAL} (default) or {@see VERSION_REFINED}
+     *                      - `algorithm` (string): {@see ALGORITHM_MCCAMY} (default), {@see ALGORITHM_NEAREST_PLANCKIAN_UCS1960}, or {@see ALGORITHM_KRYSTEK1985}
+     *                      - `version` (string): McCamy — {@see VERSION_ORIGINAL} (default) or {@see VERSION_REFINED};
+     *                        Krystek — {@see VERSION_CHEBYSHEV} (default, iterative inverse)
      */
     public function extract(ColorInterface $color, mixed $params = null): float
     {
@@ -83,6 +101,7 @@ final class TemperatureExtractor implements ExtractorInterface
 
         $kelvin = match ($algorithm) {
             self::ALGORITHM_NEAREST_PLANCKIAN_UCS1960 => self::kelvinNearestPlanckianLocusSearchUcs1960($cx, $cy),
+            self::ALGORITHM_KRYSTEK1985 => self::kelvinKrystek1985($cx, $cy),
             default => self::kelvinMcCamy($cx, $cy, $version),
         };
 
@@ -96,6 +115,13 @@ final class TemperatureExtractor implements ExtractorInterface
     {
         if ($algorithm === self::ALGORITHM_NEAREST_PLANCKIAN_UCS1960) {
             return 'Original';
+        }
+
+        if ($algorithm === self::ALGORITHM_KRYSTEK1985) {
+            return match ($version) {
+                self::VERSION_CHEBYSHEV, 'iterative', '1985' => 'Chebyshev + iterative (1985)',
+                default => 'Chebyshev + iterative (1985)',
+            };
         }
 
         return match ($version) {
@@ -129,6 +155,9 @@ final class TemperatureExtractor implements ExtractorInterface
             'brute_force',
             'planckian_locus',
             'planckianlocus' => self::ALGORITHM_NEAREST_PLANCKIAN_UCS1960,
+            'krystek',
+            'krystek1985',
+            'krystek_1985' => self::ALGORITHM_KRYSTEK1985,
             default => self::ALGORITHM_MCCAMY,
         };
     }
@@ -149,8 +178,112 @@ final class TemperatureExtractor implements ExtractorInterface
         return match ($key) {
             'original', 'mccamy1992', 'mccamy1993', 'canonical', 'canonical1992', '' => self::VERSION_ORIGINAL,
             'refined', 'updated', 'current' => self::VERSION_REFINED,
+            'chebyshev', 'iterative', 'krystek', '1985' => self::VERSION_CHEBYSHEV,
             default => self::VERSION_ORIGINAL,
         };
+    }
+
+    /**
+     * Krystek (1985): CCT from CIE 1960 (u,v) via iterative minimization of |uv(T) − uv_sample|.
+     *
+     * Forward uv(T) uses the rational approximations from Krystek (1985) / colour-science.
+     *
+     * @see https://doi.org/10.1002/col.5080100109
+     */
+    private static function kelvinKrystek1985(float $x, float $y): float
+    {
+        [$u, $v] = self::cie1931XyToUv1960($x, $y);
+
+        return self::cctFromUvKrystek1985($u, $v);
+    }
+
+    /**
+     * Krystek (1985) CIE 1960 UCS chromaticity from correlated colour temperature.
+     *
+     * @return array{0: float, 1: float} u, v
+     */
+    private static function cctToUvKrystek1985(float $t): array
+    {
+        $t = max(self::KRYSTEK_T_MIN, min(self::KRYSTEK_T_MAX, $t));
+        $t2 = $t * $t;
+
+        $u = (0.860117757 + 1.54118254e-4 * $t + 1.28641212e-7 * $t2)
+            / (1.0 + 8.42420235e-4 * $t + 7.08145163e-7 * $t2);
+        $v = (0.317398726 + 4.22806245e-5 * $t + 4.20481691e-8 * $t2)
+            / (1.0 - 2.89741816e-5 * $t + 1.61456053e-7 * $t2);
+
+        return [$u, $v];
+    }
+
+    /**
+     * Euclidean distance in (u,v) between sample and Krystek approximation at T.
+     */
+    private static function krystekUvDistanceAtKelvin(float $t, float $u, float $v): float
+    {
+        [$pu, $pv] = self::cctToUvKrystek1985($t);
+        $du = $pu - $u;
+        $dv = $pv - $v;
+
+        return sqrt($du * $du + $dv * $dv);
+    }
+
+    /**
+     * Iterative inverse: find T in [1000, 15000] K minimizing krystek uv distance.
+     */
+    private static function cctFromUvKrystek1985(float $u, float $v): float
+    {
+        $bestT = self::KELVIN_NEUTRAL;
+        $bestD = PHP_FLOAT_MAX;
+
+        for ($t = self::KRYSTEK_T_MIN; $t <= self::KRYSTEK_T_MAX; $t += self::KRYSTEK_COARSE_STEP) {
+            $d = self::krystekUvDistanceAtKelvin($t, $u, $v);
+            if ($d < $bestD) {
+                $bestD = $d;
+                $bestT = $t;
+            }
+        }
+
+        $tLo = max(self::KRYSTEK_T_MIN, $bestT - self::KRYSTEK_FINE_RADIUS);
+        $tHi = min(self::KRYSTEK_T_MAX, $bestT + self::KRYSTEK_FINE_RADIUS);
+
+        return self::goldenSectionMinKelvin(
+            $tLo,
+            $tHi,
+            static fn(float $t): float => self::krystekUvDistanceAtKelvin($t, $u, $v),
+            0.25
+        );
+    }
+
+    /**
+     * Golden-section search for minimum of f(T) on [lo, hi] (unimodal assumed).
+     */
+    private static function goldenSectionMinKelvin(float $lo, float $hi, callable $f, float $tol = 0.25): float
+    {
+        $phi = (sqrt(5.0) - 1.0) / 2.0;
+        $a = $lo;
+        $b = $hi;
+        $c = $b - $phi * ($b - $a);
+        $d = $a + $phi * ($b - $a);
+        $fc = $f($c);
+        $fd = $f($d);
+
+        while (($b - $a) > $tol) {
+            if ($fc < $fd) {
+                $b = $d;
+                $d = $c;
+                $fd = $fc;
+                $c = $b - $phi * ($b - $a);
+                $fc = $f($c);
+            } else {
+                $a = $c;
+                $c = $d;
+                $fc = $fd;
+                $d = $a + $phi * ($b - $a);
+                $fd = $f($d);
+            }
+        }
+
+        return ($a + $b) / 2.0;
     }
 
     /**

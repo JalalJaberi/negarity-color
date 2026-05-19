@@ -104,6 +104,27 @@ This path interprets “temperature” as: **which Planckian (black-body) chroma
 
 ---
 
+## Algorithm C — Krystek (1985)
+
+**Registry name / constant:** `krystek1985` · `TemperatureExtractor::ALGORITHM_KRYSTEK1985`
+
+Krystek fits **CIE 1960 (u,v)** as a function of correlated temperature *T* using **rational polynomials** (the published Chebyshev-style approximation). There is **no closed inverse**, so the library finds *T* by **iterative search** on **[1000, 15000] K**:
+
+1. Convert sample *(x,y)* → *(u,v)* (1960 UCS).
+2. **Coarse** sweep minimizing **|uv(T) − uv_sample|**.
+3. **Golden-section** refinement around the best coarse *T*.
+
+Valid only in **1000–15 000 K** (values are clamped to that range before mapping to the signed scale).
+
+```php
+$extractor->extract($color, [
+    'algorithm' => TemperatureExtractor::ALGORITHM_KRYSTEK1985,
+    'version' => TemperatureExtractor::VERSION_CHEBYSHEV, // default
+]);
+```
+
+---
+
 ## Choosing an algorithm in code
 
 Pass an **array** with an **`algorithm`** key as the second argument to `extract()`:
@@ -125,6 +146,11 @@ $b = $extractor->extract($color, [
 // Nearest Planckian locus (UCS 1960)
 $c = $extractor->extract($color, [
     'algorithm' => TemperatureExtractor::ALGORITHM_NEAREST_PLANCKIAN_UCS1960,
+]);
+
+// Krystek (1985)
+$d = $extractor->extract($color, [
+    'algorithm' => TemperatureExtractor::ALGORITHM_KRYSTEK1985,
 ]);
 ```
 

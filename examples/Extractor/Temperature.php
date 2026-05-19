@@ -31,16 +31,17 @@ $mccamyVersions = [
     TemperatureExtractor::VERSION_REFINED => 'McCamy refined',
 ];
 
-echo '========== TemperatureExtractor: McCamy versions + UCS1960 ==========' . PHP_EOL;
+echo '========== TemperatureExtractor: McCamy, Krystek, UCS1960 ==========' . PHP_EOL;
 echo PHP_EOL;
 echo 'Signed scale: −1 (cold) … +1 (warm). Default version when omitted: original.' . PHP_EOL;
 echo PHP_EOL;
 
 printf(
-    "%-14s | %-16s | %-16s | %-16s\n",
+    "%-14s | %-12s | %-12s | %-12s | %-12s\n",
     'Sample',
-    'Original',
-    'Refined',
+    'McCamy orig',
+    'McCamy ref',
+    'Krystek',
     'UCS1960'
 );
 echo str_repeat('-', 70) . PHP_EOL;
@@ -54,15 +55,19 @@ foreach ($samples as $name => $color) {
         'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
         'version' => TemperatureExtractor::VERSION_REFINED,
     ]);
+    $krystek = $extractor->extract($color, [
+        'algorithm' => TemperatureExtractor::ALGORITHM_KRYSTEK1985,
+    ]);
     $ucs = $extractor->extract($color, [
         'algorithm' => TemperatureExtractor::ALGORITHM_NEAREST_PLANCKIAN_UCS1960,
     ]);
 
     printf(
-        "%-14s | %16s | %16s | %16s\n",
+        "%-14s | %12s | %12s | %12s | %12s\n",
         $name,
         number_format($original, 4),
         number_format($refined, 4),
+        number_format($krystek, 4),
         number_format($ucs, 4)
     );
 }
