@@ -57,5 +57,5 @@ Implement **`ExtractorInterface`**, add a **`getLabelForValue()`** helper on you
 
 ## Reference
 
-- [Temperature](/docs/extractors-analysis/temperature) — how CCT is computed (McCamy vs Planckian UCS search)
+- [Temperature](/docs/extractors-analysis/temperature) — CCT: McCamy original & refined, Planckian UCS, Krystek
 - [Extractors Reference](/docs/references/extractors) — API details and parameter semantics

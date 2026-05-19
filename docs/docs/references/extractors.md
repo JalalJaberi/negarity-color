@@ -36,7 +36,7 @@ $label = BrightnessExtractor::getLabelForValue($value);
 
 | Registry name | Class | Returns | Notes |
 |---------------|-------|---------|--------|
-| `temperature` | `TemperatureExtractor` | `float` (−1 cold … 1 warm) | CCT via McCamy (default) or optional Planckian UCS search — [guide](/docs/extractors-analysis/temperature) and below |
+| `temperature` | `TemperatureExtractor` | `float` (−1 cold … 1 warm) | McCamy (`original` / `refined`), Planckian UCS, Krystek — [guide](/docs/extractors-analysis/temperature) |
 | `brightness` | `BrightnessExtractor` | `float` (0–100) | LCh L (perceived lightness) |
 | `saturation` | `SaturationExtractor` | `float` (0–100) | LCh chroma normalized |
 | `chroma` | `ChromaExtractor` | `float` (0–100) | Neutral vs “colory” |
@@ -48,26 +48,33 @@ Each built-in class provides **`public static function getLabelForValue(float|st
 
 ### Temperature extractor parameters
 
-For a **step-by-step** explanation of chromaticity → Kelvin → signed value and both algorithms, see the **[Temperature](/docs/extractors-analysis/temperature)** guide.
+See the **[Temperature](/docs/extractors-analysis/temperature)** guide for step-by-step pipelines (including **McCamy refined** formulas).
 
 `TemperatureExtractor::extract($color, $params)` accepts an optional array with:
 
 - **`algorithm`** (string, default: `mccamy`):
-  - `mccamy` — McCamy cubic CCT from CIE 1931 (x, y) (`TemperatureExtractor::ALGORITHM_MCCAMY`)
-  - `nearestPlanckianUcs1960` — brute-force nearest point on the Planckian locus in CIE 1960 UCS (`TemperatureExtractor::ALGORITHM_NEAREST_PLANCKIAN_UCS1960`). Aliases: `ucs1960`, `brute`, `planckian_locus`, …
-  - `krystek1985` — Krystek (1985) rational *u,v(T)* fit + iterative inverse on [1000, 15000] K (`TemperatureExtractor::ALGORITHM_KRYSTEK1985`). Aliases: `krystek`, …
-- **`version`** (string, default: `original`) — for **McCamy** only:
-  - `original` — canonical 1992 cubic (`TemperatureExtractor::VERSION_ORIGINAL`)
-  - `refined` — updated cubic coefficients (`TemperatureExtractor::VERSION_REFINED`)
+  - `mccamy` — McCamy cubic CCT from CIE 1931 (x, y); use **`version`** for original vs refined (`TemperatureExtractor::ALGORITHM_MCCAMY`)
+  - `nearestPlanckianUcs1960` — nearest point on the Planckian locus in CIE 1960 UCS (`TemperatureExtractor::ALGORITHM_NEAREST_PLANCKIAN_UCS1960`). Aliases: `ucs1960`, `brute`, `planckian_locus`, …
+  - `krystek1985` — Krystek (1985) rational *u,v(T)* + iterative inverse [1000, 15000] K (`TemperatureExtractor::ALGORITHM_KRYSTEK1985`). Aliases: `krystek`, …
+- **`version`** (string, default: `original`) — **McCamy only** (`algorithm` = `mccamy`):
+  - `original` — McCamy **1992** cubic: −449·n³ + 3525·n² − 6823.3·n + 5520.33; clamp 1k–25k K (`TemperatureExtractor::VERSION_ORIGINAL`)
+  - `refined` — updated cubic: −437·n³ + 3601·n² − 6861·n + 5514.31; clamp 1k–250k K (`TemperatureExtractor::VERSION_REFINED`). Aliases: `updated`, `current`
 
-Both McCamy versions **fall back** to nearest Planckian UCS when chromaticity is farther than **0.01** (u,v) from the locus (saturated primaries).
+Both McCamy versions **fall back** to nearest Planckian UCS when chromaticity is farther than **0.01** (u,v) from the locus.
 
-Use `TemperatureExtractor::getVersionLabel($algorithm, $version)` for display names in UIs.
+`TemperatureExtractor::getVersionLabel($algorithm, $version)` returns UI labels (`Original (1992)`, `Refined`, …).
 
 ```php
-$signed = ExtractorRegistry::get('temperature')->extract($color, [
+// McCamy refined
+$refined = ExtractorRegistry::get('temperature')->extract($color, [
     'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
     'version' => TemperatureExtractor::VERSION_REFINED,
+]);
+
+// McCamy original (1992) — same as omitting version
+$original = ExtractorRegistry::get('temperature')->extract($color, [
+    'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
+    'version' => TemperatureExtractor::VERSION_ORIGINAL,
 ]);
 ```
 

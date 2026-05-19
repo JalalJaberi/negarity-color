@@ -32,7 +32,7 @@ What happens when you call `TemperatureExtractor::extract($color, $params)`:
    These describe **where** the color sits in the chromaticity diagram, not how bright it is.
 
 4. **Estimate correlated temperature in Kelvin**  
-   Two algorithms are supported (see below). Both produce a single scalar *T* in **Kelvin**.
+   Several methods are supported (see below): **McCamy** (`original` or `refined`), **nearest Planckian UCS**, and **Krystek (1985)**. Each produces a scalar *T* in **Kelvin**.
 
 5. **Clamp Kelvin before mapping**  
    The value *T* is clamped to **500 … 100 000 K** (implementation detail for numerical stability and UI consistency).
@@ -56,22 +56,70 @@ What happens when you call `TemperatureExtractor::extract($color, $params)`:
 
 **Registry name / constant:** `mccamy` · `TemperatureExtractor::ALGORITHM_MCCAMY`
 
-This path stays entirely in **(x, y)** chromaticity space. Pass **`version`** in `$params` to select the variant (default **`original`**).
+This path stays entirely in **CIE 1931 (x, y)** chromaticity. Pass **`version`** in `$params` to pick the cubic coefficients (default **`original`**).
 
-### McCamy versions
+| `version` | Constant | Summary |
+|-----------|----------|---------|
+| `original` (default) | `VERSION_ORIGINAL` | McCamy (canonical **1992**) |
+| `refined` | `VERSION_REFINED` | Updated cubic (previous Negarity default) |
 
-| `version` | Constant | Description |
-|-----------|----------|-------------|
-| `original` (default) | `VERSION_ORIGINAL` | **McCamy (canonical 1992)** — cubic in *n* = (x−x_e)/(y−y_e), coefficients −449, +3525, −6823.3, +5520.33; clamp **[1000, 25 000] K** |
-| `refined` | `VERSION_REFINED` | **Refined** cubic — same *n*, coefficients −437, +3601, −6861, +5514.31; clamp **[1000, 250 000] K** (previous library default) |
+**Aliases (case-insensitive):** `refined` also accepts `updated`, `current`; `original` accepts `mccamy1992`, `canonical`, …
 
-Reference white for both variants: **x_e = 0.3320**, **y_e = 0.1858**. If *y − y_e* is numerically zero, **original** uses **6500 K**; **refined** uses the neutral Kelvin constant.
+Shared reference white: **x_e = 0.3320**, **y_e = 0.1858**.
 
-**When it’s useful:** fast, closed form, good for **near-white** and **near-daylight** chromaticities.
+**Off-locus fallback (both versions):** if distance to the Planckian locus in CIE 1960 (u,v) exceeds **0.01**, the cubic result is discarded and Kelvin comes from the **nearest-locus UCS search** (algorithm B), so saturated blue no longer maps to spurious ~1700 K / “hot”.
 
-**Off-locus fallback:** if the sample’s distance to the Planckian locus in CIE 1960 (u,v) exceeds **0.01**, McCamy is skipped and Kelvin comes from the same **nearest-locus UCS search** as algorithm B (so saturated blue no longer maps to ~1700 K / “hot”).
+### McCamy original (1992) — `version` = `original`
 
-**Caveat:** for strongly saturated colors, even the UCS nearest-locus CCT is only a geometric summary, not full perceived warmth.
+1. Compute the chromaticity factor:
+
+   ```text
+   n = (x − x_e) / (y − y_e)
+   ```
+
+   If *y − y_e* is numerically zero, return **6500 K** (neutral fallback).
+
+2. Evaluate the **1992** cubic (McCamy, canonical):
+
+   ```text
+   T = −449·n³ + 3525·n² − 6823.3·n + 5520.33
+   ```
+
+3. Clamp *T* to **[1000, 25 000] K**, then map to the signed scale.
+
+### McCamy refined — `version` = `refined`
+
+Same pipeline as **original**, but different coefficients and clamping. Use this when you want the behaviour that Negarity used before `version` was introduced.
+
+1. Same **n** and reference white as above. If *y − y_e* ≈ 0, use the library neutral Kelvin constant (**6500 K**).
+
+2. Evaluate the **refined** cubic:
+
+   ```text
+   T = −437·n³ + 3601·n² − 6861·n + 5514.31
+   ```
+
+3. Clamp *T* to **[1000, 250 000] K**, then map to the signed scale.
+
+Near whites and grays, **original** and **refined** usually agree within a few signed units; they diverge more for colours farther from the Planckian locus (before the UCS fallback kicks in).
+
+```php
+// McCamy original (1992) — default when version is omitted
+$original = $extractor->extract($color, [
+    'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
+    'version' => TemperatureExtractor::VERSION_ORIGINAL,
+]);
+
+// McCamy refined
+$refined = $extractor->extract($color, [
+    'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
+    'version' => TemperatureExtractor::VERSION_REFINED,
+]);
+```
+
+**When McCamy is useful:** fast, closed form, good for **near-white** and **near-daylight** chromaticities.
+
+**Caveat:** far from the black-body locus, CCT is not meaningful; the off-locus fallback improves saturated RGB, but remains a geometric summary.
 
 ---
 
@@ -162,7 +210,7 @@ If `algorithm` is omitted or unknown, the implementation uses **McCamy** with **
 
 ## Example script
 
-Run the shipped example to compare both algorithms side by side on sample colors:
+Run the shipped example to compare McCamy (**original** and **refined**), Krystek, and UCS on sample colors:
 
 ```bash
 php examples/Extractor/Temperature.php
