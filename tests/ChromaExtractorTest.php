@@ -90,4 +90,12 @@ final class ChromaExtractorTest extends TestCase
             0.0001
         );
     }
+
+    public function testOklchFromHslSourceColor(): void
+    {
+        $hsl = Color::hsl(120, 80, 45);
+
+        self::assertGreaterThan(0.0, $this->extractor->extract($hsl));
+        self::assertNotNull($hsl->toOklab());
+    }
 }

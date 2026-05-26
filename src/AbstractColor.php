@@ -605,10 +605,13 @@ abstract class AbstractColor implements \JsonSerializable, ColorInterface
                     if ($targetSupportsCIE) {
                         $illuminant = $illuminant ?? $this->illuminant;
                         $observer = $observer ?? $this->observer;
-                        return $targetSpaceClass::$fromRgbMethod($rgbValues, $alphaValue, $illuminant, $observer);
+                        $convertedValues = $targetSpaceClass::$fromRgbMethod($rgbValues, $alphaValue, $illuminant, $observer);
                     } else {
-                        return $targetSpaceClass::$fromRgbMethod($rgbValues, $alphaValue);
+                        $convertedValues = $targetSpaceClass::$fromRgbMethod($rgbValues, $alphaValue);
                     }
+
+                    // Indirect conversions use non-strict mode to preserve precision (same as prior intent).
+                    return ['values' => $convertedValues, 'strictMode' => false];
                 }
             } catch (ColorSpaceNotFoundException $e) {
                 // Re-throw color space not found exceptions immediately
