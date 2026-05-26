@@ -113,6 +113,9 @@ final class ColorSpaceRegistry
             \Negarity\Color\ColorSpace\HSV::class,
             \Negarity\Color\ColorSpace\Lab::class,
             \Negarity\Color\ColorSpace\LCh::class,
+            \Negarity\Color\ColorSpace\Luv::class,
+            \Negarity\Color\ColorSpace\OkLab::class,
+            \Negarity\Color\ColorSpace\Oklch::class,
             \Negarity\Color\ColorSpace\XYZ::class,
             \Negarity\Color\ColorSpace\YCbCr::class,
         ];

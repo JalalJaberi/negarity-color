@@ -38,8 +38,8 @@ $label = BrightnessExtractor::getLabelForValue($value);
 |---------------|-------|---------|--------|
 | `temperature` | `TemperatureExtractor` | `float` (−1 cold … 1 warm) | McCamy (`original` / `refined`), Planckian UCS, Krystek — [guide](/docs/extractors-analysis/temperature) |
 | `brightness` | `BrightnessExtractor` | `float` (0–100) | LCh L (perceived lightness) |
-| `saturation` | `SaturationExtractor` | `float` (0–100) | LCh chroma normalized |
-| `chroma` | `ChromaExtractor` | `float` (0–100) | Neutral vs “colory” |
+| `saturation` | `SaturationExtractor` | `float` (0–100) | HSV (default), HSL — [guide](/docs/extractors-analysis/saturation) |
+| `chroma` | `ChromaExtractor` | `float` (0–100) | OKLCH (default), CIE Lab, CIE Luv — [guide](/docs/extractors-analysis/chroma) |
 | `perceived_weight` | `PerceivedWeightExtractor` | `float` (0–100) | Dark + saturated → heavier |
 | `vibrancy` | `VibrancyExtractor` | `float` (0–100) | Mid-light + high chroma peaks |
 | `contrast` | `ContrastExtractor` | `float` (1–21) | WCAG contrast vs another color |
@@ -75,6 +75,53 @@ $refined = ExtractorRegistry::get('temperature')->extract($color, [
 $original = ExtractorRegistry::get('temperature')->extract($color, [
     'algorithm' => TemperatureExtractor::ALGORITHM_MCCAMY,
     'version' => TemperatureExtractor::VERSION_ORIGINAL,
+]);
+```
+
+### Saturation extractor parameters
+
+See the **[Saturation](/docs/extractors-analysis/saturation)** guide for formulas.
+
+`SaturationExtractor::extract($color, $params)` accepts an optional array with:
+
+- **`algorithm`** (string, default: `hsv`):
+  - `hsv` — HSV *S* = (V − min) / V; Alvy Ray Smith, SIGGRAPH 1978 (`SaturationExtractor::ALGORITHM_HSV`). Aliases: `alvy`, `smith`, `siggraph1978`
+  - `hsl` — HSL *S* relative to lightness; Foley & van Dam (`SaturationExtractor::ALGORITHM_HSL`). Aliases: `foley`, `vandam`
+
+Both algorithms read the **S** channel from `toHSV()` / `toHSL()` (0–100). For absolute colorfulness use [Chroma](/docs/extractors-analysis/chroma).
+
+`SaturationExtractor::getAlgorithmLabel($algorithm)` returns UI labels.
+
+```php
+$hsv = ExtractorRegistry::get('saturation')->extract($color, [
+    'algorithm' => SaturationExtractor::ALGORITHM_HSV,
+]);
+
+$hsl = ExtractorRegistry::get('saturation')->extract($color, [
+    'algorithm' => SaturationExtractor::ALGORITHM_HSL,
+]);
+```
+
+### Chroma extractor parameters
+
+See the **[Chroma](/docs/extractors-analysis/chroma)** guide for formulas and normalization.
+
+`ChromaExtractor::extract($color, $params)` accepts an optional array with:
+
+- **`algorithm`** (string, default: `oklch`):
+  - `oklch` — OKLab/OKLCH *C* = √(a² + b²); normalize with divisor **0.4** (`ChromaExtractor::ALGORITHM_OKLCH`). Aliases: `oklab`, `ok`
+  - `cie1976Lab` — CIE 1976 L\*a\*b\* *C\**; divisor **150** (`ChromaExtractor::ALGORITHM_CIE1976_LAB`). Aliases: `lab`, `cielab`, `cstar`
+  - `cie1976Luv` — CIE 1976 L\*u\*v\* *C\*uv*; divisor **150** (`ChromaExtractor::ALGORITHM_CIE1976_LUV`). Aliases: `luv`, `cieluv`
+
+`ChromaExtractor::getAlgorithmLabel($algorithm)` returns UI labels.
+
+```php
+$oklch = ExtractorRegistry::get('chroma')->extract($color, [
+    'algorithm' => ChromaExtractor::ALGORITHM_OKLCH,
+]);
+
+$lab = ExtractorRegistry::get('chroma')->extract($color, [
+    'algorithm' => ChromaExtractor::ALGORITHM_CIE1976_LAB,
 ]);
 ```
 

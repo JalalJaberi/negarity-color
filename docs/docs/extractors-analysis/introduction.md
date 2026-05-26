@@ -21,8 +21,8 @@ Always call **`ColorSpaceRegistry::registerBuiltIn()`** (or register spaces your
 |------|------------------|
 | `temperature` | Warm vs cool (−1 … 1) from chromaticity — see [Temperature](/docs/extractors-analysis/temperature) |
 | `brightness` | Perceived lightness 0–100 (LCh L) |
-| `saturation` | Vivid vs dull 0–100 (LCh-based) |
-| `chroma` | How “colored” vs neutral 0–100 |
+| `saturation` | Vivid vs dull 0–100 (HSV default, HSL) — see [Saturation](/docs/extractors-analysis/saturation) |
+| `chroma` | How “colored” vs neutral 0–100 — see [Chroma](/docs/extractors-analysis/chroma) |
 | `perceived_weight` | Visual heaviness 0–100 |
 | `vibrancy` | Dull vs vibrant 0–100 |
 | `contrast` | WCAG contrast ratio vs white, black, or another color |
@@ -58,4 +58,6 @@ Implement **`ExtractorInterface`**, add a **`getLabelForValue()`** helper on you
 ## Reference
 
 - [Temperature](/docs/extractors-analysis/temperature) — CCT: McCamy original & refined, Planckian UCS, Krystek
+- [Saturation](/docs/extractors-analysis/saturation) — HSV (Smith), HSL (Foley & van Dam)
+- [Chroma](/docs/extractors-analysis/chroma) — OKLCH, CIE Lab, CIE Luv
 - [Extractors Reference](/docs/references/extractors) — API details and parameter semantics

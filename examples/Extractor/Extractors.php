@@ -50,10 +50,18 @@ foreach ($colors as $name => $color) {
     echo "  brightness:       " . round($bright, 2) . "  → " . BrightnessExtractor::getLabelForValue($bright) . PHP_EOL;
 
     $sat = ExtractorRegistry::get('saturation')->extract($color);
-    echo "  saturation:       " . round($sat, 2) . "  → " . SaturationExtractor::getLabelForValue($sat) . PHP_EOL;
+    echo "  saturation (HSV): " . round($sat, 2) . "  → " . SaturationExtractor::getLabelForValue($sat) . PHP_EOL;
+    $satHsl = ExtractorRegistry::get('saturation')->extract($color, [
+        'algorithm' => SaturationExtractor::ALGORITHM_HSL,
+    ]);
+    echo "  saturation (HSL): " . round($satHsl, 2) . PHP_EOL;
 
     $chroma = ExtractorRegistry::get('chroma')->extract($color);
-    echo "  chroma:           " . round($chroma, 2) . "  → " . ChromaExtractor::getLabelForValue($chroma) . PHP_EOL;
+    echo "  chroma (OKLCH):     " . round($chroma, 2) . "  → " . ChromaExtractor::getLabelForValue($chroma) . PHP_EOL;
+    $chromaLab = ExtractorRegistry::get('chroma')->extract($color, [
+        'algorithm' => ChromaExtractor::ALGORITHM_CIE1976_LAB,
+    ]);
+    echo "  chroma (Lab):       " . round($chromaLab, 2) . PHP_EOL;
 
     $weight = ExtractorRegistry::get('perceived_weight')->extract($color);
     echo "  perceived_weight: " . round($weight, 2) . "  → " . PerceivedWeightExtractor::getLabelForValue($weight) . PHP_EOL;
