@@ -38,6 +38,7 @@ $label = BrightnessExtractor::getLabelForValue($value);
 |---------------|-------|---------|--------|
 | `temperature` | `TemperatureExtractor` | `float` (−1 cold … 1 warm) | McCamy (`original` / `refined`), Planckian UCS, Krystek — [guide](/docs/extractors-analysis/temperature) |
 | `brightness` | `BrightnessExtractor` | `float` (0–100) | LCh L (perceived lightness) |
+| `luminance` | `LuminanceExtractor` | `float` (0–100) | CIE XYZ Y — [guide](/docs/extractors-analysis/luminance) |
 | `saturation` | `SaturationExtractor` | `float` (0–100) | HSV (default), HSL — [guide](/docs/extractors-analysis/saturation) |
 | `chroma` | `ChromaExtractor` | `float` (0–100) | OKLCH (default), CIE Lab, CIE Luv — [guide](/docs/extractors-analysis/chroma) |
 | `perceived_weight` | `PerceivedWeightExtractor` | `float` (0–100) | Dark + saturated → heavier |

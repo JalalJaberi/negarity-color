@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Negarity\Color\Color;
 use Negarity\Color\Extractor\BrightnessExtractor;
+use Negarity\Color\Extractor\LuminanceExtractor;
 use Negarity\Color\Extractor\ChromaExtractor;
 use Negarity\Color\Extractor\ContrastExtractor;
 use Negarity\Color\Extractor\ExtractorRegistry;
@@ -23,6 +24,7 @@ ColorSpaceRegistry::registerBuiltIn();
 
 ExtractorRegistry::register(new TemperatureExtractor());
 ExtractorRegistry::register(new BrightnessExtractor());
+ExtractorRegistry::register(new LuminanceExtractor());
 ExtractorRegistry::register(new SaturationExtractor());
 ExtractorRegistry::register(new ChromaExtractor());
 ExtractorRegistry::register(new PerceivedWeightExtractor());
@@ -44,6 +46,7 @@ $colors = [
 $extractors = [
     'temperature'       => [null, TemperatureExtractor::getLabelForValue(...)],
     'brightness'         => [null, BrightnessExtractor::getLabelForValue(...)],
+    'luminance'          => [null, LuminanceExtractor::getLabelForValue(...)],
     'saturation'         => [null, SaturationExtractor::getLabelForValue(...)],
     'chroma'             => [null, ChromaExtractor::getLabelForValue(...)],
     'perceived_weight'   => [null, PerceivedWeightExtractor::getLabelForValue(...)],

@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Negarity\Color\Color;
 use Negarity\Color\Extractor\BrightnessExtractor;
+use Negarity\Color\Extractor\LuminanceExtractor;
 use Negarity\Color\Extractor\ChromaExtractor;
 use Negarity\Color\Extractor\ContrastExtractor;
 use Negarity\Color\Extractor\ExtractorRegistry;
@@ -23,6 +24,7 @@ ColorSpaceRegistry::registerBuiltIn();
 
 ExtractorRegistry::register(new TemperatureExtractor());
 ExtractorRegistry::register(new BrightnessExtractor());
+ExtractorRegistry::register(new LuminanceExtractor());
 ExtractorRegistry::register(new SaturationExtractor());
 ExtractorRegistry::register(new ChromaExtractor());
 ExtractorRegistry::register(new PerceivedWeightExtractor());
@@ -48,6 +50,9 @@ foreach ($colors as $name => $color) {
 
     $bright = ExtractorRegistry::get('brightness')->extract($color);
     echo "  brightness:       " . round($bright, 2) . "  → " . BrightnessExtractor::getLabelForValue($bright) . PHP_EOL;
+
+    $luminance = ExtractorRegistry::get('luminance')->extract($color);
+    echo "  luminance:        " . round($luminance, 2) . "  → " . LuminanceExtractor::getLabelForValue($luminance) . PHP_EOL;
 
     $sat = ExtractorRegistry::get('saturation')->extract($color);
     echo "  saturation (HSV): " . round($sat, 2) . "  → " . SaturationExtractor::getLabelForValue($sat) . PHP_EOL;
