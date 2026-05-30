@@ -75,18 +75,20 @@ echo WarmthExtractor::getLabelForValue($score);
 
 ## Parameterized extractor
 
-Use the second argument of `extract()` for options (compare `ContrastExtractor`):
+Use the second argument of `extract()` for options (compare `ContrastExtractor`, `BrightnessExtractor`, `SaturationExtractor`, `ChromaExtractor`):
 
 ```php
 public function extract(ColorInterface $color, mixed $params = null): float
 {
-    $threshold = is_numeric($params) ? (float) $params : 0.5;
+    $algorithm = is_array($params) && isset($params['algorithm'])
+        ? (string) $params['algorithm']
+        : 'default';
     // ...
     return $result;
 }
 ```
 
-Call site: `ExtractorRegistry::get('my_extractor')->extract($color, 0.75);`
+Call site: `ExtractorRegistry::get('brightness')->extract($color, ['algorithm' => 'rec709']);`
 
 ## Tips
 

@@ -15,7 +15,7 @@ Negarity Color is a comprehensive PHP library for working with colors. It provid
 - **Easy Conversions**: Convert between any supported color spaces seamlessly (automatic via RGB hub)
 - **Named Colors**: Use predefined color names from various color registries
 - **Filters**: Apply various color filters and transformations (work with any color space via RGB fallback)
-- **Extractors**: Derive scalar metrics from a color (brightness, contrast, temperature, etc.) via `ExtractorRegistry`
+- **Extractors**: Derive scalar metrics from a color (brightness with multiple algorithms, luminance, saturation, chroma, temperature, contrast, etc.) via `ExtractorRegistry`
 - **Generators**: Build harmonic palettes (complementary, analogous, etc.) via `GeneratorRegistry`
 - **Extensible**: Easily extend the library with custom color spaces, names, filters, extractors, and generators
 - **Float Precision**: All channel values use floats for maximum precision throughout conversions

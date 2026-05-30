@@ -37,7 +37,7 @@ $label = BrightnessExtractor::getLabelForValue($value);
 | Registry name | Class | Returns | Notes |
 |---------------|-------|---------|--------|
 | `temperature` | `TemperatureExtractor` | `float` (−1 cold … 1 warm) | McCamy (`original` / `refined`), Planckian UCS, Krystek — [guide](/docs/extractors-analysis/temperature) |
-| `brightness` | `BrightnessExtractor` | `float` (0–100) | LCh L (perceived lightness) |
+| `brightness` | `BrightnessExtractor` | `float` (0–100) | LCh L (default); RGB heuristics, Rec. 601/709, Lab L*, CIECAM02/16 — [guide](/docs/extractors-analysis/brightness) |
 | `luminance` | `LuminanceExtractor` | `float` (0–100) | CIE XYZ Y — [guide](/docs/extractors-analysis/luminance) |
 | `saturation` | `SaturationExtractor` | `float` (0–100) | HSV (default), HSL — [guide](/docs/extractors-analysis/saturation) |
 | `chroma` | `ChromaExtractor` | `float` (0–100) | OKLCH (default), CIE Lab, CIE Luv — [guide](/docs/extractors-analysis/chroma) |
@@ -103,6 +103,35 @@ $hsl = ExtractorRegistry::get('saturation')->extract($color, [
 ]);
 ```
 
+### Brightness extractor parameters
+
+See the **[Brightness](/docs/extractors-analysis/brightness)** guide for formulas.
+
+`BrightnessExtractor::extract($color, $params)` accepts an optional array with:
+
+- **`algorithm`** (string, default: `lch`):
+  - `lch` — LCh **L** / perceptual lightness (`BrightnessExtractor::ALGORITHM_LCH`)
+  - `average` — (R + G + B) / 3 on gamma-encoded RGB
+  - `lightness` — (max + min) / 2 on RGB channels
+  - `hsvValue` — HSV **V** = max(R,G,B); aliases: `value`, `max`, `hsb`
+  - `rec601` — ITU-R BT.601 luma on 8-bit RGB
+  - `rec709` — ITU-R BT.709 luma on 8-bit RGB
+  - `cie1976Lab` — CIE 1976 L\*a\*b\* **L\***; aliases: `lab`, `cielab`
+  - `ciecam02` — CIECAM02 lightness **J**
+  - `ciecam16` — CIECAM16 lightness **J**
+- **`L_A`** (float, optional) — adapting luminance (cd/m²) for CIECAM02/16
+- **`Y_b`** (float, optional) — background **Y** factor for CIECAM02/16
+
+`BrightnessExtractor::getAlgorithmLabel($algorithm)` returns UI labels.
+
+```php
+$lch = ExtractorRegistry::get('brightness')->extract($color);
+
+$rec709 = ExtractorRegistry::get('brightness')->extract($color, [
+    'algorithm' => BrightnessExtractor::ALGORITHM_REC709,
+]);
+```
+
 ### Chroma extractor parameters
 
 See the **[Chroma](/docs/extractors-analysis/chroma)** guide for formulas and normalization.
@@ -155,5 +184,9 @@ See the library example `examples/Extractor/Extractors.php`—it registers every
 
 - [Introduction to Extractors](/docs/extractors-analysis/introduction)
 - [Temperature](/docs/extractors-analysis/temperature)
+- [Brightness](/docs/extractors-analysis/brightness)
+- [Luminance](/docs/extractors-analysis/luminance)
+- [Saturation](/docs/extractors-analysis/saturation)
+- [Chroma](/docs/extractors-analysis/chroma)
 - [Adding Extractors](/docs/extending/extractors)
 - [Exceptions Reference](/docs/references/exceptions) — `ExtractorNotFoundException`

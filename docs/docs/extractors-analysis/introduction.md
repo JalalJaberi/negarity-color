@@ -20,7 +20,7 @@ Always call **`ColorSpaceRegistry::registerBuiltIn()`** (or register spaces your
 | Name | What it measures |
 |------|------------------|
 | `temperature` | Warm vs cool (−1 … 1) from chromaticity — see [Temperature](/docs/extractors-analysis/temperature) |
-| `brightness` | Perceived lightness 0–100 (LCh L) |
+| `brightness` | Display brightness 0–100 (LCh L default; RGB heuristics, Rec. 601/709, Lab L*, CIECAM) — see [Brightness](/docs/extractors-analysis/brightness) |
 | `luminance` | Relative luminance 0–100 (CIE XYZ Y) — see [Luminance](/docs/extractors-analysis/luminance) |
 | `saturation` | Vivid vs dull 0–100 (HSV default, HSL) — see [Saturation](/docs/extractors-analysis/saturation) |
 | `chroma` | How “colored” vs neutral 0–100 — see [Chroma](/docs/extractors-analysis/chroma) |
@@ -62,4 +62,5 @@ Implement **`ExtractorInterface`**, add a **`getLabelForValue()`** helper on you
 - [Saturation](/docs/extractors-analysis/saturation) — HSV (Smith), HSL (Foley & van Dam)
 - [Chroma](/docs/extractors-analysis/chroma) — OKLCH, CIE Lab, CIE Luv
 - [Luminance](/docs/extractors-analysis/luminance) — CIE XYZ Y (linear RGB)
+- [Brightness](/docs/extractors-analysis/brightness) — LCh, RGB heuristics, Rec. 601/709, Lab L*, CIECAM02/16
 - [Extractors Reference](/docs/references/extractors) — API details and parameter semantics

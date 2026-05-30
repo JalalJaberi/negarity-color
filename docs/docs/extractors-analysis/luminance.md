@@ -57,7 +57,7 @@ There is **no** `algorithm` parameter — a single photometric definition.
 | Extractor | Source | Meaning |
 |-----------|--------|---------|
 | **`luminance`** | XYZ **Y** | Physical relative luminance (linear-light weighted sum) |
-| **`brightness`** | LCh **L** | Perceptual lightness (CIE L\*a\*b\* derived) |
+| **`brightness`** | LCh **L** (default), or chosen algorithm | Display / heuristic lightness — see [Brightness](/docs/extractors-analysis/brightness) |
 
 Example: saturated **yellow** often has **high Y** (lots of green + red in linear light) while perceptual **L** can differ.
 

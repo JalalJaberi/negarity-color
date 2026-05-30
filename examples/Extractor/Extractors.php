@@ -49,7 +49,15 @@ foreach ($colors as $name => $color) {
     echo "  temperature:      " . round($temp, 3) . "  → " . TemperatureExtractor::getLabelForValue($temp) . PHP_EOL;
 
     $bright = ExtractorRegistry::get('brightness')->extract($color);
-    echo "  brightness:       " . round($bright, 2) . "  → " . BrightnessExtractor::getLabelForValue($bright) . PHP_EOL;
+    echo "  brightness (LCh): " . round($bright, 2) . "  → " . BrightnessExtractor::getLabelForValue($bright) . PHP_EOL;
+    $brightRec709 = ExtractorRegistry::get('brightness')->extract($color, [
+        'algorithm' => BrightnessExtractor::ALGORITHM_REC709,
+    ]);
+    echo "  brightness (709): " . round($brightRec709, 2) . PHP_EOL;
+    $brightCam16 = ExtractorRegistry::get('brightness')->extract($color, [
+        'algorithm' => BrightnessExtractor::ALGORITHM_CIECAM16,
+    ]);
+    echo "  brightness (CAM16): " . round($brightCam16, 2) . PHP_EOL;
 
     $luminance = ExtractorRegistry::get('luminance')->extract($color);
     echo "  luminance:        " . round($luminance, 2) . "  → " . LuminanceExtractor::getLabelForValue($luminance) . PHP_EOL;
