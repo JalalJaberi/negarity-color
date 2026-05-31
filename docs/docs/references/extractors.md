@@ -41,9 +41,9 @@ $label = BrightnessExtractor::getLabelForValue($value);
 | `luminance` | `LuminanceExtractor` | `float` (0–100) | CIE XYZ Y — [guide](/docs/extractors-analysis/luminance) |
 | `saturation` | `SaturationExtractor` | `float` (0–100) | HSV (default), HSL — [guide](/docs/extractors-analysis/saturation) |
 | `chroma` | `ChromaExtractor` | `float` (0–100) | OKLCH (default), CIE Lab, CIE Luv — [guide](/docs/extractors-analysis/chroma) |
-| `perceived_weight` | `PerceivedWeightExtractor` | `float` (0–100) | Dark + saturated → heavier |
-| `vibrancy` | `VibrancyExtractor` | `float` (0–100) | Mid-light + high chroma peaks |
-| `contrast` | `ContrastExtractor` | `float` (1–21) | WCAG contrast vs another color |
+| `perceived_weight` | `PerceivedWeightExtractor` | `float` (0–100) | Linear (default), brightness × chroma — [guide](/docs/extractors-analysis/perceived-weight) |
+| `vibrancy` | `VibrancyExtractor` | `float` (0–100) | Midtone chroma (default), Gaussian index — [guide](/docs/extractors-analysis/vibrancy) |
+| `contrast` | `ContrastExtractor` | `float` | WCAG (default), Michelson, Weber, RMS, ΔE76 — [guide](/docs/extractors-analysis/contrast) |
 
 Each built-in class provides **`public static function getLabelForValue(float|string $value): string`** for human-readable labels (WCAG bands for contrast, buckets for brightness, etc.).
 
@@ -103,6 +103,52 @@ $hsl = ExtractorRegistry::get('saturation')->extract($color, [
 ]);
 ```
 
+### Perceived weight extractor parameters
+
+See the **[Perceived weight](/docs/extractors-analysis/perceived-weight)** guide for formulas.
+
+`PerceivedWeightExtractor::extract($color, $params)` accepts an optional array with:
+
+- **`algorithm`** (string, default: `brightnessChromaLinear`):
+  - `brightnessChromaLinear` — 0.7·(100−L*) + 0.3·(C*/130)·100 (`PerceivedWeightExtractor::ALGORITHM_BRIGHTNESS_CHROMA_LINEAR`). Aliases: `linear`, `sum`, `additive`
+  - `brightnessChromaMultiplication` — (100−L*) × (1 + k·C*/130) (`PerceivedWeightExtractor::ALGORITHM_BRIGHTNESS_CHROMA_MULTIPLICATION`). Aliases: `multiplication`, `multiply`, `multiplicative`
+- **`k`** (float, default: `0.5`) — chroma factor for the multiplication algorithm only
+
+Both algorithms use LCh **L** and **c** via `toLCh()`. `PerceivedWeightExtractor::getAlgorithmLabel($algorithm)` returns UI labels.
+
+```php
+$linear = ExtractorRegistry::get('perceived_weight')->extract($color);
+
+$multiplication = ExtractorRegistry::get('perceived_weight')->extract($color, [
+    'algorithm' => PerceivedWeightExtractor::ALGORITHM_BRIGHTNESS_CHROMA_MULTIPLICATION,
+    'k' => 0.5,
+]);
+```
+
+### Vibrancy extractor parameters
+
+See the **[Vibrancy](/docs/extractors-analysis/vibrancy)** guide for formulas.
+
+`VibrancyExtractor::extract($color, $params)` accepts an optional array with:
+
+- **`algorithm`** (string, default: `midtoneChromaIndex`):
+  - `midtoneChromaIndex` — C_norm × midPeak × 100; triangular envelope at L* = 50 (`VibrancyExtractor::ALGORITHM_MIDTONE_CHROMA_INDEX`). Aliases: `midtone`, `triangle`, `chroma_index`
+  - `gaussianVibrancyIndex` — C_norm × exp(−(L*−μ)² / (2σ²)) × 100 (`VibrancyExtractor::ALGORITHM_GAUSSIAN_VIBRANCY_INDEX`). Aliases: `gaussian`, `gauss`, `normal`
+- **`mu`** (float, default: `50`) — Gaussian centre μ (L* units)
+- **`sigma`** (float, default: `25`) — Gaussian width σ (L* units)
+
+`VibrancyExtractor::getAlgorithmLabel($algorithm)` returns UI labels.
+
+```php
+$midtone = ExtractorRegistry::get('vibrancy')->extract($color);
+
+$gaussian = ExtractorRegistry::get('vibrancy')->extract($color, [
+    'algorithm' => VibrancyExtractor::ALGORITHM_GAUSSIAN_VIBRANCY_INDEX,
+    'mu' => 50,
+    'sigma' => 25,
+]);
+```
+
 ### Brightness extractor parameters
 
 See the **[Brightness](/docs/extractors-analysis/brightness)** guide for formulas.
@@ -157,11 +203,35 @@ $lab = ExtractorRegistry::get('chroma')->extract($color, [
 
 ### Contrast extractor parameters
 
-`ContrastExtractor::extract($color, $params)`:
+See the **[Contrast](/docs/extractors-analysis/contrast)** guide for formulas and white/black pairing.
 
-- `null` or `'white'` — contrast against white (default)
-- `'black'` — contrast against black
-- Any `ColorInterface` — contrast against that color
+`ContrastExtractor::extract($color, $params)` accepts:
+
+- **Legacy:** `null`, `'white'`, `'black'`, or a `ColorInterface` → **WCAG** vs that reference
+- **Array:**
+  - **`algorithm`** (string, default: `wcagContrastRatio`):
+    - `wcagContrastRatio` — WCAG 2.x ratio 1–21 (`ContrastExtractor::ALGORITHM_WCAG_CONTRAST_RATIO`)
+    - `michelsonContrast` — (L_max−L_min)/(L_max+L_min)×100
+    - `weberContrast` — (L_target−L_bg)/L_bg×100
+    - `rmsContrast` — |L₁−L₂|/√(½(L₁²+L₂²))×100
+    - `deltaE76` — CIE76 ΔE*ab in Lab
+  - **`contrastWith`** / **`reference`**: `'white'`, `'black'`, or `ColorInterface`
+
+`ContrastExtractor::getAlgorithmLabel($algorithm)`, `getDisplayRange($algorithm)`, and `getLabelForValue($value, $algorithm)` support UI and API responses.
+
+```php
+$wcagWhite = ExtractorRegistry::get('contrast')->extract($color, 'white');
+
+$michelsonBlack = ExtractorRegistry::get('contrast')->extract($color, [
+    'algorithm' => ContrastExtractor::ALGORITHM_MICHELSON_CONTRAST,
+    'contrastWith' => 'black',
+]);
+
+$deltaE = ExtractorRegistry::get('contrast')->extract($color, [
+    'algorithm' => ContrastExtractor::ALGORITHM_DELTA_E76,
+    'contrastWith' => 'white',
+]);
+```
 
 ## `ExtractorInterface`
 
@@ -188,5 +258,8 @@ See the library example `examples/Extractor/Extractors.php`—it registers every
 - [Luminance](/docs/extractors-analysis/luminance)
 - [Saturation](/docs/extractors-analysis/saturation)
 - [Chroma](/docs/extractors-analysis/chroma)
+- [Perceived weight](/docs/extractors-analysis/perceived-weight)
+- [Vibrancy](/docs/extractors-analysis/vibrancy)
+- [Contrast](/docs/extractors-analysis/contrast)
 - [Adding Extractors](/docs/extending/extractors)
 - [Exceptions Reference](/docs/references/exceptions) — `ExtractorNotFoundException`

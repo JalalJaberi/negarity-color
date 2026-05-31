@@ -24,9 +24,9 @@ Always call **`ColorSpaceRegistry::registerBuiltIn()`** (or register spaces your
 | `luminance` | Relative luminance 0–100 (CIE XYZ Y) — see [Luminance](/docs/extractors-analysis/luminance) |
 | `saturation` | Vivid vs dull 0–100 (HSV default, HSL) — see [Saturation](/docs/extractors-analysis/saturation) |
 | `chroma` | How “colored” vs neutral 0–100 — see [Chroma](/docs/extractors-analysis/chroma) |
-| `perceived_weight` | Visual heaviness 0–100 |
-| `vibrancy` | Dull vs vibrant 0–100 |
-| `contrast` | WCAG contrast ratio vs white, black, or another color |
+| `perceived_weight` | Visual heaviness 0–100 (linear default, brightness × chroma) — see [Perceived weight](/docs/extractors-analysis/perceived-weight) |
+| `vibrancy` | Dull vs vibrant 0–100 (midtone chroma default, Gaussian index) — see [Vibrancy](/docs/extractors-analysis/vibrancy) |
+| `contrast` | WCAG ratio vs white, black, or another color — see [Contrast](/docs/extractors-analysis/contrast) |
 
 Each built-in extractor class implements **`ExtractorInterface`** and exposes **`getLabelForValue()`** so you can turn numbers into short labels.
 
@@ -63,4 +63,7 @@ Implement **`ExtractorInterface`**, add a **`getLabelForValue()`** helper on you
 - [Chroma](/docs/extractors-analysis/chroma) — OKLCH, CIE Lab, CIE Luv
 - [Luminance](/docs/extractors-analysis/luminance) — CIE XYZ Y (linear RGB)
 - [Brightness](/docs/extractors-analysis/brightness) — LCh, RGB heuristics, Rec. 601/709, Lab L*, CIECAM02/16
+- [Perceived weight](/docs/extractors-analysis/perceived-weight) — linear brightness + chroma, multiplicative model
+- [Vibrancy](/docs/extractors-analysis/vibrancy) — midtone chroma index, Gaussian vibrancy index
+- [Contrast](/docs/extractors-analysis/contrast) — WCAG, Michelson, Weber, RMS, ΔE76
 - [Extractors Reference](/docs/references/extractors) — API details and parameter semantics
