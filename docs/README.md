@@ -86,7 +86,9 @@ $color = Color::rgb(255, 100, 50)
 
 ## Documentation
 
-[Getting started](https://jalaljaberi.github.io/negarity-color/docs/getting-started)
+- Contributor / AI agent guide: [../AGENTS.md](../AGENTS.md)
+- Local docs site: `cd docs && npm install && npm start` (Node 20+)
+- Published docs (if deployed): [Getting started](https://jalaljaberi.github.io/negarity-color/docs/getting-started)
 
 ## References
 
