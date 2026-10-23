@@ -6,6 +6,16 @@ Modern, extensible **color manipulation** library for **PHP 8.3+**.
 composer require jalaljaberi/negarity-color
 ```
 
+## Version and releases
+
+The project version is **1.0.0**, recorded in [`VERSION`](./VERSION).
+Use **`v1.0.0`** as the Git tag when publishing this release on GitHub.
+Composer derives the package version from that tag.
+
+The release workflow attaches `negarity-color-v1.0.0.zip` containing the runtime
+code, production autoloader, license, and version file. See
+[release instructions](./.github/RELEASING.md) before publishing.
+
 ## Quick links
 
 | Resource | Location |
